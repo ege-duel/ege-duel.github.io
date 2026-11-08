@@ -5927,7 +5927,7 @@ var Cloud = (function () {
   async function findByTag(raw) {
     if (!user) throw new Error('Войдите через Google, чтобы искать профили');
     const tag = normTag(raw);
-    if (!/^[A-Z0-9]{6}$/.test(tag)) throw new Error('# состоит из 6 латинских букв и цифр, например #K7M2QX');
+    if (!/^[A-Z0-9]{6}$/.test(tag)) throw new Error('ID состоит из 6 латинских букв и цифр, например #K7M2QX');
     const t = await db.collection('tags').doc(tag).get();
     if (!t.exists) return null;
     return getProfile(t.data().uid);
@@ -6962,7 +6962,7 @@ var SubjectIcons = (function () {
     main().innerHTML = `
       <div id="profile-page">
       <h1>Мой профиль</h1>
-      <p class="lead">Так вас увидит соперник в дуэли и друзья по вашему #. ${Cloud.user ? 'Профиль сохраняется в вашем Google-аккаунте.' : 'Без входа профиль хранится только в этом браузере. Войдите через Google, чтобы получить свой # и добавлять друзей.'}</p>
+      <p class="lead">Так вас увидит соперник в дуэли и друзья по вашему ID. ${Cloud.user ? 'Профиль сохраняется в вашем Google-аккаунте.' : 'Без входа профиль хранится только в этом браузере. Войдите через Google, чтобы получить свой # и добавлять друзей.'}</p>
       <div class="profile-grid">
         <div class="stack">
           <section class="card">
@@ -7147,11 +7147,11 @@ var SubjectIcons = (function () {
 
   function friendsCardHTML() {
     if (!Cloud.available) return '<h3>Друзья</h3><p class="muted" style="margin:0">Друзья доступны только на сайте с подключённым входом через Google.</p>';
-    if (!Cloud.user) return `<h3>Друзья</h3><p class="muted" style="margin:0 0 12px;font-size:14px">Войдите через Google — вы получите свой уникальный # и сможете находить друзей по их #.</p><button class="btn google wide" id="login2">${GOOGLE_G} Войти через Google</button>`;
+    if (!Cloud.user) return `<h3>Друзья</h3><p class="muted" style="margin:0 0 12px;font-size:14px">Войдите через Google — вы получите свой уникальный ID и сможете находить друзей по их ID.</p><button class="btn google wide" id="login2">${GOOGLE_G} Войти через Google</button>`;
     const tag = Profile.me.tag;
     return `<div class="row" style="align-items:center"><h3 style="margin:0">Друзья</h3><span class="sp"></span><button type="button" class="btn" id="add-friend">＋ Добавить друга</button></div>
       <div class="my-tag">Ваш ID: ${tag ? `<b>#${esc(tag)}</b> <button type="button" class="link" id="copy-tag">Скопировать</button>` : '<span class="muted">выдаётся…</span>'}</div>
-      <div class="hint" style="margin:0 0 12px">Отправьте свой # другу — по нему он найдёт ваш профиль.</div>
+      <div class="hint" style="margin:0 0 12px">Отправьте свой ID другу — по нему он найдёт ваш профиль.</div>
       <div id="friends-list"><div class="waiting"><span class="dot-pulse"></span> Загружаем друзей…</div></div>`;
   }
 
@@ -7165,7 +7165,7 @@ var SubjectIcons = (function () {
   async function loadFriends() {
     const box = $('#friends-list');
     if (!box || !Cloud.user) return;
-    if (!(Profile.me.friends || []).length) { box.innerHTML = '<p class="muted" style="margin:0;font-size:14px">Пока никого нет. Нажмите «Добавить друга» и введите его #.</p>'; return; }
+    if (!(Profile.me.friends || []).length) { box.innerHTML = '<p class="muted" style="margin:0;font-size:14px">Пока никого нет. Нажмите «Добавить друга» и введите его ID.</p>'; return; }
     try {
       const list = await Cloud.friendsProfiles();
       app.friendsCache = list;
@@ -7243,7 +7243,7 @@ var SubjectIcons = (function () {
 
   function openFindModal() {
     const m = modal(`<div class="row" style="align-items:center"><h3 style="margin:0">Добавить друга</h3><span class="sp"></span><button type="button" class="modal-x" data-close aria-label="Закрыть">×</button></div>
-      <p class="muted" style="font-size:14px;margin:8px 0 12px">Введите # друга — его можно найти у него в профиле.</p>
+      <p class="muted" style="font-size:14px;margin:8px 0 12px">Введите ID друга — его можно найти у него в профиле.</p>
       <div class="answer-row"><input class="input" id="find-tag" maxlength="8" placeholder="#K7M2QX" autocomplete="off" style="font-family:Unbounded,monospace;letter-spacing:.08em;text-transform:uppercase"><button type="button" class="btn" id="find-go">Найти</button></div>
       <div id="find-res" style="margin-top:14px"></div>`);
     const inp = $('#find-tag', m.el), res = $('#find-res', m.el);
@@ -7251,7 +7251,7 @@ var SubjectIcons = (function () {
       res.innerHTML = '<div class="waiting"><span class="dot-pulse"></span> Ищем…</div>';
       try {
         const fp = await Cloud.findByTag(inp.value);
-        if (!fp) { res.innerHTML = '<div class="notice bad">Профиль с таким # не найден.</div>'; return; }
+        if (!fp) { res.innerHTML = '<div class="notice bad">Профиль с таким ID не найден.</div>'; return; }
         showProfileModal(fp);
       } catch (e) { res.innerHTML = `<div class="notice bad">${esc(e.message || 'Ошибка поиска')}</div>`; }
     };
