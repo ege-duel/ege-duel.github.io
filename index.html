@@ -633,6 +633,16 @@ body.on-home .login-btn:not(.hide), body.on-home .login-btn.hide + .streak-btn {
 .nick-ro { display: flex; align-items: center; gap: 10px; padding: 10px 14px; background: var(--bg); border: 1px solid var(--line); border-radius: 12px; flex-wrap: wrap; }
 .nick-ro b { font-size: 16px; }
 .nick-ro .link { margin-left: auto; font-size: 13px; }
+/* кадрирование аватара */
+.crop-stage { position: relative; width: min(300px, 100%); aspect-ratio: 1; margin: 0 auto; overflow: hidden; border-radius: 14px; background: #000; touch-action: none; cursor: grab; user-select: none; }
+.crop-stage:active { cursor: grabbing; }
+.crop-stage img { position: absolute; left: 0; top: 0; max-width: none; transform-origin: 0 0; pointer-events: none; }
+.crop-mask { position: absolute; inset: 0; pointer-events: none; background: radial-gradient(circle closest-side, transparent 99%, rgba(0, 0, 0, .58) 100%); }
+.crop-mask::after { content: ""; position: absolute; inset: 0; border-radius: 50%; box-shadow: inset 0 0 0 2px rgba(255, 255, 255, .85); }
+.crop-zoom { display: flex; align-items: center; gap: 10px; margin: 14px auto 4px; width: min(300px, 100%); color: var(--ink2); font-weight: 700; font-size: 18px; }
+.crop-zoom input { flex: 1; accent-color: var(--accent); }
+.profile-grid > * { min-width: 0; }
+.answer-row .input { min-width: 0; }
 
 </style>
 </head>
@@ -5704,31 +5714,34 @@ var Profile = (function () {
   }
 
   // Загрузка фото: обрезка по центру до квадрата 128×128, JPEG
-  function readPhoto(file) {
+  // Загрузка изображения из файла (для окна кадрирования)
+  function loadImage(file) {
     return new Promise((resolve, reject) => {
       if (!file || !/^image\//.test(file.type)) { reject(new Error('Это не изображение')); return; }
       if (file.size > 15 * 1024 * 1024) { reject(new Error('Файл больше 15 МБ')); return; }
       const url = URL.createObjectURL(file);
       const img = new Image();
-      img.onload = () => {
-        const S = 128;
-        const c = document.createElement('canvas');
-        c.width = S; c.height = S;
-        const ctx = c.getContext('2d');
-        const side = Math.min(img.naturalWidth, img.naturalHeight);
-        const sx = (img.naturalWidth - side) / 2, sy = (img.naturalHeight - side) / 2;
-        ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, S, S);
-        ctx.drawImage(img, sx, sy, side, side, 0, 0, S, S);
-        URL.revokeObjectURL(url);
-        let q = 0.85, data = c.toDataURL('image/jpeg', q);
-        while (data.length > PHOTO_MAX && q > 0.3) { q -= 0.1; data = c.toDataURL('image/jpeg', q); }
-        if (data.length > PHOTO_MAX) { reject(new Error('Не удалось сжать фото')); return; }
-        resolve(data);
-      };
+      img.onload = () => resolve(img); // адрес освобождает вызывающий (окну кадрирования он ещё нужен)
       img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('Не удалось открыть изображение')); };
       img.src = url;
     });
   }
+  // Вырезает квадрат (sx, sy, side в пикселях исходника) и сжимает в data URL
+  function cropPhoto(img, r) {
+    const S = 160;
+    const c = document.createElement('canvas');
+    c.width = S; c.height = S;
+    const ctx = c.getContext('2d');
+    if (!r) { const side = Math.min(img.naturalWidth, img.naturalHeight); r = { sx: (img.naturalWidth - side) / 2, sy: (img.naturalHeight - side) / 2, side }; }
+    ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, S, S);
+    ctx.imageSmoothingQuality = 'high';
+    ctx.drawImage(img, r.sx, r.sy, r.side, r.side, 0, 0, S, S);
+    let q = 0.88, data = c.toDataURL('image/jpeg', q);
+    while (data.length > PHOTO_MAX && q > 0.3) { q -= 0.08; data = c.toDataURL('image/jpeg', q); }
+    if (data.length > PHOTO_MAX) throw new Error('Не удалось сжать фото');
+    return data;
+  }
+  async function readPhoto(file) { const img = await loadImage(file); try { return cropPhoto(img); } finally { URL.revokeObjectURL(img.src); } }
 
   // Запись результата игры в статистику (один раз на игру)
   function record(key, result) {
@@ -5793,7 +5806,7 @@ var Profile = (function () {
   }
 
   return {
-    get me() { return me; }, save, shared, cloudData, publicData, sanitizePublic, applyCloud, fillFromGoogle, resetLocal, markToday, streak, sanitize, fallback, avatar, card, statLine, readPhoto, record, resetStats, favorite, winRate, nickInfo, setNick,
+    get me() { return me; }, save, shared, cloudData, publicData, sanitizePublic, applyCloud, fillFromGoogle, resetLocal, markToday, streak, sanitize, fallback, avatar, card, statLine, readPhoto, loadImage, cropPhoto, record, resetStats, favorite, winRate, nickInfo, setNick,
     PRESETS, CARDS, COLORS, BIO_MAX, esc,
   };
 })();
@@ -6962,7 +6975,7 @@ var SubjectIcons = (function () {
     main().innerHTML = `
       <div id="profile-page">
       <h1>Мой профиль</h1>
-      <p class="lead">Так вас увидит соперник в дуэли и друзья по вашему ID. ${Cloud.user ? 'Профиль сохраняется в вашем Google-аккаунте.' : 'Без входа профиль хранится только в этом браузере. Войдите через Google, чтобы получить свой # и добавлять друзей.'}</p>
+      <p class="lead">Так вас увидит соперник в дуэли и друзья по вашему ID. ${Cloud.user ? 'Профиль сохраняется в вашем Google-аккаунте.' : 'Без входа профиль хранится только в этом браузере. Войдите через Google, чтобы получить свой ID и добавлять друзей.'}</p>
       <div class="profile-grid">
         <div class="stack">
           <section class="card">
@@ -6975,7 +6988,7 @@ var SubjectIcons = (function () {
                   <input type="file" id="photo-in" accept="image/*" class="hide">
                   ${p.photo ? '<button type="button" class="btn ghost" id="photo-del">Убрать фото</button>' : ''}
                 </div>
-                <div class="hint" style="margin-top:6px">Фото обрежется по центру до квадрата и уменьшится.</div>
+                <div class="hint" style="margin-top:6px">После выбора фото можно приблизить и выбрать область в круге.</div>
               </div>
             </div>
             <h2 style="margin-top:22px">О себе</h2>
@@ -7044,15 +7057,66 @@ var SubjectIcons = (function () {
     });
     $('#photo-in').onchange = async (e) => {
       const f = e.target.files && e.target.files[0];
+      e.target.value = '';
       if (!f) return;
-      try {
-        Profile.me.photo = await Profile.readPhoto(f);
-        if (!Profile.save()) { Profile.me.photo = null; toast('Не удалось сохранить фото в браузере'); }
+      let img;
+      try { img = await Profile.loadImage(f); } catch (err) { toast(err.message || 'Не удалось загрузить фото'); return; }
+      if (app.cropUrl) URL.revokeObjectURL(app.cropUrl);
+      app.cropUrl = img.src;
+      openCropper(img, (data) => {
+        const old = Profile.me.photo;
+        Profile.me.photo = data;
+        if (!Profile.save()) { Profile.me.photo = old; toast('Не удалось сохранить фото в браузере'); }
         else toast('Фото обновлено');
-      } catch (err) { toast(err.message || 'Не удалось загрузить фото'); }
-      renderProfile(); renderHeaderAvatar();
+        renderProfile(); renderHeaderAvatar();
+      });
     };
     if ($('#photo-del')) $('#photo-del').onclick = () => { Profile.me.photo = null; Profile.save(); renderProfile(); renderHeaderAvatar(); };
+  }
+
+  /* ---------- кадрирование аватара: масштаб + перетаскивание в круге ---------- */
+  function openCropper(img, onDone) {
+    const W = img.naturalWidth, H = img.naturalHeight;
+    const m = modal(`<div class="row" style="align-items:center"><h3 style="margin:0">Аватар</h3><button type="button" class="modal-x" data-close aria-label="Закрыть">×</button></div>
+      <p class="muted" style="font-size:14px;margin:6px 0 12px">Перетащите фото и настройте масштаб — в круг попадёт то, что увидят другие.</p>
+      <div class="crop-stage" id="crop-stage"><img src="${img.src}" alt="" draggable="false" id="crop-img"><div class="crop-mask"></div></div>
+      <div class="crop-zoom"><span aria-hidden="true">−</span><input type="range" id="crop-z" min="1" max="5" step="0.01" value="1" aria-label="Масштаб"><span aria-hidden="true">+</span></div>
+      <div class="actions" style="justify-content:flex-end"><button type="button" class="btn soft" data-close>Отмена</button><button type="button" class="btn" id="crop-ok">Сохранить</button></div>`);
+    const stage = $('#crop-stage', m.el), el = $('#crop-img', m.el), zIn = $('#crop-z', m.el);
+    let V = stage.clientWidth || 280, base = V / Math.min(W, H), z = 1, ox = 0, oy = 0;
+    const sc = () => base * z;
+    const clamp = () => { const s = sc(); ox = Math.min(0, Math.max(V - W * s, ox)); oy = Math.min(0, Math.max(V - H * s, oy)); };
+    const draw = () => { clamp(); const s = sc(); el.style.width = W * s + 'px'; el.style.height = H * s + 'px'; el.style.transform = `translate(${ox}px, ${oy}px)`; };
+    const zoomTo = (nz, px = V / 2, py = V / 2) => {
+      nz = Math.max(1, Math.min(5, nz));
+      const s0 = sc(), ix = (px - ox) / s0, iy = (py - oy) / s0;
+      z = nz; const s1 = sc(); ox = px - ix * s1; oy = py - iy * s1;
+      zIn.value = z; draw();
+    };
+    ox = (V - W * base) / 2; oy = (V - H * base) / 2; draw();
+    zIn.oninput = () => zoomTo(+zIn.value);
+    stage.addEventListener('wheel', (e) => { e.preventDefault(); const r = stage.getBoundingClientRect(); zoomTo(z * (e.deltaY < 0 ? 1.1 : 1 / 1.1), e.clientX - r.left, e.clientY - r.top); }, { passive: false });
+    const pts = new Map(); let last = null, pinch = null;
+    stage.addEventListener('pointerdown', (e) => { stage.setPointerCapture(e.pointerId); pts.set(e.pointerId, { x: e.clientX, y: e.clientY }); last = { x: e.clientX, y: e.clientY }; pinch = null; });
+    stage.addEventListener('pointermove', (e) => {
+      if (!pts.has(e.pointerId)) return;
+      pts.set(e.pointerId, { x: e.clientX, y: e.clientY });
+      if (pts.size >= 2) {
+        const [a, b] = [...pts.values()], d = Math.hypot(a.x - b.x, a.y - b.y), r = stage.getBoundingClientRect();
+        if (pinch) zoomTo(pinch.z * d / pinch.d, (a.x + b.x) / 2 - r.left, (a.y + b.y) / 2 - r.top);
+        else pinch = { d, z };
+        return;
+      }
+      if (last) { ox += e.clientX - last.x; oy += e.clientY - last.y; draw(); }
+      last = { x: e.clientX, y: e.clientY };
+    });
+    const up = (e) => { pts.delete(e.pointerId); pinch = null; const rest = [...pts.values()][0]; last = rest ? { x: rest.x, y: rest.y } : null; };
+    stage.addEventListener('pointerup', up); stage.addEventListener('pointercancel', up);
+    $('#crop-ok', m.el).onclick = () => {
+      const s = sc();
+      try { const data = Profile.cropPhoto(img, { sx: -ox / s, sy: -oy / s, side: V / s }); m.close(); onDone(data); }
+      catch (err) { toast(err.message || 'Не удалось сохранить фото'); }
+    };
   }
 
   const SUBJ_NAME = { math: 'Профильная математика', rus: 'Русский язык', soc: 'Обществознание', bio: 'Биология', phys: 'Физика', chem: 'Химия' };
