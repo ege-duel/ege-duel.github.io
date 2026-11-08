@@ -653,21 +653,37 @@ body.gated { overflow: hidden; }
 .gate-list { list-style: none; padding: 0; margin: 0 0 20px; text-align: left; display: grid; gap: 8px; font-size: 14.5px; color: var(--ink2); }
 .gate-box .answer-row { width: 100%; }
 .gate-box .hint.bad { color: var(--bad, #e03131); }
-/* профиль: три колонки — настройка | профиль и статистика | друзья */
-.wrap:has(> #profile-page), #main:has(#profile-page) { max-width: 1440px !important; }
-.profile-grid.p3 { grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr) minmax(0, .95fr) !important; gap: 18px; }
+/* профиль: две колонки — профиль и статистика | друзья; настройка — в выезжающей панели */
+.wrap:has(> #profile-page), #main:has(#profile-page) { max-width: 1180px !important; }
+.profile-grid.p3 { grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr) !important; gap: 18px; }
+.pe-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 14px; }
+.pe-row h3 { margin: 0 !important; }
+.pe-open { flex: none; width: 36px; height: 36px; border-radius: 11px; border: 1px solid var(--line); background: var(--bg2); color: var(--ink2); display: grid; place-items: center; cursor: pointer; transition: color .15s, background .15s, border-color .15s, transform .15s; }
+.pe-open:hover { color: var(--accent); border-color: var(--accent); background: var(--accent-soft); transform: rotate(-8deg); }
+.pe-open:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.pe-back { position: fixed; inset: 0; z-index: 45; background: rgba(0, 0, 0, .45); opacity: 0; pointer-events: none; transition: opacity .3s ease; }
+.pe-back.open { opacity: 1; pointer-events: auto; }
+.pe-drawer { position: fixed; top: 0; right: 0; bottom: 0; z-index: 46; width: min(460px, 100vw); background: var(--bg); border-left: 1px solid var(--line); box-shadow: -20px 0 50px rgba(0, 0, 0, .3); display: flex; flex-direction: column; transform: translateX(100%); visibility: hidden; transition: transform .38s cubic-bezier(.22, .9, .3, 1), visibility 0s linear .38s; }
+.pe-drawer.open { transform: none; visibility: visible; transition: transform .38s cubic-bezier(.22, .9, .3, 1), visibility 0s; }
+.pe-head { display: flex; align-items: center; gap: 12px; padding: 18px 20px; border-bottom: 1px solid var(--line); }
+.pe-head h2 { margin: 0; font-size: 19px; }
+.pe-body { flex: 1; overflow-y: auto; padding: 18px 20px 28px; gap: 14px; overscroll-behavior: contain; }
+.pe-body .card { padding: 18px; }
+.pe-body .card h3 { margin-top: 0; }
+.pe-drawer.open .pe-body > .card { animation: pe-card .45s cubic-bezier(.22, .9, .3, 1) both; }
+.pe-drawer.open .pe-body > .card:nth-child(2) { animation-delay: .06s; }
+.pe-drawer.open .pe-body > .card:nth-child(3) { animation-delay: .12s; }
+@keyframes pe-card { from { opacity: 0; transform: translateX(28px); } to { opacity: 1; transform: none; } }
+body:has(.pe-drawer.open) { overflow: hidden; }
+@media (prefers-reduced-motion: reduce) { .pe-drawer, .pe-drawer.open, .pe-back { transition: none; } .pe-drawer.open .pe-body > .card { animation: none; } }
 .p3 > .stack { grid-column: auto !important; grid-row: auto !important; gap: 14px; }
 .p3-cap { font-size: 12.5px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; color: var(--ink3); padding: 0 4px; }
 .p3 .card h3 { margin-top: 0; }
 .p3 .pstats { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 .p3-fr { position: sticky; top: 84px; }
-@media (max-width: 1180px) {
-  .profile-grid.p3 { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) !important; }
-  .p3-fr { position: static; grid-column: 1 / -1 !important; }
-}
 @media (max-width: 760px) {
   .profile-grid.p3 { grid-template-columns: 1fr !important; }
-  .p3-info { order: 1; } .p3-fr { order: 2; } .p3-set { order: 3; }
+  .p3-fr { position: static; }
   .p3 .pstats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 /* таблица лидеров */
@@ -8365,6 +8381,7 @@ var SubjectIcons = (function () {
     const g = app.game;
     if (g && g.S && g.S.phase === 'over') recordResult(g);
     const gameTab = gameTabOf(g);
+    if (app.tab !== 'profile' || (g && app.tab === gameTab)) $$('#pe-drawer, #pe-back').forEach((x) => x.remove()); // панель настройки живёт в body
     const shop = $('#shop-btn');
     if (shop) { shop.classList.toggle('hide', !!(g && app.tab === gameTab && g.S && g.S.phase !== 'over')); shop.classList.toggle('on', app.tab === 'shop'); }
     if (g && app.tab === gameTab) { renderGame(); return; }
@@ -8603,13 +8620,17 @@ var SubjectIcons = (function () {
   function renderProfile() {
     const p = Profile.me;
     const st = p.stats;
+    if (!$('#profile-page')) app.profEdit = false; // при новом входе на страницу панель закрыта
+    $$('#pe-drawer, #pe-back').forEach((x) => x.remove());
+    const pen = '<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M4 20h4L19 9a2.8 2.8 0 0 0-4-4L4 16v4zM13.5 6.5l4 4"/></svg>';
     main().innerHTML = `
       <div id="profile-page">
       <h1>Мой профиль</h1>
       <p class="lead">Так вас увидит соперник в дуэли и друзья по вашему ID. ${Cloud.user ? 'Профиль сохраняется в вашем Google-аккаунте.' : 'Без входа профиль хранится только в этом браузере. Войдите через Google, чтобы получить свой ID и добавлять друзей.'}</p>
-      <div class="profile-grid p3">
-        <div class="stack p3-set">
-          <div class="p3-cap">⚙️ Настройка профиля</div>
+      <div class="pe-back${app.profEdit ? ' open' : ''}" id="pe-back"></div>
+      <aside class="pe-drawer${app.profEdit ? ' open' : ''}" id="pe-drawer" role="dialog" aria-modal="true" aria-label="Настройка профиля"${app.profEdit ? '' : ' inert'}>
+        <div class="pe-head"><h2>✏️ Настройка профиля</h2><button type="button" class="modal-x" id="pe-close" aria-label="Закрыть">×</button></div>
+        <div class="pe-body stack">
           <section class="card">
             <h3>Аватар</h3>
             <div class="row" style="gap:16px;align-items:center">
@@ -8640,10 +8661,12 @@ var SubjectIcons = (function () {
             <div class="card-colors">${Profile.CARDS.map((c, i) => `<button type="button" class="cc${(Profile.me.tile | 0) === i ? ' on' : ''}${c ? '' : ' none'}" data-tile="${i}" style="${c ? '--pc:' + c : ''}" title="${c ? 'Цвет ' + i : 'Стандартный'}" aria-label="${c ? 'Цвет плиток ' + i : 'Стандартный цвет плиток'}"></button>`).join('')}</div>
           </section>
         </div>
+      </aside>
+      <div class="profile-grid p3">
         <div class="stack p3-info">
           <div class="p3-cap">👤 Профиль и статистика</div>
           <section class="card">
-            <h3>Так вас видит соперник</h3>
+            <div class="pe-row"><h3>Так вас видит соперник</h3><button type="button" class="pe-open" id="pe-open" title="Редактировать профиль" aria-label="Редактировать профиль">${pen}</button></div>
             <div id="p-preview">${Profile.card(Profile.shared())}</div>
             <button type="button" class="btn soft" id="view-me" style="margin-top:10px;width:100%">👁 Посмотреть профиль</button>
           </section>
@@ -8674,10 +8697,27 @@ var SubjectIcons = (function () {
         </div>
       </div>
       </div>`;
+    // position: fixed не работает внутри анимированного main — переносим панель в body
+    document.body.append($('#pe-back'), $('#pe-drawer'));
     bindCommon();
     bindAccount();
     bindFriends();
     bindNick();
+    const peSet = (on) => {
+      app.profEdit = on;
+      const d = $('#pe-drawer');
+      d.classList.toggle('open', on); $('#pe-back').classList.toggle('open', on);
+      d.toggleAttribute('inert', !on);
+      if (on) setTimeout(() => { const c = $('#pe-close'); if (c) c.focus({ preventScroll: true }); }, 50);
+      else if ($('#pe-open')) $('#pe-open').focus({ preventScroll: true });
+    };
+    $('#pe-open').onclick = () => peSet(true);
+    $('#pe-close').onclick = () => peSet(false);
+    $('#pe-back').onclick = () => peSet(false);
+    if (!app.peKey) {
+      app.peKey = true;
+      document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && $('#pe-drawer.open') && !$('.modal.show')) $('#pe-close').click(); });
+    }
     $$('[data-card]').forEach((b) => (b.onclick = () => {
       Profile.me.card = +b.dataset.card; Profile.save();
       $$('[data-card]').forEach((x) => x.classList.toggle('on', x === b));
