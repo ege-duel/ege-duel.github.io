@@ -5594,6 +5594,7 @@ var Profile = (function () {
     return {
       name: (me.name || '').trim().slice(0, 24) || 'Игрок', bio: String(me.bio || '').slice(0, BIO_MAX), photo: me.photo || null,
       preset: me.preset | 0, color: me.color | 0, tag: me.tag, card: cardIdx(me.card), tile: cardIdx(me.tile),
+      fav: (favorite() || {}).id || '', favN: (favorite() || {}).count || 0,
       stats: { duels: st.duels, wins: st.wins, bestSolo: st.bestSolo, solved: st.solved, streak: Streak.info(me.days).count, bestStreak: Streak.info(me.days).best },
     };
   }
@@ -5604,6 +5605,7 @@ var Profile = (function () {
     const int = (v) => Math.max(0, Math.min(1e6, Math.floor(+v || 0)));
     b.tag = typeof p.tag === 'string' && /^[A-Z0-9]{6}$/.test(p.tag) ? p.tag : null;
     b.stats = Object.assign(b.stats, { solved: int(st.solved), streak: int(st.streak), bestStreak: int(st.bestStreak) });
+    b.fav = SUBJ_IDS.indexOf(p.fav) >= 0 && int(p.favN) > 0 ? { id: p.fav, count: int(p.favN) } : null;
     return b;
   }
   function applyCloud(d) {
@@ -7080,7 +7082,7 @@ var SubjectIcons = (function () {
       $$('[data-card]').forEach((x) => x.classList.toggle('on', x === b));
       updateProfilePreview();
     }));
-    if ($('#view-me')) $('#view-me').onclick = () => showProfileModal(Object.assign({ uid: Cloud.user ? Cloud.user.uid : '', self: true, online: true }, Profile.publicData()));
+    if ($('#view-me')) $('#view-me').onclick = () => showProfileModal(Object.assign({ uid: Cloud.user ? Cloud.user.uid : '', self: true, online: true }, Profile.sanitizePublic(Profile.publicData())));
     $$('[data-tile]').forEach((b) => (b.onclick = () => {
       Profile.me.tile = +b.dataset.tile; Profile.save();
       $$('[data-tile]').forEach((x) => x.classList.toggle('on', x === b));
@@ -7204,8 +7206,8 @@ var SubjectIcons = (function () {
 
   const SUBJ_NAME = { math: 'Профильная математика', rus: 'Русский язык', soc: 'Обществознание', bio: 'Биология', phys: 'Физика', chem: 'Химия' };
   const SUBJ_ICON = { math: '📐', rus: '📖', soc: '🏛️', bio: '🧬', phys: '⚛️', chem: '🧪' };
-  function favTile() {
-    const f = Profile.favorite();
+  function favTile(f) {
+    if (f === undefined) f = Profile.favorite();
     return `<div class="stat fav-stat"><b>${f ? SUBJ_ICON[f.id] + ' ' + SUBJ_NAME[f.id] : '—'}</b><span>любимый предмет${f ? ' · ' + f.count + ' ' + tasksWord(f.count) : ' — решите пару заданий'}</span></div>`;
   }
   const statusHTML = (fp) => `<span class="st-dot ${fp.online ? 'on' : ''}"></span>${fp.online ? 'Онлайн' : 'Оффлайн'}`;
@@ -7360,6 +7362,7 @@ var SubjectIcons = (function () {
         <div class="stat"><b>${Profile.winRate(st)}%</b><span>побед</span></div>
         <div class="stat"><b>${st.solved || 0}</b><span>задач решено</span></div>
         <div class="stat"><b>🔥 ${st.streak || 0}</b><span>дней подряд</span></div>
+        ${favTile(fp.fav || null)}
       </div>
       <div class="pview-show"><h3 style="margin:14px 0 6px">🏅 Витрина достижений</h3><div class="empty-show">Здесь пока ничего нет(</div></div>
     </div>`;
