@@ -8124,7 +8124,7 @@ var SubjectIcons = (function () {
   async function joinRoom(codeRaw, quiet) {
     const code = Net.normCode(codeRaw);
     app.joinCode = code;
-    if (!Net.validCode(code)) { app.joinError = 'Код комнаты — 6 символов, например 2K7MQX.'; render(); return; }
+    if (!Net.validCode(code)) { if (quiet) { sess.del('egeduel:active'); return; } app.joinError ='Код комнаты — 6 символов, например 2K7MQX.'; render(); return; }
     commitFirstNick();
     if (!app.name.trim()) { app.joinError = 'Придумайте никнейм.'; render(); return; }
     app.joinError = ''; app.busy = true; render();
@@ -8138,7 +8138,7 @@ var SubjectIcons = (function () {
       app.joinError = e && e.message === 'nolib' ? 'Не загрузилась библиотека связи. Проверьте интернет.' : e && e.message === 'badcode' ? 'Неверный код комнаты.' : 'Не удалось подключиться к серверу. Проверьте интернет.';
       render(); return;
     }
-    const g = { mode: 'guest', me: null, S: null, link, pid, pub, ui: {}, offset: 0, bestRtt: Infinity, oppOnline: true, joined: false, trio: app.tab === 'trio', online: {}, profiles: {} };
+    const g = { mode: 'guest', me: null, S: null, link, pid, pub, ui: {}, offset: 0, bestRtt: Infinity, oppOnline: true, joined: false, trio: app.tab === 'trio', online: {}, profiles: {}, quiet: !!quiet };
     app.game = g;
     sess.set('egeduel:active', { mode: 'guest', code, pid, pub });
     link.on('state', (S) => onState(S));
@@ -8280,7 +8280,12 @@ var SubjectIcons = (function () {
     }
     sess.del('egeduel:active'); sess.del('egeduel:solo');
     app.game = null;
-    if (reasonMsg) { app.joinError = reasonMsg; app.tab = g.trio ? 'trio' : 'duel'; }
+    if (reasonMsg) {
+      app.joinError = reasonMsg;
+      // тихое переподключение после перезагрузки не уводит со страницы, где человек находится
+      if (g.quiet && !g.joined) toast('Прошлая дуэль уже закрыта');
+      else app.tab = g.trio ? 'trio' : 'duel';
+    }
     render();
   }
 
@@ -9109,8 +9114,6 @@ var SubjectIcons = (function () {
   }
 
   function renderDuelHome() {
-    const params = new URLSearchParams(location.search);
-    if (!app.joinCode && params.get('room')) app.joinCode = Net.normCode(params.get('room'));
     const html = `
       ${activeGameBanner('duel')}
       ${inviteBanner()}
@@ -9127,7 +9130,7 @@ var SubjectIcons = (function () {
         <div class="stack">
           <section class="card">
             <h2>Войти по коду</h2>
-            ${app.joinCode && params.get('room') ? '<div class="notice" style="margin-bottom:14px">Вас пригласили в дуэль. Нажмите «Войти», чтобы присоединиться.</div>' : ''}
+            ${app.joinCode && app.roomLink ? '<div class="notice" style="margin-bottom:14px">Вас пригласили в дуэль. Нажмите «Войти», чтобы присоединиться.</div>' : ''}
             ${nameField('name-join')}
             <div class="field"><label for="code">Код комнаты</label><input class="input" id="code" maxlength="8" placeholder="2K7MQX" autocomplete="off" style="font-family:Unbounded,monospace;letter-spacing:.12em;text-transform:uppercase;font-size:20px" value="${esc(app.joinCode)}"></div>
             ${app.joinError ? `<div class="notice bad" style="margin-bottom:14px">${esc(app.joinError)}</div>` : ''}
@@ -9963,7 +9966,14 @@ var SubjectIcons = (function () {
       vt.finished.then(free, free);
       setTimeout(free, 1500);
     };
-    if (new URLSearchParams(location.search).get('room')) app.tab = 'duel';
+    // ссылка-приглашение ?room=… срабатывает один раз: убираем её из адреса, иначе каждая перезагрузка кидала бы в дуэли
+    const room = new URLSearchParams(location.search).get('room');
+    let isReload = false;
+    try { const nav = performance.getEntriesByType('navigation')[0]; isReload = nav ? nav.type === 'reload' : performance.navigation.type === 1; } catch (e) {}
+    if (room) {
+      if (!isReload || !view) { app.tab = 'duel'; app.joinCode = Net.normCode(room); app.roomLink = true; }
+      try { history.replaceState(null, '', location.pathname + location.hash); } catch (e) {}
+    }
     if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
     render();
     if (scrollY) requestAnimationFrame(() => window.scrollTo(0, scrollY));
