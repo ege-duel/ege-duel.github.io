@@ -8394,6 +8394,8 @@ var SubjectIcons = (function () {
   const main = () => $('#main');
 
   function render() {
+    // запоминаем страницу для перезагрузки; до init() не пишем — KaTeX может вызвать rerender раньше и затереть запись
+    if (app.inited && app.tab !== 'soon') sess.set('egeduel:view', { tab: app.tab, subject: app.subject });
     $$('nav.tabs button').forEach((b) => b.classList.toggle('on', b.dataset.tab === app.tab));
     // меню раздела (Дуэль / Соло / Правила) появляется только после выбора предмета
     const navEl = $('nav.tabs');
@@ -9908,6 +9910,13 @@ var SubjectIcons = (function () {
 
   /* ---------- старт ---------- */
   function init() {
+    // после перезагрузки остаёмся на той же странице (хранится только в этой вкладке);
+    // читаем до первого render(), который сам перезаписывает запись
+    const view = sess.get('egeduel:view', null);
+    app.inited = true;
+    const VIEWS = ['home', 'duel', 'trio', 'solo', 'rules', 'top', 'profile', 'shop'];
+    if (view && VIEWS.indexOf(view.tab) >= 0) { app.tab = view.tab; if (SUBJ[view.subject]) app.subject = view.subject; }
+    const scrollY = +(sess.get('egeduel:scroll', 0)) || 0;
     $$('nav.tabs button').forEach((b) => (b.onclick = () => { if (app.tab === b.dataset.tab) return; app.tab = b.dataset.tab; app.joinError = ''; render(); animatePage(); window.scrollTo(0, 0); }));
     window.addEventListener('resize', movePill);
     if (document.fonts && document.fonts.ready) document.fonts.ready.then(movePill);
@@ -9955,8 +9964,11 @@ var SubjectIcons = (function () {
       setTimeout(free, 1500);
     };
     if (new URLSearchParams(location.search).get('room')) app.tab = 'duel';
+    if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
     render();
+    if (scrollY) requestAnimationFrame(() => window.scrollTo(0, scrollY));
     resume();
+    window.addEventListener('pagehide', () => sess.set('egeduel:scroll', Math.round(window.scrollY)));
     window.addEventListener('beforeunload', (e) => {
       const g = app.game;
       if (g && g.mode !== 'solo' && g.S && g.S.phase !== 'over' && g.S.phase !== 'lobby') { e.preventDefault(); e.returnValue = ''; }
