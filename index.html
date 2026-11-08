@@ -7395,7 +7395,7 @@ var SubjectIcons = (function () {
   }
 
   function nameField(id) {
-    if (Profile.me.name) return `<div class="field"><label>Ваш никнейм</label><div class="nick-ro">${Profile.avatar(Profile.shared(), 28)}<b>${esc(Profile.me.name)}</b><button type="button" class="link" data-nick-edit>изменить в профиле</button></div></div>`;
+    if (Profile.me.name) return ''; // никнейм задаётся при регистрации и меняется в профиле
     return `<div class="field"><label for="${id}">Придумайте никнейм</label><input class="input" id="${id}" maxlength="24" placeholder="Например, mathking" value="${esc(app.name)}" data-first-name autocomplete="off"></div>`;
   }
 
@@ -7418,7 +7418,7 @@ var SubjectIcons = (function () {
         <div class="stack">
           <section class="card">
             <h2>Войти по коду</h2>
-            ${app.joinCode && params.get('room') ? '<div class="notice" style="margin-bottom:14px">Вас пригласили в дуэль. Введите имя и нажмите «Войти».</div>' : ''}
+            ${app.joinCode && params.get('room') ? '<div class="notice" style="margin-bottom:14px">Вас пригласили в дуэль. Нажмите «Войти», чтобы присоединиться.</div>' : ''}
             ${nameField('name-join')}
             <div class="field"><label for="code">Код комнаты</label><input class="input" id="code" maxlength="8" placeholder="2K7MQX" autocomplete="off" style="font-family:Unbounded,monospace;letter-spacing:.12em;text-transform:uppercase;font-size:20px" value="${esc(app.joinCode)}"></div>
             ${app.joinError ? `<div class="notice bad" style="margin-bottom:14px">${esc(app.joinError)}</div>` : ''}
