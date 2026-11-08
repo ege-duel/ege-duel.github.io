@@ -643,6 +643,16 @@ body.on-home .login-btn:not(.hide), body.on-home .login-btn.hide + .streak-btn {
 .crop-zoom input { flex: 1; accent-color: var(--accent); }
 .profile-grid > * { min-width: 0; }
 .answer-row .input { min-width: 0; }
+/* обязательная регистрация */
+body.gated { overflow: hidden; }
+.gate { position: fixed; inset: 0; z-index: 100; display: grid; place-items: center; padding: 16px; overflow-y: auto; background: radial-gradient(1200px 600px at 50% -10%, color-mix(in srgb, var(--accent) 22%, var(--bg)), var(--bg)); }
+.gate-box { width: 100%; max-width: 420px; background: var(--card); border: 1px solid var(--line); border-radius: 20px; padding: 28px 24px; text-align: center; display: flex; flex-direction: column; align-items: center; box-shadow: 0 20px 60px rgba(0, 0, 0, .25); animation: ip-in .35s ease; }
+.gate-logo { width: 64px; height: 64px; border-radius: 16px; margin-bottom: 6px; }
+.gate-title { font-family: "Unbounded", sans-serif; font-size: 24px; margin: 12px 0 6px; }
+.gate-lead { color: var(--ink2); font-size: 15px; margin: 0 0 16px; }
+.gate-list { list-style: none; padding: 0; margin: 0 0 20px; text-align: left; display: grid; gap: 8px; font-size: 14.5px; color: var(--ink2); }
+.gate-box .answer-row { width: 100%; }
+.gate-box .hint.bad { color: var(--bad, #e03131); }
 
 </style>
 </head>
@@ -5611,7 +5621,7 @@ var Profile = (function () {
   }
   // При регистрации: имя и фото из Google, если своих нет
   async function fillFromGoogle(u) {
-    if (!me.name && u.displayName) me.name = u.displayName.slice(0, 24);
+    // никнейм новый пользователь выбирает сам на экране регистрации (имя из Google — только подсказка)
     if (!me.photo && u.photoURL) {
       try { me.photo = await photoFromUrl(u.photoURL); } catch (e) {}
     }
@@ -6942,6 +6952,7 @@ var SubjectIcons = (function () {
   function onCloudChange() {
     app.name = Profile.me.name || '';
     renderHeaderAvatar();
+    updateGate();
     if (!app.game && (app.tab === 'duel' || app.tab === 'solo') && !$('[data-first-name]:focus')) render();
     if (Cloud.user && Profile.me.isNew) { Profile.me.isNew = false; toast('Аккаунт создан! Профиль сохранён в Google-аккаунте'); }
     if (app.tab === 'profile' && !(app.game && app.tab === (app.game.mode === 'solo' ? 'solo' : 'duel'))) renderProfile();
@@ -7072,6 +7083,50 @@ var SubjectIcons = (function () {
       });
     };
     if ($('#photo-del')) $('#photo-del').onclick = () => { Profile.me.photo = null; Profile.save(); renderProfile(); renderHeaderAvatar(); };
+  }
+
+  /* ---------- обязательная регистрация: вход через Google и никнейм ---------- */
+  function updateGate() {
+    let el = $('#gate');
+    const need = Cloud.available && (!Cloud.ready || !Cloud.user || !String(Profile.me.name || '').trim());
+    document.body.classList.toggle('gated', !!need);
+    if (!need) { if (el) el.remove(); app.gateMode = null; return; }
+    const mode = !Cloud.ready ? 'wait' : !Cloud.user ? 'login' : 'nick';
+    if (el && app.gateMode === mode && mode !== 'login') return;
+    if (!el) { el = document.createElement('div'); el.id = 'gate'; el.className = 'gate'; document.body.appendChild(el); }
+    app.gateMode = mode;
+    const li = $('.logo img');
+    const logo = li ? `<img class="gate-logo" src="${li.src}" alt="" width="64" height="64">` : '';
+    if (mode === 'wait') { el.innerHTML = `<div class="gate-box">${logo}<div class="waiting" style="justify-content:center;margin-top:10px"><span class="dot-pulse"></span> Загружаем…</div></div>`; return; }
+    if (mode === 'login') {
+      const err = Cloud.error ? `<div class="notice bad" style="margin-top:12px">${esc(Cloud.error)}</div>` : '';
+      el.innerHTML = `<div class="gate-box">${logo}
+        <h1 class="gate-title">ЕГЭ Дуэль</h1>
+        <p class="gate-lead">Чтобы начать, войдите через Google — это и есть регистрация, займёт пару секунд.</p>
+        <ul class="gate-list"><li>⚔️ Дуэли с друзьями и соло-тренировки</li><li>📈 Статистика и огонёк сохраняются в аккаунте</li><li>📱 Прогресс доступен на телефоне и компьютере</li></ul>
+        <button class="btn google wide" id="gate-login">${GOOGLE_G} Войти через Google</button>${err}</div>`;
+      $('#gate-login').onclick = async () => { const b = $('#gate-login'); b.disabled = true; await doLogin(); const b2 = $('#gate-login'); if (b2) b2.disabled = false; };
+      return;
+    }
+    const sug = String((Cloud.user && Cloud.user.displayName) || '').replace(/\s+/g, ' ').trim().slice(0, 24);
+    el.innerHTML = `<div class="gate-box">${Profile.avatar(Profile.shared(), 72)}
+      <h1 class="gate-title">Придумайте никнейм</h1>
+      <p class="gate-lead">Его увидят соперники и друзья. Потом менять никнейм можно раз в неделю.</p>
+      <div class="answer-row"><input class="input" id="gate-nick" maxlength="24" placeholder="Например, mathking" value="${esc(sug)}" autocomplete="off"><button type="button" class="btn" id="gate-ok">Готово</button></div>
+      <div class="hint" id="gate-err" style="margin-top:8px">От 2 до 24 символов.</div>
+      <button type="button" class="link" id="gate-out" style="margin-top:14px">Войти в другой аккаунт</button></div>`;
+    const inp = $('#gate-nick');
+    const go = () => {
+      const err = Profile.setNick(inp.value);
+      if (err) { $('#gate-err').textContent = err; $('#gate-err').classList.add('bad'); inp.focus(); return; }
+      app.name = Profile.me.name;
+      updateGate(); renderHeaderAvatar(); app.rendered = null; render();
+      toast('Добро пожаловать, ' + Profile.me.name + '!');
+    };
+    $('#gate-ok').onclick = go;
+    inp.addEventListener('keydown', (e) => { if (e.key === 'Enter') go(); });
+    $('#gate-out').onclick = async () => { await Cloud.signOut(); app.name = ''; };
+    setTimeout(() => { inp.focus(); inp.select(); }, 50);
   }
 
   /* ---------- кадрирование аватара: масштаб + перетаскивание в круге ---------- */
@@ -7974,6 +8029,7 @@ var SubjectIcons = (function () {
     Cloud.onInvites(showInvites);
     setInterval(renderHeaderAvatar, 60000); // смена суток
     Cloud.on(onCloudChange);
+    updateGate();
     Cloud.init();
     const tb = $('#theme');
     const applyTheme = (t) => { if (t) document.documentElement.setAttribute('data-theme', t); else document.documentElement.removeAttribute('data-theme'); };
@@ -8014,7 +8070,7 @@ var SubjectIcons = (function () {
       if (g && g.mode !== 'solo' && g.S && g.S.phase !== 'over' && g.S.phase !== 'lobby') { e.preventDefault(); e.returnValue = ''; }
     });
   }
-  window.EGEApp = { rerender: () => { app.rendered = null; render(); }, _app: app };
+  window.EGEApp = { rerender: () => { app.rendered = null; render(); }, gate: () => updateGate(), _app: app };
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
 })();
 
