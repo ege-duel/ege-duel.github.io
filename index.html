@@ -685,6 +685,43 @@ body.gated { overflow: hidden; }
 .top-score b { font-family: "Unbounded", sans-serif; font-size: 17px; }
 .top-score small { font-size: 11.5px; color: var(--ink3); }
 @media (max-width: 420px) { .top-place { width: 22px; } .top-card { padding: 10px; } }
+/* трио */
+.hud.trio { display: block; }
+.hud.trio .center-hud { text-align: center; margin-bottom: 10px; }
+.trio-row { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.tp { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 10px 8px; border: 1px solid var(--line); border-radius: 14px; background: var(--card); min-width: 0; text-align: center; }
+.tp.me { border: 2px solid var(--accent); }
+.tp.gone { opacity: .55; }
+.tp .tp-who { flex-direction: column; gap: 4px; border: 0; background: none; padding: 0; font: inherit; color: inherit; cursor: pointer; }
+.tp .tp-who:disabled { cursor: default; }
+.tp .tp-who:not(:disabled):hover .pname { color: var(--accent); }
+.tp .pname { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%; font-size: 14px; }
+.tp .hearts { justify-content: center; }
+.tp .heart { width: 16px; height: 16px; }
+.verdicts.trio { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.versus.trio { grid-template-columns: 1fr auto 1fr auto 1fr; }
+.trio-table { width: 100%; max-width: 520px; margin: 20px auto; border-collapse: collapse; font-size: 15px; text-align: left; }
+.trio-table td, .trio-table th { padding: 8px 10px; border-bottom: 1px solid var(--line); }
+.trio-table th { color: var(--ink3); font-size: 12px; text-transform: uppercase; letter-spacing: .04em; }
+.trio-table tr.me td { background: color-mix(in srgb, var(--accent) 12%, transparent); font-weight: 700; }
+.trio-table .tt-place { font-size: 20px; width: 56px; }
+.lobby-pl { display: grid; gap: 8px; margin-top: 8px; text-align: left; }
+.lp { display: flex; align-items: center; gap: 10px; padding: 8px 12px; border: 1px solid var(--line); border-radius: 12px; background: var(--bg); min-width: 0; }
+.lp b { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.lp.empty { border-style: dashed; }
+.lp-ava { width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; background: var(--bg2); color: var(--ink3); font-weight: 800; flex: none; }
+.lp-tag { margin-left: auto; font-size: 11.5px; font-weight: 700; color: var(--ink3); background: var(--bg2); padding: 2px 8px; border-radius: 8px; }
+@media (max-width: 700px) {
+  .verdicts.trio { grid-template-columns: 1fr; }
+  .versus.trio { grid-template-columns: 1fr; }
+}
+@media (max-width: 480px) {
+  .trio-row { gap: 6px; }
+  .tp { padding: 8px 4px; }
+  .tp .pname { font-size: 12.5px; }
+  .tp .heart { width: 13px; height: 13px; }
+  .tp .pstat { font-size: 11px; }
+}
 
 </style>
 </head>
@@ -695,6 +732,7 @@ body.gated { overflow: hidden; }
     <nav class="tabs">
       <span class="tab-pill" aria-hidden="true"></span>
       <button data-tab="duel">Дуэль</button>
+      <button data-tab="trio">Трио</button>
       <button data-tab="solo">Соло</button>
       <button data-tab="rules">Правила</button>
       <button data-tab="top">🏆 100</button>
@@ -5378,7 +5416,8 @@ var Net = (function () {
 
   function available() { return typeof window.mqtt !== 'undefined' && typeof window.mqtt.connect === 'function'; }
 
-  function connectOne(idx, role, code, onStatus) {
+  function connectOne(idx, role, code, onStatus, pres) {
+    pres = pres || role;
     return new Promise((resolve, reject) => {
       const base = PREFIX + code + '/';
       const client = window.mqtt.connect(BROKERS[idx], {
@@ -5388,12 +5427,12 @@ var Net = (function () {
         connectTimeout: 8000,
         clean: true,
         resubscribe: true,
-        will: { topic: base + 'presence/' + role, payload: '0', qos: 1, retain: true },
+        will: { topic: base + 'presence/' + pres, payload: '0', qos: 1, retain: true },
       });
       let done = false;
       const timer = setTimeout(() => { if (!done) { done = true; try { client.end(true); } catch (e) {} reject(new Error('timeout')); } }, 9000);
       client.on('connect', () => {
-        client.publish(base + 'presence/' + role, '1', { qos: 1, retain: true });
+        client.publish(base + 'presence/' + pres, '1', { qos: 1, retain: true });
         if (onStatus) onStatus(true);
         if (!done) { done = true; clearTimeout(timer); resolve(client); }
       });
@@ -5404,8 +5443,8 @@ var Net = (function () {
   }
 
   class Link {
-    constructor(client, code, role) {
-      this.client = client; this.code = code; this.role = role;
+    constructor(client, code, role, pres) {
+      this.client = client; this.code = code; this.role = role; this.pres = pres || role;
       this.base = PREFIX + code + '/';
       this.handlers = {};
       client.on('message', (topic, payload) => {
@@ -5425,7 +5464,7 @@ var Net = (function () {
     }
     clear(sub) { this.client.publish(this.base + sub, '', { qos: 1, retain: true }); }
     close() {
-      try { this.client.publish(this.base + 'presence/' + this.role, '0', { qos: 1, retain: true }); } catch (e) {}
+      try { this.client.publish(this.base + 'presence/' + this.pres, '0', { qos: 1, retain: true }); } catch (e) {}
       const c = this.client;
       setTimeout(() => { try { c.end(false); } catch (e) {} }, 400);
     }
@@ -5452,12 +5491,12 @@ var Net = (function () {
     return new Link(c, code, 'host');
   }
 
-  async function join(code, onStatus) {
+  async function join(code, onStatus, pres) {
     if (!available()) throw new Error('nolib');
     const idx = +code[0] - 1;
     if (!(idx >= 0 && idx < BROKERS.length)) throw new Error('badcode');
-    const c = await connectOne(idx, 'guest', code, onStatus);
-    return new Link(c, code, 'guest');
+    const c = await connectOne(idx, 'guest', code, onStatus, pres);
+    return new Link(c, code, 'guest', pres);
   }
 
   function normCode(s) {
@@ -6260,7 +6299,7 @@ var SubjectIcons = (function () {
     joinError: '',
     busy: false,
   };
-  ['math', 'bio', 'soc', 'phys', 'rus'].forEach((sid) => { app.draft[sid] = { duel: loadDraft(sid, 'duel'), solo: loadDraft(sid, 'solo') }; });
+  ['math', 'bio', 'soc', 'phys', 'rus'].forEach((sid) => { app.draft[sid] = { duel: loadDraft(sid, 'duel'), trio: loadDraft(sid, 'trio'), solo: loadDraft(sid, 'solo') }; });
   const draft = (key) => app.draft[app.subject][key];
   const saveDraft = (key) => store.set(setKey(app.subject, key), app.draft[app.subject][key]);
 
@@ -6311,12 +6350,29 @@ var SubjectIcons = (function () {
     return {
       v: 1, seq: 0, id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6), gameNo: 1, code: code || null, settings: Object.assign({}, settings),
       phase: code ? 'lobby' : 'ready', round: 0,
-      players: { host: { name: hostName, lives: settings.lives, answered: false, ready: false }, guest: null },
+      players: Object.assign({ host: { name: hostName, lives: settings.lives, answered: false, ready: false }, guest: null }, settings.size === 3 ? { guest2: null } : {}),
       task: null, deadline: 0, result: null, history: [], winner: null, reason: null,
     };
   }
-  const roles = (S) => (S.players.guest ? ['host', 'guest'] : ['host']);
+  const ALL_ROLES = ['host', 'guest', 'guest2'];
+  const roles = (S) => ALL_ROLES.filter((r) => S.players[r]);
   const isSolo = (S) => !S.code;
+  const isTrio = (S) => !!(S && S.settings && S.settings.size === 3);
+  const seats = (S) => (isTrio(S) ? ALL_ROLES : ['host', 'guest']);
+  // в трио игрок без жизней выбывает (out), а вышедший из комнаты помечается left
+  const inGame = (S, r) => { const p = S.players[r]; return !!p && !p.left && !p.out; };
+  const active = (S) => roles(S).filter((r) => inGame(S, r));
+  const okCount = (S, r) => S.history.filter((h) => h[r]).length;
+  const roleByPub = (S, pub) => ALL_ROLES.find((r) => r !== 'host' && S.players[r] && S.players[r].pub === pub) || null;
+  const gameTabOf = (g) => (!g ? null : g.mode === 'solo' ? 'solo' : g.trio ? 'trio' : 'duel');
+  // места в трио: оставшиеся в игре выше выбывших, затем по жизням и верным ответам
+  function standings(S) {
+    const key = (r) => { const p = S.players[r]; return [p.left ? 0 : 1, p.out ? p.outRound || 0 : 1e9, S.settings.lives ? p.lives : 0, okCount(S, r)]; };
+    const cmp = (a, b) => { for (let i = 0; i < 4; i++) if (a.k[i] !== b.k[i]) return b.k[i] - a.k[i]; return 0; };
+    const list = roles(S).map((r) => ({ r, k: key(r) })).sort(cmp);
+    list.forEach((x, i) => { x.place = i && cmp(list[i - 1], x) === 0 ? list[i - 1].place : i + 1; });
+    return list;
+  }
 
   function pickNum(S, P) {
     const st = S.settings;
@@ -6344,12 +6400,12 @@ var SubjectIcons = (function () {
   }
 
   function submitAnswer(S, P, role, value) {
-    if (S.phase !== 'question' || !S.players[role] || S.players[role].answered) return false;
-    const grace = role === 'guest' ? GRACE : 400;
+    if (S.phase !== 'question' || !inGame(S, role) || S.players[role].answered) return false;
+    const grace = role !== 'host' ? GRACE : 400;
     if (S.deadline && Date.now() > S.deadline + grace) return false;
     P.answers[role] = { value: String(value).slice(0, 200) };
     S.players[role].answered = true;
-    if (roles(S).every((r) => S.players[r].answered)) finishRound(S, P);
+    if (active(S).every((r) => S.players[r].answered)) finishRound(S, P);
     return true;
   }
 
@@ -6357,25 +6413,26 @@ var SubjectIcons = (function () {
     if (S.phase !== 'question') return;
     const t = P.task;
     const v = {}, h = { round: S.round, num: t.num };
-    roles(S).forEach((r) => {
+    active(S).forEach((r) => {
       const a = P.answers[r];
       const ok = a ? E.check(t, a.value) : false;
       v[r] = { value: a ? a.value : null, ok, timeout: !a };
       if (!ok && S.settings.lives) S.players[r].lives = Math.max(0, S.players[r].lives - 1); // при безлимите жизни не тратятся
       h[r] = ok;
     });
+    if (isTrio(S) && S.settings.lives) active(S).forEach((r) => { if (S.players[r].lives <= 0) { S.players[r].out = true; S.players[r].outRound = S.round; } });
     S.history.push(h);
     S.result = { answer: E.answerText(t), short: t.short, full: t.full, v };
     S.deadline = 0;
     roles(S).forEach((r) => { S.players[r].ready = false; });
-    const alive = roles(S).filter((r) => !S.settings.lives || S.players[r].lives > 0);
+    const alive = isTrio(S) ? active(S) : roles(S).filter((r) => !S.settings.lives || S.players[r].lives > 0);
     const lastRound = S.settings.rounds && S.round >= S.settings.rounds;
     if (isSolo(S)) {
       if (!alive.length) { S.phase = 'over'; S.reason = 'lives'; }
       else if (lastRound) { S.phase = 'over'; S.reason = 'rounds'; }
       else S.phase = 'result';
     } else if (alive.length < 2) {
-      S.phase = 'over'; S.reason = 'lives'; S.winner = alive.length ? alive[0] : 'draw';
+      S.phase = 'over'; S.reason = 'lives'; S.winner = alive.length ? alive[0] : isTrio(S) ? roundsWinner(S) : 'draw';
     } else if (lastRound) {
       // все раунды сыграны: побеждает тот, у кого больше жизней, затем — больше верных ответов
       S.phase = 'over'; S.reason = 'rounds'; S.winner = roundsWinner(S);
@@ -6383,6 +6440,7 @@ var SubjectIcons = (function () {
   }
 
   function roundsWinner(S) {
+    if (isTrio(S)) { const st = standings(S); return st.length > 1 && st[1].place === 1 ? 'draw' : st[0].r; }
     const H = S.players.host, G = S.players.guest;
     if (S.settings.lives && H.lives !== G.lives) return H.lives > G.lives ? 'host' : 'guest';
     const ok = (r) => S.history.filter((h) => h[r]).length;
@@ -6397,14 +6455,15 @@ var SubjectIcons = (function () {
   function setReady(S, P, role) {
     if (!S.players[role]) return;
     if (S.phase === 'ready' || S.phase === 'result') {
+      if (isTrio(S) && !inGame(S, role)) return;
       S.players[role].ready = true;
-      const need = isSolo(S) ? ['host'] : ['host', 'guest'];
+      const need = isSolo(S) ? ['host'] : isTrio(S) ? active(S) : ['host', 'guest'];
       if (need.every((r) => S.players[r] && S.players[r].ready)) startRound(S, P);
     } else if (S.phase === 'over' && S.reason !== 'leave' && S.reason !== 'quit') {
       S.players[role].ready = true; // хочет реванш
       if (roles(S).every((r) => S.players[r].ready)) {
         E.resetMemory();
-        roles(S).forEach((r) => { S.players[r].lives = S.settings.lives; });
+        roles(S).forEach((r) => { S.players[r].lives = S.settings.lives; S.players[r].out = false; S.players[r].outRound = 0; });
         S.history = []; S.round = 0; S.winner = null; S.reason = null; S.gameNo = (S.gameNo || 1) + 1;
         startRound(S, P);
       }
@@ -6453,9 +6512,11 @@ var SubjectIcons = (function () {
   }
 
   // ---- хозяин ----
-  async function createRoom() {
-    const st = validSettings(draft('duel'));
+  async function createRoom(trio) {
+    trio = trio === true;
+    const st = validSettings(draft(trio ? 'trio' : 'duel'));
     if (!st) return;
+    if (trio) st.size = 3;
     commitFirstNick();
     if (!app.name.trim()) { toast('Придумайте никнейм'); $('#name-duel') && $('#name-duel').focus(); return; }
     app.busy = true; render();
@@ -6470,49 +6531,106 @@ var SubjectIcons = (function () {
     app.busy = false;
     E.resetMemory();
     const S = newState(st, app.name.trim(), link.code);
-    app.game = { mode: 'host', me: 'host', S, P: {}, link, ui: {}, oppOnline: false };
+    app.game = { mode: 'host', me: 'host', S, P: { pids: {} }, link, ui: {}, oppOnline: false, trio, online: {}, profiles: {} };
     bindHost(link);
     sess.set('egeduel:active', { mode: 'host', code: link.code });
     commit();
-    sendPendingInvite(link.code);
+    if (!trio) sendPendingInvite(link.code);
   }
 
   function bindHost(link) {
     const g = app.game;
+    g.online = g.online || {}; g.profiles = g.profiles || {};
+    if (!g.P.pids) g.P.pids = {};
     link.on('g2h', (m) => onGuestMsg(m));
-    link.on('presence/guest', (v) => { g.oppOnline = v === '1'; render(); });
-    // визитка гостя (хозяин сам её публикует; после перезагрузки страницы берём сохранённую)
-    link.on('profile/guest', (p) => { if (p && typeof p === 'object' && !g.oppProfile) { g.oppProfile = Profile.sanitize(p); render(); } });
+    roles(g.S).forEach((r) => { if (r !== 'host') watchPresence(g, g.S.players[r].pub); });
+    // визитки гостей (хозяин сам их публикует; после перезагрузки страницы берём сохранённые)
+    ['guest', 'guest2'].forEach((r) => link.on('profile/' + r, (p) => { if (p && typeof p === 'object' && !g.profiles[r]) { g.profiles[r] = Profile.sanitize(p); render(); } }));
     link.send('profile/host', Profile.shared(), { retain: true });
+  }
+
+  // «в сети» для гостя с публичным id pub
+  function watchPresence(g, pub) {
+    if (!pub) return;
+    g.watched = g.watched || {};
+    if (g.watched[pub]) return;
+    g.watched[pub] = true;
+    g.link.on('presence/g_' + pub, (v) => {
+      if (app.game !== g || !g.S) return;
+      const r = roleByPub(g.S, pub);
+      if (!r) return;
+      g.online[r] = v === '1';
+      if (g.mode === 'host' && r === 'guest' && !isTrio(g.S)) g.oppOnline = g.online[r];
+      render();
+    });
+  }
+
+  // трио: игрок вышел из комнаты
+  function trioLeave(S, P, role) {
+    const p = S.players[role];
+    if (!p) return;
+    const g = app.game;
+    if (S.phase === 'lobby' || S.phase === 'ready') {
+      // игра ещё не началась — место освобождается
+      S.players[role] = null;
+      if (P.pids) delete P.pids[role];
+      if (g && g.profiles) delete g.profiles[role];
+      S.phase = 'lobby';
+      roles(S).forEach((r) => { S.players[r].ready = false; });
+      return;
+    }
+    p.left = true; p.ready = false;
+    if (S.phase === 'over') return;
+    const alive = active(S);
+    if (alive.length < 2) { S.phase = 'over'; S.deadline = 0; S.reason = 'leave'; S.winner = alive.length ? alive[0] : roundsWinner(S); }
+    else if (S.phase === 'question' && alive.every((r) => S.players[r].answered)) finishRound(S, P);
+    else if (S.phase === 'result' && alive.every((r) => S.players[r].ready)) startRound(S, P);
   }
 
   function onGuestMsg(m) {
     const g = app.game;
     if (!g || g.mode !== 'host' || !m || typeof m !== 'object') return;
     const S = g.S, P = g.P;
-    if (m.type === 'ping') { g.link.send('h2g', { type: 'pong', t: m.t, h: Date.now(), pid: m.pid }, { qos: 0 }); return; }
+    if (m.type === 'ping') { g.link.send('h2g', { type: 'pong', t: m.t, h: Date.now(), pub: m.pub }, { qos: 0 }); return; }
+    if (!P.pids) P.pids = {};
+    const roleOf = (pid) => (pid ? ALL_ROLES.find((r) => r !== 'host' && S.players[r] && P.pids[r] === pid) : null) || null;
     if (m.type === 'join') {
-      const acceptProfile = () => {
+      const pub = String(m.pub || '');
+      if (!/^[A-Z0-9]{8}$/.test(pub) || typeof m.pid !== 'string') return;
+      const accept = (r) => {
         const p = Profile.sanitize(m.profile) || Profile.fallback(String(m.name || 'Соперник'));
-        g.oppProfile = p;
-        g.link.send('profile/guest', p, { retain: true });
+        g.profiles[r] = p;
+        g.link.send('profile/' + r, p, { retain: true });
+        g.online[r] = true;
+        if (!isTrio(S)) g.oppOnline = true;
       };
-      if ((!S.players.guest && S.phase === 'lobby') || (S.players.guest && S.players.guest.pid === m.pid)) acceptProfile();
-      if (!S.players.guest && S.phase === 'lobby') {
-        S.players.guest = { pid: m.pid, name: String(m.name || 'Соперник').slice(0, 24), lives: S.settings.lives, answered: false, ready: false };
-        S.phase = 'ready';
-        g.oppOnline = true;
-        toast((S.players.guest.name) + ' в игре!');
+      let role = roleOf(m.pid);
+      if (!role && S.phase === 'lobby') {
+        role = seats(S).find((r) => r !== 'host' && !S.players[r]);
+        if (!role) return;
+        S.players[role] = { pub, name: String(m.name || 'Соперник').slice(0, 24), lives: S.settings.lives, answered: false, ready: false };
+        P.pids[role] = m.pid;
+        accept(role);
+        watchPresence(g, pub);
+        if (seats(S).every((r) => S.players[r])) S.phase = 'ready';
+        toast(S.players[role].name + ' в игре!');
         commit();
-      } else if (S.players.guest && S.players.guest.pid === m.pid) {
-        g.oppOnline = true;
+      } else if (role) {
+        accept(role);
         commit(); // повторное подключение — просто отправим состояние
       }
       return;
     }
-    if (!S.players.guest || m.pid !== S.players.guest.pid) return;
-    if (m.type === 'answer' && m.round === S.round) { if (submitAnswer(S, P, 'guest', m.value)) commit(); else commit(); }
-    else if (m.type === 'ready' && m.round === S.round) { setReady(S, P, 'guest'); commit(); }
+    const role = roleOf(m.pid);
+    if (!role) return;
+    if (m.type === 'answer' && m.round === S.round) { submitAnswer(S, P, role, m.value); commit(); }
+    else if (m.type === 'ready' && m.round === S.round) { setReady(S, P, role); commit(); }
+    else if (m.type === 'leave' && isTrio(S)) {
+      const nm = S.players[role].name;
+      trioLeave(S, P, role);
+      toast(nm + ' вышел(а) из комнаты');
+      commit();
+    }
     else if (m.type === 'leave') {
       if (S.phase !== 'over') {
         S.phase = 'over';
@@ -6533,27 +6651,29 @@ var SubjectIcons = (function () {
     commitFirstNick();
     if (!app.name.trim()) { app.joinError = 'Придумайте никнейм.'; render(); return; }
     app.joinError = ''; app.busy = true; render();
-    const pid = (sess.get('egeduel:active', {}) || {}).code === code ? sess.get('egeduel:active').pid : Net.rid(12);
+    const prev = sess.get('egeduel:active', {}) || {};
+    const pid = prev.code === code && prev.pid ? prev.pid : Net.rid(12);
+    const pub = prev.code === code && prev.pub ? prev.pub : Net.rid(8);
     let link;
-    try { link = await Net.join(code, onConn); }
+    try { link = await Net.join(code, onConn, 'g_' + pub); }
     catch (e) {
       app.busy = false;
       app.joinError = e && e.message === 'nolib' ? 'Не загрузилась библиотека связи. Проверьте интернет.' : e && e.message === 'badcode' ? 'Неверный код комнаты.' : 'Не удалось подключиться к серверу. Проверьте интернет.';
       render(); return;
     }
-    const g = { mode: 'guest', me: 'guest', S: null, link, pid, ui: {}, offset: 0, bestRtt: Infinity, oppOnline: true, joined: false };
+    const g = { mode: 'guest', me: null, S: null, link, pid, pub, ui: {}, offset: 0, bestRtt: Infinity, oppOnline: true, joined: false, trio: app.tab === 'trio', online: {}, profiles: {} };
     app.game = g;
-    sess.set('egeduel:active', { mode: 'guest', code, pid });
+    sess.set('egeduel:active', { mode: 'guest', code, pid, pub });
     link.on('state', (S) => onState(S));
     link.on('h2g', (m) => {
-      if (m && m.type === 'pong' && m.pid === pid) {
+      if (m && m.type === 'pong' && m.pub === pub) {
         const now = Date.now(), rtt = now - m.t;
         if (rtt < g.bestRtt + 30) { g.bestRtt = Math.min(g.bestRtt, rtt); g.offset = m.h - (m.t + rtt / 2); }
       }
     });
-    link.on('presence/host', (v) => { g.oppOnline = v === '1'; render(); });
-    link.on('profile/host', (p) => { if (p && typeof p === 'object') { g.oppProfile = Profile.sanitize(p); render(); } });
-    const sendJoin = () => link.send('g2h', { type: 'join', pid, name: app.name.trim().slice(0, 24), profile: Profile.shared() });
+    link.on('presence/host', (v) => { g.oppOnline = v === '1'; g.online.host = g.oppOnline; render(); });
+    ALL_ROLES.forEach((r) => link.on('profile/' + r, (p) => { if (p && typeof p === 'object') { g.profiles[r] = Profile.sanitize(p); render(); } }));
+    const sendJoin = () => link.send('g2h', joinMsg(g));
     sendJoin();
     let n = 0;
     g.joinTimer = setInterval(() => {
@@ -6567,10 +6687,10 @@ var SubjectIcons = (function () {
     }, 2000);
     // синхронизация часов
     let pings = 0;
-    const ping = () => { if (app.game !== g) return; link.send('g2h', { type: 'ping', pid, t: Date.now() }, { qos: 0 }); pings++; g.pingTimer = setTimeout(ping, pings < 4 ? 1500 : 15000); };
+    const ping = () => { if (app.game !== g) return; link.send('g2h', { type: 'ping', pid, pub, t: Date.now() }, { qos: 0 }); pings++; g.pingTimer = setTimeout(ping, pings < 4 ? 1500 : 15000); };
     ping();
     app.busy = false;
-    if (!quiet) app.tab = 'duel'; // при восстановлении после перезагрузки остаёмся на главной
+    if (!quiet) app.tab = g.trio ? 'trio' : 'duel'; // при восстановлении после перезагрузки остаёмся на главной
     render();
   }
 
@@ -6578,17 +6698,23 @@ var SubjectIcons = (function () {
     const g = app.game;
     if (!g || g.mode !== 'guest' || !S || typeof S !== 'object' || !S.players) return;
     if (g.S && S.seq <= g.S.seq && S.code === g.S.code) return;
-    if (S.players.guest && S.players.guest.pid !== g.pid) {
-      if (!g.joined) leaveGame(true, 'В этой комнате уже идёт игра с другим участником.');
-      return;
+    const mine = roleByPub(S, g.pub);
+    if (!mine) {
+      const full = seats(S).every((r) => S.players[r]);
+      if (g.joined) return;
+      if (full) { leaveGame(true, isTrio(S) ? 'В этой комнате уже собрались три игрока.' : 'В этой комнате уже идёт игра с другим участником.'); return; }
+      g.S = S; render(); return; // ещё не приняты
     }
-    if (!S.players.guest) { g.S = S; render(); return; } // ещё не приняты
+    g.me = mine;
+    const t = isTrio(S);
+    if (g.trio !== t) { const wasHere = app.tab === gameTabOf(g); g.trio = t; if (wasHere) app.tab = gameTabOf(g); }
+    roles(S).forEach((r) => { if (r !== 'host' && r !== mine) watchPresence(g, S.players[r].pub); });
     if (!g.joined) { g.joined = true; toast('Вы в комнате'); }
     app.subject = subjOfState(S);
     if (g.bestRtt === Infinity && S.now) g.offset = S.now - Date.now();
     g.S = S;
     // сбросим ожидающие действия, если хозяин их уже учёл
-    const me = S.players.guest;
+    const me = S.players[mine];
     if (g.ui.pendingAnswer && (g.ui.pendingAnswer.round !== S.round || me.answered || S.phase !== 'question')) g.ui.pendingAnswer = null;
     if (g.ui.pendingReady && (g.ui.pendingReady.round !== S.round || me.ready || g.ui.pendingReady.phase !== S.phase)) g.ui.pendingReady = null;
     render();
@@ -6614,7 +6740,7 @@ var SubjectIcons = (function () {
     const g = app.game;
     if (!g) return;
     if (g.mode === 'guest') {
-      if (g.S.phase !== 'question' || g.S.players.guest.answered || g.ui.pendingAnswer) return;
+      if (g.S.phase !== 'question' || !g.me || !inGame(g.S, g.me) || g.S.players[g.me].answered || g.ui.pendingAnswer) return;
       const msg = guestSend('answer', { value: String(value) });
       g.ui.pendingAnswer = { round: g.S.round, msg, at: Date.now(), value: String(value) };
       g.ui.myValue = String(value);
@@ -6631,7 +6757,7 @@ var SubjectIcons = (function () {
     const g = app.game;
     if (!g) return;
     if (g.mode === 'guest') {
-      if (g.S.players.guest.ready || g.ui.pendingReady) return;
+      if (!g.me || g.S.players[g.me].ready || g.ui.pendingReady) return;
       const msg = guestSend('ready');
       g.ui.pendingReady = { round: g.S.round, phase: g.S.phase, msg, at: Date.now() };
       render();
@@ -6649,18 +6775,24 @@ var SubjectIcons = (function () {
     const S = g.S;
     if (!silent) {
       const inPlay = S && S.phase !== 'over' && S.phase !== 'lobby' && g.mode !== 'solo';
-      const q = g.mode === 'solo' ? (S.phase === 'over' ? null : 'Завершить игру?') : inPlay ? (S.settings.lives ? 'Выйти из дуэли? Это будет засчитано как поражение.' : 'Завершить дуэль? Жизни безлимитные, поэтому победитель определится по числу верных ответов.') : null;
+      const q = g.mode === 'solo' ? (S.phase === 'over' ? null : 'Завершить игру?') : inPlay && isTrio(S) ? (g.mode === 'host' ? 'Вы создали комнату: если выйти, игра закончится для всех. Выйти?' : inGame(S, g.me) ? 'Выйти из трио? Вы выбудете из игры.' : null) : inPlay ? (S.settings.lives ? 'Выйти из дуэли? Это будет засчитано как поражение.' : 'Завершить дуэль? Жизни безлимитные, поэтому победитель определится по числу верных ответов.') : null;
       if (q && !confirm(q)) return;
     }
     clearInterval(g.joinTimer); clearTimeout(g.pingTimer);
     if (app.invitedUid) { Cloud.cancelInvite(app.invitedUid); app.invitedUid = null; }
-    if (g.mode === 'host') {
+    if (g.mode === 'host' && isTrio(S)) {
+      if (S.phase === 'lobby' && roles(S).length > 1) { S.phase = 'over'; S.reason = 'closed'; S.seq++; S.now = Date.now(); g.link.send('state', S, { retain: true }); }
+      else if (S.phase !== 'lobby' && S.phase !== 'over') { S.players.host.left = true; S.phase = 'over'; S.deadline = 0; S.reason = 'leave'; S.winner = roundsWinner(S); S.seq++; S.now = Date.now(); g.link.send('state', S, { retain: true }); }
+      if (S.phase === 'lobby' || S.reason === 'closed' || S.phase === 'over') { ['state', 'profile/host', 'profile/guest', 'profile/guest2'].forEach((t) => g.link.clear(t)); }
+      store.del('egeduel:host:' + S.code);
+      g.link.close();
+    } else if (g.mode === 'host') {
       if (S.phase === 'lobby' || S.phase === 'over') { g.link.clear('state'); g.link.clear('profile/host'); g.link.clear('profile/guest'); }
       else { S.phase = 'over'; if (S.settings.lives) { S.winner = 'guest'; S.reason = 'leave'; } else { S.winner = roundsWinner(S); S.reason = 'stop'; S.stopBy = 'host'; } S.seq++; S.now = Date.now(); g.link.send('state', S, { retain: true }); }
       store.del('egeduel:host:' + S.code);
       g.link.close();
     } else if (g.mode === 'guest') {
-      if (S && S.players && S.players.guest && S.players.guest.pid === g.pid) g.link.send('g2h', { type: 'leave', pid: g.pid });
+      if (S && S.players && g.me && S.players[g.me] && S.players[g.me].pub === g.pub) g.link.send('g2h', { type: 'leave', pid: g.pid });
       g.link.close();
     } else if (g.mode === 'solo' && S.phase !== 'over' && !silent) {
       // соло: показать итоги
@@ -6671,7 +6803,7 @@ var SubjectIcons = (function () {
     }
     sess.del('egeduel:active'); sess.del('egeduel:solo');
     app.game = null;
-    if (reasonMsg) { app.joinError = reasonMsg; app.tab = 'duel'; }
+    if (reasonMsg) { app.joinError = reasonMsg; app.tab = g.trio ? 'trio' : 'duel'; }
     render();
   }
 
@@ -6680,9 +6812,11 @@ var SubjectIcons = (function () {
     if (el) el.classList.toggle('show', !ok && !!app.game && app.game.mode !== 'solo');
     if (ok && app.game && app.game.mode === 'host') setTimeout(() => commit(), 100);
     if (ok && app.game && app.game.mode === 'guest' && app.game.link) {
-      app.game.link.send('g2h', { type: 'join', pid: app.game.pid, name: app.name.trim().slice(0, 24), profile: Profile.shared() });
+      app.game.link.send('g2h', joinMsg(app.game));
     }
   }
+
+  function joinMsg(g) { return { type: 'join', pid: g.pid, pub: g.pub, name: app.name.trim().slice(0, 24), profile: Profile.shared() }; }
 
   // ---- восстановление после перезагрузки страницы ----
   async function resume() {
@@ -6698,7 +6832,7 @@ var SubjectIcons = (function () {
       if (!d || !d.S) { sess.del('egeduel:active'); return; }
       try {
         const link = await Net.hostExisting(a.code, onConn);
-        app.game = { mode: 'host', me: 'host', S: d.S, P: d.P || {}, link, ui: {}, oppOnline: false };
+        app.game = { mode: 'host', me: 'host', S: d.S, P: d.P || {}, link, ui: {}, oppOnline: false, trio: isTrio(d.S), online: {}, profiles: {} };
         app.subject = subjOfState(d.S);
         bindHost(link);
         // остаёмся на главной: вернуться к игре можно по плашке «У вас идёт дуэль»
@@ -6736,7 +6870,9 @@ var SubjectIcons = (function () {
       s += `<button type="button" class="chip ${rCustom ? 'on' : ''}" data-set="rounds-custom">Своё…</button></div>`;
       s += `<div class="row ${rCustom ? '' : 'hide'}" style="margin-top:8px"><input class="input" style="max-width:110px" type="number" min="1" max="100" data-set="rounds-num" value="${rCustom ? R : 15}"> <span class="muted">раундов (от 1 до 100)</span></div>`;
       const inf = +d.lives === 0;
-      const rh = key === 'solo'
+      const rh = key === 'trio'
+        ? (R ? (inf ? 'После последнего раунда места распределяются по числу верных ответов.' : 'Игрок без жизней выбывает. После последнего раунда места — по жизням, затем по верным ответам.') : (inf ? 'Без лимита жизней и раундов игра идёт, пока игроки не выйдут. Лучше задать число раундов.' : 'Игрок без жизней выбывает и смотрит за игрой. Побеждает последний оставшийся.'))
+        : key === 'solo'
         ? (R ? `Тренировка закончится через ${R} ${roundsWord(R)}${inf ? '' : ' или раньше, если закончатся жизни'}.` : (inf ? 'Без лимита жизней и раундов тренировка идёт, пока вы не нажмёте «Завершить».' : 'Тренировка идёт, пока не закончатся жизни.'))
         : (R ? (inf ? 'После последнего раунда побеждает тот, у кого больше верных ответов.' : 'После последнего раунда побеждает тот, у кого больше жизней; при равенстве — у кого больше верных ответов.') : (inf ? 'Без лимита жизней и раундов дуэль идёт, пока кто-то не нажмёт «Завершить» — победит тот, у кого больше верных ответов.' : 'Игра идёт, пока у кого-то не закончатся жизни.'));
       s += `<div class="hint">${rh}</div></div>`;
@@ -6788,12 +6924,12 @@ var SubjectIcons = (function () {
     if (navEl) navEl.classList.toggle('nav-hidden', !sectionNav);
     document.body.classList.toggle('on-home', !sectionNav);
     const lsm = $('.logo small');
-    if (lsm) lsm.textContent = sectionNav ? SUBJ[(app.game && app.game.S && (app.tab === 'duel' || app.tab === 'solo') && subjOfState(app.game.S)) || app.subject].short + ' · 2027' : 'подготовка к ЕГЭ · 2027';
+    if (lsm) lsm.textContent = sectionNav ? SUBJ[(app.game && app.game.S && (app.tab === 'duel' || app.tab === 'trio' || app.tab === 'solo') && subjOfState(app.game.S)) || app.subject].short + ' · 2027' : 'подготовка к ЕГЭ · 2027';
     movePill();
     renderHeaderAvatar();
     const g = app.game;
     if (g && g.S && g.S.phase === 'over') recordResult(g);
-    const gameTab = g ? (g.mode === 'solo' ? 'solo' : 'duel') : null;
+    const gameTab = gameTabOf(g);
     const shop = $('#shop-btn');
     if (shop) { shop.classList.toggle('hide', !!(g && app.tab === gameTab && g.S && g.S.phase !== 'over')); shop.classList.toggle('on', app.tab === 'shop'); }
     if (g && app.tab === gameTab) { renderGame(); return; }
@@ -6803,6 +6939,7 @@ var SubjectIcons = (function () {
     else if (app.tab === 'soon') renderSoon();
     else if (app.tab === 'shop') renderShop();
     else if (app.tab === 'duel') renderDuelHome();
+    else if (app.tab === 'trio') renderTrioHome();
     else if (app.tab === 'solo') renderSoloHome();
     else if (app.tab === 'top') renderTop();
     else renderRules();
@@ -7001,9 +7138,9 @@ var SubjectIcons = (function () {
     app.name = Profile.me.name || '';
     renderHeaderAvatar();
     updateGate();
-    if (!app.game && (app.tab === 'duel' || app.tab === 'solo') && !$('[data-first-name]:focus')) render();
+    if (!app.game && (app.tab === 'duel' || app.tab === 'trio' || app.tab === 'solo') && !$('[data-first-name]:focus')) render();
     if (Cloud.user && Profile.me.isNew) { Profile.me.isNew = false; toast('Аккаунт создан! Профиль сохранён в Google-аккаунте'); }
-    if (app.tab === 'profile' && !(app.game && app.tab === (app.game.mode === 'solo' ? 'solo' : 'duel'))) renderProfile();
+    if (app.tab === 'profile' && !(app.game && app.tab === gameTabOf(app.game))) renderProfile();
     else if (!app.game) {
       $$('[data-name]').forEach((inp) => { if (inp !== document.activeElement) inp.value = app.name; });
     }
@@ -7015,7 +7152,7 @@ var SubjectIcons = (function () {
     const p = S.players[role];
     if (!p) return null;
     if (role === myRole()) return Profile.shared();
-    return g.oppProfile || Profile.fallback(p.name);
+    return (g.profiles && g.profiles[role]) || g.oppProfile || Profile.fallback(p.name);
   }
 
   function recordResult(g) {
@@ -7449,9 +7586,9 @@ var SubjectIcons = (function () {
   function activeGameBanner(tab) {
     const g = app.game;
     if (!g) return '';
-    const where = g.mode === 'solo' ? 'solo' : 'duel';
+    const where = gameTabOf(g);
     if (where === tab) return '';
-    return `<div class="notice" style="margin-bottom:18px">У вас идёт ${g.mode === 'solo' ? 'соло-игра' : 'дуэль'}. <button class="link" data-go="${where}">Вернуться к игре →</button></div>`;
+    return `<div class="notice" style="margin-bottom:18px">У вас идёт ${g.mode === 'solo' ? 'соло-игра' : g.trio ? 'игра втроём' : 'дуэль'}. <button class="link" data-go="${where}">Вернуться к игре →</button></div>`;
   }
 
   function nameField(id) {
@@ -7497,8 +7634,49 @@ var SubjectIcons = (function () {
       </div>`;
     main().innerHTML = html;
     bindCommon();
-    $('#create').onclick = createRoom;
+    $('#create').onclick = () => createRoom(false);
     if ($('#inv-cancel')) $('#inv-cancel').onclick = () => { app.invite = null; render(); };
+    $('#join').onclick = () => joinRoom($('#code').value);
+    $('#code').addEventListener('keydown', (e) => { if (e.key === 'Enter') joinRoom($('#code').value); });
+    $('#code').addEventListener('input', (e) => { app.joinCode = e.target.value; });
+  }
+
+  function renderTrioHome() {
+    const html = `
+      ${activeGameBanner('trio')}
+      <div class="home-kicker">${SUBJ[app.subject].name}</div>
+      <h1>Трио: битва втроём</h1>
+      <p class="lead">Создайте комнату на троих, отправьте код двум друзьям и решайте одни и те же задания ЕГЭ одновременно. Неверный ответ или истёкшее время — минус жизнь. Без жизней игрок выбывает. Побеждает последний, у кого остались жизни.</p>
+      <div class="grid2">
+        <section class="card" data-skey="trio">
+          <h2>Создать комнату на троих</h2>
+          ${nameField('name-duel')}
+          ${settingsHTML('trio')}
+          <button class="btn big wide" id="create" ${app.busy ? 'disabled' : ''}>${app.busy ? 'Подключаемся…' : 'Создать комнату и получить код'}</button>
+        </section>
+        <div class="stack">
+          <section class="card">
+            <h2>Войти по коду</h2>
+            ${nameField('name-join')}
+            <div class="field"><label for="code">Код комнаты</label><input class="input" id="code" maxlength="8" placeholder="2K7MQX" autocomplete="off" style="font-family:Unbounded,monospace;letter-spacing:.12em;text-transform:uppercase;font-size:20px" value="${esc(app.joinCode)}"></div>
+            ${app.joinError ? `<div class="notice bad" style="margin-bottom:14px">${esc(app.joinError)}</div>` : ''}
+            <button class="btn big wide" id="join" ${app.busy ? 'disabled' : ''}>${app.busy ? 'Подключаемся…' : 'Войти'}</button>
+          </section>
+          <section class="card">
+            <h3>Как это работает</h3>
+            <ol style="margin:0;padding-left:20px;color:var(--ink2);font-size:14px">
+              <li>Создатель выбирает время, жизни, раунды и номера заданий.</li>
+              <li>Код или ссылку получают два друга. Игра начнётся, когда соберутся все трое.</li>
+              <li>Все получают одно задание. После раунда — краткое и подробное решение.</li>
+              <li>У кого кончились жизни, тот выбывает и может смотреть игру до конца.</li>
+              <li>Места: 🥇 последний оставшийся, 🥈 и 🥉 — по порядку выбывания.</li>
+            </ol>
+          </section>
+        </div>
+      </div>`;
+    main().innerHTML = html;
+    bindCommon();
+    $('#create').onclick = () => createRoom(true);
     $('#join').onclick = () => joinRoom($('#code').value);
     $('#code').addEventListener('keydown', (e) => { if (e.key === 'Enter') joinRoom($('#code').value); });
     $('#code').addEventListener('input', (e) => { app.joinCode = e.target.value; });
@@ -7722,11 +7900,11 @@ var SubjectIcons = (function () {
       card.addEventListener('click', (e) => {
         const el = e.target.closest('[data-set]');
         if (!el || el.tagName === 'INPUT') return;
-        const key = card.querySelector('#create') ? 'duel' : 'solo';
+        const key = card.dataset.skey || (card.querySelector('#create') ? 'duel' : 'solo');
         onSettingsClick(key, el);
       });
       card.addEventListener('change', (e) => {
-        const key = card.querySelector('#create') ? 'duel' : 'solo';
+        const key = card.dataset.skey || (card.querySelector('#create') ? 'duel' : 'solo');
         const rn = e.target.closest('[data-set="rounds-num"]');
         if (rn) {
           draft(key).rounds = Math.max(1, Math.min(100, Math.round(+rn.value || 1)));
@@ -7747,7 +7925,7 @@ var SubjectIcons = (function () {
   /* ---------- экран игры ---------- */
   function names(S) {
     const me = myRole(), opp = me === 'host' ? 'guest' : 'host';
-    return { me, opp, meP: S.players[me], oppP: S.players[opp] };
+    return { me, opp, meP: S.players[me], oppP: S.players[opp], opps: roles(S).filter((r) => r !== me) };
   }
 
   function renderGame() {
@@ -7757,7 +7935,7 @@ var SubjectIcons = (function () {
       $('#leave').onclick = () => leaveGame(true);
       return;
     }
-    if (g.mode === 'guest' && !S.players.guest) {
+    if (g.mode === 'guest' && !(g.me && S.players[g.me] && S.players[g.me].pub === g.pub)) {
       main().innerHTML = `<div class="card" style="text-align:center;padding:40px"><div class="waiting" style="justify-content:center"><span class="dot-pulse"></span> Входим в комнату ${esc(S.code)}…</div><div class="actions" style="justify-content:center"><button class="btn ghost" id="leave">Отмена</button></div></div>`;
       $('#leave').onclick = () => leaveGame(true);
       return;
@@ -7777,9 +7955,31 @@ var SubjectIcons = (function () {
     renderHud();
   }
 
+  function lobbyPlayersHTML(S) {
+    const g = app.game;
+    return `<div class="lobby-pl">${seats(S).map((r) => {
+      const p = S.players[r];
+      if (!p) return '<div class="lp empty"><span class="lp-ava">?</span><span class="muted">Ждём игрока…</span></div>';
+      const isMe = r === myRole();
+      return `<div class="lp">${Profile.avatar(isMe ? Profile.shared() : oppProfile(S, r), 34)}<b>${esc(p.name)}</b>${isMe ? '<span class="muted">(вы)</span>' : ''}${r === 'host' ? '<span class="lp-tag">создатель</span>' : ''}</div>`;
+    }).join('')}</div>`;
+  }
+
   function renderLobby() {
     const g = app.game, S = g.S;
     app.rendered = null;
+    const joined = roles(S).length, total = seats(S).length;
+    if (g.mode === 'guest') {
+      main().innerHTML = `<section class="card" style="max-width:560px;margin:0 auto;text-align:center">
+        <h2>Вы в комнате ${esc(S.code)}</h2>
+        <p class="muted">${SUBJ[subjOfState(S)].name} · игра втроём. Начнём, когда соберутся все.</p>
+        ${lobbyPlayersHTML(S)}
+        <div class="waiting" style="justify-content:center;margin-top:14px"><span class="dot-pulse"></span> Собралось ${joined} из ${total}…</div>
+        <div class="actions" style="justify-content:center"><button class="btn danger" id="leave">Выйти</button></div>
+      </section>`;
+      $('#leave').onclick = () => leaveGame(true);
+      return;
+    }
     const url = location.href.split('?')[0].split('#')[0] + '?room=' + S.code;
     const local = location.protocol === 'file:';
     main().innerHTML = `
@@ -7793,14 +7993,16 @@ var SubjectIcons = (function () {
           </div>
           <div class="field" style="margin-top:16px"><span class="lbl">Ссылка-приглашение</span>
             <div class="share-row"><input class="input" readonly value="${esc(url)}" id="link"><button class="btn" id="copy-link">Копировать</button></div>
-            ${local ? '<div class="hint">Сайт открыт как файл на компьютере, поэтому ссылка у друга не откроется. Отправьте ему этот же файл и код комнаты: он откроет файл и введёт код во вкладке «Дуэль».</div>' : '<div class="hint">Друг откроет ссылку, введёт имя — и дуэль начнётся.</div>'}
+            ${local ? '<div class="hint">Сайт открыт как файл на компьютере, поэтому ссылка у друга не откроется. Отправьте ему этот же файл и код комнаты: он откроет файл и введёт код во вкладке «Дуэль».</div>' : (isTrio(S) ? '<div class="hint">Отправьте ссылку двум друзьям — игра начнётся, когда соберутся все трое.</div>' : '<div class="hint">Друг откроет ссылку, введёт имя — и дуэль начнётся.</div>')}
           </div>
-          <div class="waiting" style="margin-top:18px"><span class="dot-pulse"></span> Ждём соперника…</div>
+          ${isTrio(S) ? `<div class="field" style="margin-top:16px"><span class="lbl">Игроки · ${joined} из ${total}</span>${lobbyPlayersHTML(S)}</div>` : ''}
+          <div class="waiting" style="margin-top:18px"><span class="dot-pulse"></span> ${isTrio(S) ? (total - joined === 1 ? 'Ждём ещё одного игрока…' : 'Ждём ещё двух игроков…') : 'Ждём соперника…'}</div>
         </section>
         <section class="card">
           <h3>Настройки комнаты</h3>
           <dl class="summary">
             <dt>Предмет</dt><dd>${SUBJ[subjOfState(S)].name}</dd>
+            <dt>Режим</dt><dd>${isTrio(S) ? 'Трио — на троих' : 'Дуэль 1 на 1'}</dd>
             <dt>Создатель</dt><dd>${esc(S.players.host.name)}</dd>
             <dt>Время на ответ</dt><dd>${timeLabel(S.settings.time)}</dd>
             <dt>Жизни</dt><dd>${S.settings.lives || '∞ безлимит'}</dd>
@@ -7824,7 +8026,7 @@ var SubjectIcons = (function () {
     const solo = isSolo(S);
     const statusOf = (role, p) => {
       if (!p) return '';
-      const online = role === me ? true : g.oppOnline !== false;
+      const online = role === me ? true : g.online && role in g.online ? g.online[role] : g.oppOnline !== false;
       if (!online && !solo) return '<span class="pstat off">● не в сети</span>';
       if (S.phase === 'question') return p.answered || (role === me && g.ui.pendingAnswer) ? '<span class="pstat ok">✓ ответ дан</span>' : '<span class="pstat">думает…</span>';
       if (S.phase === 'result' || S.phase === 'ready') return p.ready || (role === me && g.ui.pendingReady) ? '<span class="pstat ok">✓ готов</span>' : '<span class="pstat">читает разбор</span>';
@@ -7835,10 +8037,20 @@ var SubjectIcons = (function () {
     let center = '';
     if (S.phase === 'question') {
       if (S.deadline) {
-        const rem = S.deadline - (Date.now() + (me === 'guest' ? g.offset || 0 : 0));
+        const rem = S.deadline - (Date.now() + (me !== 'host' ? g.offset || 0 : 0));
         center = `<div class="round-lbl">Раунд ${S.round}${S.settings.rounds ? " из " + S.settings.rounds : ""}</div><div class="timer ${rem < 10000 ? 'low' : ''}" id="timer">${fmtTime(rem)}</div>`;
       } else center = `<div class="round-lbl">Раунд ${S.round}${S.settings.rounds ? " из " + S.settings.rounds : ""}</div><div class="timer inf">∞</div>`;
     } else center = `<div class="round-lbl">${S.phase === 'ready' ? 'Подготовка' : S.phase === 'over' ? 'Игра окончена' : 'Раунд ' + S.round}</div>`;
+    if (isTrio(S)) {
+      const tp = (r) => {
+        const p = S.players[r], isMe = r === me;
+        const gone = p.left ? '<span class="pstat off">🚪 вышел(а)</span>' : p.out ? '<span class="pstat off">💀 выбыл(а)</span>' : '';
+        return `<div class="tp${isMe ? ' me' : ''}${gone ? ' gone' : ''}"><button type="button" class="pwho tp-who" ${isMe ? 'disabled' : `data-opp="${r}"`} title="${isMe ? 'Это вы' : 'Профиль соперника'}">${Profile.avatar(isMe ? Profile.shared() : oppProfile(S, r), 34)}<div class="pname">${esc(p.name)}${isMe ? ' <span class="muted" style="font-weight:600">(вы)</span>' : ''}</div></button>${hearts(p.lives, max)}${gone || statusOf(r, p)}</div>`;
+      };
+      hud.className = 'hud trio';
+      hud.innerHTML = `<div class="center-hud">${center}</div><div class="trio-row">${[me].concat(names(S).opps).map(tp).join('')}</div>`;
+      $$('[data-opp]', hud).forEach((b) => (b.onclick = () => showOppCard(S, b.dataset.opp)));
+    } else {
     hud.className = 'hud';
     hud.innerHTML = `
       <div class="player"><div class="pwho">${Profile.avatar(Profile.shared(), 34)}<div class="pname">${esc(meP.name)} <span class="muted" style="font-weight:600">(вы)</span></div></div>${hearts(meP.lives, max)}${statusOf(me, meP)}</div>
@@ -7847,10 +8059,11 @@ var SubjectIcons = (function () {
         : oppP ? `<div class="player right"><button type="button" class="pwho opp-btn" id="opp-btn" title="Профиль соперника"><div class="pname">${esc(oppP.name)}</div>${Profile.avatar(oppProfile(S, opp), 34)}</button>${hearts(oppP.lives, max)}${statusOf(opp, oppP)}</div>` : '<div></div>'}`;
     const ob = $('#opp-btn');
     if (ob) ob.onclick = () => showOppCard(S, opp);
+    }
     const tb = $('#tbar');
     if (tb) {
       if (S.phase === 'question' && S.deadline) {
-        const rem = S.deadline - (Date.now() + (me === 'guest' ? g.offset || 0 : 0));
+        const rem = S.deadline - (Date.now() + (me !== 'host' ? g.offset || 0 : 0));
         const pct = Math.max(0, Math.min(100, (rem / (S.settings.time * 1000)) * 100));
         tb.className = 'tbar' + (rem < 10000 ? ' low' : '');
         tb.innerHTML = `<i style="width:${pct}%"></i>`;
@@ -7890,11 +8103,12 @@ var SubjectIcons = (function () {
     const g = app.game;
     const me = myRole();
     const mine = S.players[me];
+    if (isTrio(S) && !inGame(S, me)) return `<div class="answer-box"><div class="sent">👀 Вы ${mine.left ? 'вышли из игры' : 'выбыли'} и наблюдаете за соперниками</div></div>`;
     const sent = mine.answered || g.ui.pendingAnswer;
-    const rem = S.deadline ? S.deadline - (Date.now() + (me === 'guest' ? g.offset || 0 : 0)) : Infinity;
+    const rem = S.deadline ? S.deadline - (Date.now() + (me !== 'host' ? g.offset || 0 : 0)) : Infinity;
     if (sent) {
       const waiting = !isSolo(S);
-      return `<div class="answer-box"><div class="sent">${g.ui.pendingAnswer && !mine.answered ? '<span class="dot-pulse"></span> Отправляем ответ…' : '✓ Ответ принят'}${g.ui.myValue ? ': <span style="color:var(--ink)">' + esc(g.ui.myValue) + '</span>' : ''}</div>${waiting ? '<div class="waiting" style="margin-top:12px"><span class="dot-pulse"></span> Ждём ответ соперника…</div>' : ''}</div>`;
+      return `<div class="answer-box"><div class="sent">${g.ui.pendingAnswer && !mine.answered ? '<span class="dot-pulse"></span> Отправляем ответ…' : '✓ Ответ принят'}${g.ui.myValue ? ': <span style="color:var(--ink)">' + esc(g.ui.myValue) + '</span>' : ''}</div>${waiting ? `<div class="waiting" style="margin-top:12px"><span class="dot-pulse"></span> ${isTrio(S) ? 'Ждём ответы соперников…' : 'Ждём ответ соперника…'}</div>` : ''}</div>`;
     }
     if (rem <= 0) return `<div class="answer-box"><div class="sent" style="background:var(--bad-soft);color:var(--bad)">⏰ Время вышло</div></div>`;
     const type = S.task.type;
@@ -7943,6 +8157,7 @@ var SubjectIcons = (function () {
       const what = v.timeout ? '⏰ Время вышло' : (v.ok ? '✓ ' : '✗ ') + esc(v.value);
       return `<div class="verdict ${cls}"><div class="who">${label}</div><div class="what">${what}</div><div class="delta">${S.settings.lives ? (v.ok ? 'Жизнь сохранена' : '−1 жизнь') + ' · осталось ' + p.lives : (v.ok ? 'Верно' : 'Не засчитано') + ' · жизни не ограничены'}</div></div>`;
     };
+    if (isTrio(S)) return `<div class="verdicts trio">${[me].concat(names(S).opps).filter((r) => R.v[r]).map((r) => one(r, S.players[r], esc(S.players[r].name) + (r === me ? ' (вы)' : ''))).join('')}</div>`;
     return `<div class="verdicts ${isSolo(S) ? 'solo' : ''}">${one(me, meP, esc(meP.name) + ' (вы)')}${!isSolo(S) && oppP ? one(opp, oppP, esc(oppP.name)) : ''}</div>`;
   }
 
@@ -7962,6 +8177,10 @@ var SubjectIcons = (function () {
     const mine = S.players[me];
     const solo = isSolo(S);
     const pend = mine.ready || g.ui.pendingReady;
+    if (S.phase === 'result' && isTrio(S)) {
+      if (!inGame(S, me)) return `<div class="actions" id="nextbox"><div class="waiting">👀 Вы выбыли. Следующий раунд начнётся, когда соперники нажмут «Продолжить».</div><span class="sp"></span><button class="btn danger" id="leave">Выйти</button></div>`;
+      return `<div class="actions" id="nextbox">${pend ? '<div class="waiting"><span class="dot-pulse"></span> Вы готовы. Ждём остальных…</div>' : '<button class="btn big" id="next">Продолжить →</button>'}<span class="sp"></span><button class="btn danger" id="leave">Выйти</button></div>`;
+    }
     if (S.phase === 'result') {
       return `<div class="actions" id="nextbox">${pend ? '<div class="waiting"><span class="dot-pulse"></span> Вы готовы. Ждём, когда соперник нажмёт «Продолжить»…</div>' : '<button class="btn big" id="next">Продолжить →</button>'}<span class="sp"></span><button class="btn danger" id="leave">${solo ? 'Завершить' : 'Выйти'}</button></div>`;
     }
@@ -7974,6 +8193,18 @@ var SubjectIcons = (function () {
     if (S.phase === 'ready') {
       const { meP, oppP } = names(S);
       const pend = meP.ready || g.ui.pendingReady;
+      if (isTrio(S)) {
+        const opps = names(S).opps;
+        body.innerHTML = `<section class="card" style="text-align:center;padding:32px">
+        <h2>Все в сборе!</h2>
+        <div class="versus trio">${Profile.card(Profile.shared(), 'Вы')}${opps.map((r) => '<div class="vs">VS</div>' + Profile.card(oppProfile(S, r), 'Соперник')).join('')}</div>
+        <p class="muted">${timeLabel(S.settings.time)} на ответ · ${livesLabel(S.settings.lives)} · ${S.settings.rounds ? S.settings.rounds + ' ' + roundsWord(S.settings.rounds) : 'раунды без ограничения'} · ${esc(numsLabel(S.settings))}</p>
+        <div class="actions" style="justify-content:center" id="readybox">${readyBoxHTML(S)}</div>
+        <div class="actions" style="justify-content:center"><button class="btn danger" id="leave">Выйти</button></div>
+      </section>`;
+        bindBody();
+        return;
+      }
       body.innerHTML = `<section class="card" style="text-align:center;padding:32px">
         <h2>${oppP ? 'Соперник найден!' : 'Ожидание'}</h2>
         <div class="versus">${Profile.card(Profile.shared(), 'Вы')}<div class="vs">VS</div>${oppP ? Profile.card(oppProfile(S, myRole() === 'host' ? 'guest' : 'host'), 'Соперник') : ''}</div>
@@ -8001,7 +8232,49 @@ var SubjectIcons = (function () {
     return `<details class="card" style="margin-top:18px"><summary style="cursor:pointer;font-weight:700">Условие задания № ${S.task.num}</summary><div class="task-text" style="margin-top:12px">${S.task.text}${S.task.svg || ''}</div></details>`;
   }
 
+  function readyBoxHTML(S) {
+    const g = app.game, me = myRole();
+    const pend = S.players[me].ready || g.ui.pendingReady;
+    const n = roles(S).filter((r) => S.players[r].ready || (r === me && g.ui.pendingReady)).length;
+    return pend ? `<div class="waiting"><span class="dot-pulse"></span> Готовы ${n} из 3. Ждём остальных…</div>` : `<button class="btn big" id="next">Начать трио${n ? ' (готовы ' + n + ' из 3)' : ''}</button>`;
+  }
+
+  function trioOverHTML(S) {
+    const g = app.game, me = myRole(), meP = S.players[me];
+    const st = standings(S);
+    const mine = st.find((x) => x.r === me) || { place: 3 };
+    const medal = (p) => ['🥇', '🥈', '🥉'][p - 1] || p;
+    let emoji, title, sub;
+    if (S.reason === 'closed') { emoji = '🚪'; title = 'Комната закрыта'; sub = 'Создатель закрыл комнату до начала игры.'; }
+    else {
+      emoji = mine.place === 1 ? '🏆' : medal(mine.place);
+      title = mine.place === 1 ? (S.winner === 'draw' ? 'Делите первое место!' : 'Победа!') : mine.place + '-е место';
+      sub = S.reason === 'rounds' ? `Все ${S.settings.rounds} ${roundsWord(S.settings.rounds)} сыграны.`
+        : S.reason === 'leave' ? (meP.left ? 'Вы вышли из игры.' : S.players.host.left ? 'Создатель комнаты вышел — игра окончена.' : 'Соперники покинули игру.')
+        : S.winner === 'draw' ? 'Последние игроки выбыли в одном раунде.' : `Последним с жизнями остался(ась) ${esc(S.players[S.winner] ? S.players[S.winner].name : '')}.`;
+    }
+    const anyLeft = roles(S).some((r) => S.players[r].left);
+    const canRe = (S.reason === 'lives' || S.reason === 'rounds') && !anyLeft && roles(S).every((r) => r === me || !g.online || g.online[r] !== false);
+    const pend = meP.ready || g.ui.pendingReady;
+    const wants = roles(S).filter((r) => r !== me && S.players[r].ready);
+    const actions = canRe
+      ? (pend ? '<div class="waiting"><span class="dot-pulse"></span> Ждём, когда все согласятся на реванш…</div>' : `<button class="btn big" id="next">${wants.length ? 'Принять реванш' : 'Реванш'}</button>`) + '<button class="btn ghost big" id="leave">В меню</button>'
+      : '<button class="btn big" id="leave">В меню</button>';
+    const rows = S.reason === 'closed' ? '' : `<table class="trio-table"><thead><tr><th>Место</th><th>Игрок</th>${S.settings.lives ? '<th>Жизни</th>' : ''}<th>Верно</th></tr></thead><tbody>${st.map((x) => {
+      const p = S.players[x.r];
+      const note = p.left ? ' <span class="muted">· вышел(а)</span>' : p.out ? ` <span class="muted">· выбыл(а) в раунде ${p.outRound}</span>` : '';
+      return `<tr class="${x.r === me ? 'me' : ''}"><td class="tt-place">${medal(x.place)}</td><td>${esc(p.name)}${x.r === me ? ' (вы)' : ''}${note}</td>${S.settings.lives ? `<td>${p.lives}</td>` : ''}<td>${okCount(S, x.r)}</td></tr>`;
+    }).join('')}</tbody></table>`;
+    return `<section class="card over">
+      <div class="big-emoji">${emoji}</div><h1>${title}</h1><p class="muted" style="margin:0">${sub}</p>
+      ${rows}
+      ${canRe && wants.length && !pend ? `<div class="notice" style="margin-bottom:12px">${wants.map((r) => esc(S.players[r].name)).join(' и ')} ${wants.length > 1 ? 'хотят' : 'хочет'} реванш!</div>` : ''}
+      <div class="actions" style="justify-content:center">${actions}</div>
+    </section>`;
+  }
+
   function overHTML(S) {
+    if (isTrio(S)) return trioOverHTML(S);
     const g = app.game;
     const { me, opp, meP, oppP } = names(S);
     const solo = isSolo(S);
@@ -8060,7 +8333,11 @@ var SubjectIcons = (function () {
     if (!S.history.length) return '';
     const { me, opp, oppP } = names(S);
     const solo = isSolo(S);
-    const mk = (v) => (v ? '<span class="mk-ok">✓</span>' : '<span class="mk-bad">✗</span>');
+    const mk = (v) => (v === undefined ? '<span class="muted">—</span>' : v ? '<span class="mk-ok">✓</span>' : '<span class="mk-bad">✗</span>');
+    if (isTrio(S)) {
+      const cols = [me].concat(names(S).opps);
+      return `<section class="card history" style="margin-top:18px"><h2>История раундов</h2><table><thead><tr><th>Раунд</th><th>Задание</th>${cols.map((r) => '<th>' + (r === me ? 'Вы' : esc(S.players[r].name)) + '</th>').join('')}</tr></thead><tbody>${S.history.map((h) => `<tr><td>${h.round}</td><td>№ ${h.num} · ${esc(titleOf(subjOfState(S), h.num))}</td>${cols.map((r) => '<td>' + mk(h[r]) + '</td>').join('')}</tr>`).join('')}</tbody></table></section>`;
+    }
     return `<section class="card history" style="margin-top:18px"><h2>История раундов</h2><table><thead><tr><th>Раунд</th><th>Задание</th><th>Вы</th>${solo ? '' : '<th>' + esc(oppP ? oppP.name : 'Соперник') + '</th>'}</tr></thead><tbody>${S.history.map((h) => `<tr><td>${h.round}</td><td>№ ${h.num} · ${esc(titleOf(subjOfState(S), h.num))}</td><td>${mk(h[me])}</td>${solo ? '' : '<td>' + mk(h[opp]) + '</td>'}</tr>`).join('')}</tbody></table></section>`;
   }
 
@@ -8082,8 +8359,8 @@ var SubjectIcons = (function () {
     if (S.phase === 'question') {
       const box = $('#answerbox');
       const me = myRole();
-      const rem = S.deadline ? S.deadline - (Date.now() + (me === 'guest' ? g.offset || 0 : 0)) : Infinity;
-      const k = (S.players[me].answered ? 'a' : g.ui.pendingAnswer ? 'p' : rem <= 0 ? 't' : 'i');
+      const rem = S.deadline ? S.deadline - (Date.now() + (me !== 'host' ? g.offset || 0 : 0)) : Infinity;
+      const k = (isTrio(S) && !inGame(S, me) ? 'o' : S.players[me].answered ? 'a' : g.ui.pendingAnswer ? 'p' : rem <= 0 ? 't' : 'i');
       if (box && box.dataset.k !== k) {
         box.dataset.k = k;
         if (k === 'i' && $('#ans')) return; // поле ввода уже на месте
@@ -8096,7 +8373,7 @@ var SubjectIcons = (function () {
     } else if (S.phase === 'ready') {
       const rb = $('#readybox');
       const pend = S.players[myRole()].ready || g.ui.pendingReady;
-      if (rb) { rb.innerHTML = pend ? '<div class="waiting"><span class="dot-pulse"></span> Ждём, когда соперник нажмёт «Начать»…</div>' : '<button class="btn big" id="next">Начать дуэль</button>'; bindBody(); }
+      if (rb) { rb.innerHTML = isTrio(S) ? readyBoxHTML(S) : pend ? '<div class="waiting"><span class="dot-pulse"></span> Ждём, когда соперник нажмёт «Начать»…</div>' : '<button class="btn big" id="next">Начать дуэль</button>'; bindBody(); }
     } else if (S.phase === 'over') {
       const ov = $('.over');
       if (ov) { const tmp = document.createElement('div'); tmp.innerHTML = overHTML(S); ov.replaceWith(tmp.firstElementChild); bindBody(); }
@@ -8112,8 +8389,7 @@ var SubjectIcons = (function () {
       if (checkTimeout(S, g.P, g.mode === 'host')) { commit(); return; }
     }
     if (S.phase === 'question' && S.deadline) {
-      const gameTab = g.mode === 'solo' ? 'solo' : 'duel';
-      if (app.tab === gameTab) { renderHud(); patchBody(); }
+      if (app.tab === gameTabOf(g)) { renderHud(); patchBody(); }
     }
   }, 250);
 
