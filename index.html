@@ -615,6 +615,8 @@ body.on-home .login-btn:not(.hide), body.on-home .login-btn.hide + .streak-btn {
 .card-colors .cc.none { background: var(--bg2); box-shadow: inset 0 0 0 1px var(--line); position: relative; }
 .card-colors .cc.none::after { content: ''; position: absolute; left: 20%; right: 20%; top: 50%; height: 2px; background: var(--ink3); transform: rotate(-45deg); }
 .card-colors .cc.on { border-color: var(--ink); }
+.pstats.tc .stat, .pstats[data-tc] .stat { background: color-mix(in srgb, var(--tc) 24%, var(--bg)); border-color: color-mix(in srgb, var(--tc) 60%, transparent); }
+.pstats.tc .stat span, .pstats[data-tc] .stat span { color: color-mix(in srgb, var(--tc) 35%, var(--ink2)); }
 .pstats .fav-stat { grid-column: 1 / -1; }
 .pstats .fav-stat b { font-size: 18px; }
 .st-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #adb5bd; margin-right: 5px; vertical-align: 1px; }
@@ -5504,6 +5506,7 @@ var Profile = (function () {
     p.days = Streak.normalize(p.days);
     p.counts = cleanCounts(p.counts);
     p.card = cardIdx(p.card);
+    p.tile = cardIdx(p.tile);
     p.nameAt = Math.max(0, Math.floor(+p.nameAt || 0));
     p.subj = cleanSubj(p.subj);
     return p;
@@ -5543,7 +5546,7 @@ var Profile = (function () {
       counts: cleanCounts(me.counts),
       tag: me.tag || null,
       friends: (me.friends || []).filter((x) => typeof x === 'string').slice(0, 200),
-      card: cardIdx(me.card),
+      card: cardIdx(me.card), tile: cardIdx(me.tile),
       subj: cleanSubj(me.subj),
       nameAt: Math.max(0, Math.floor(+me.nameAt || 0)),
     };
@@ -5553,7 +5556,7 @@ var Profile = (function () {
     const st = me.stats;
     return {
       name: (me.name || '').trim().slice(0, 24) || 'Игрок', bio: String(me.bio || '').slice(0, BIO_MAX), photo: me.photo || null,
-      preset: me.preset | 0, color: me.color | 0, tag: me.tag, card: cardIdx(me.card),
+      preset: me.preset | 0, color: me.color | 0, tag: me.tag, card: cardIdx(me.card), tile: cardIdx(me.tile),
       stats: { duels: st.duels, wins: st.wins, bestSolo: st.bestSolo, solved: st.solved, streak: Streak.info(me.days).count, bestStreak: Streak.info(me.days).best },
     };
   }
@@ -5588,6 +5591,7 @@ var Profile = (function () {
     me.counts = cleanCounts(cc);
     if (typeof d.tag === 'string' && /^[A-Z0-9]{6}$/.test(d.tag)) me.tag = d.tag;
     me.card = cardIdx(d.card);
+    me.tile = cardIdx(d.tile);
     me.nameAt = Math.max(0, Math.floor(+d.nameAt || 0));
     const cs = cleanSubj(d.subj), ls = cleanSubj(me.subj);
     Object.keys(ls).forEach((k) => { cs[k] = Math.max(cs[k] || 0, ls[k]); });
@@ -5622,7 +5626,7 @@ var Profile = (function () {
   }
   // После выхода из аккаунта — чистый профиль на этом устройстве
   function resetLocal() {
-    me = { name: '', bio: '', photo: null, preset: Math.floor(Math.random() * PRESETS.length), color: Math.floor(Math.random() * COLORS.length), stats: Object.assign({}, EMPTY_STATS), days: [], counts: {}, tag: null, friends: [], card: 0, subj: {}, nameAt: 0 };
+    me = { name: '', bio: '', photo: null, preset: Math.floor(Math.random() * PRESETS.length), color: Math.floor(Math.random() * COLORS.length), stats: Object.assign({}, EMPTY_STATS), days: [], counts: {}, tag: null, friends: [], card: 0, tile: 0, subj: {}, nameAt: 0 };
     saveLocal();
   }
 
@@ -5635,7 +5639,7 @@ var Profile = (function () {
       preset: me.preset | 0,
       color: me.color | 0,
       tag: me.tag || null,
-      card: cardIdx(me.card),
+      card: cardIdx(me.card), tile: cardIdx(me.tile),
       stats: { duels: me.stats.duels, wins: me.stats.wins, bestSolo: me.stats.bestSolo, streak: Streak.info(me.days).count },
     };
   }
@@ -5654,6 +5658,7 @@ var Profile = (function () {
       color: Math.abs(p.color | 0) % COLORS.length,
       tag: typeof p.tag === 'string' && /^[A-Z0-9]{6}$/.test(p.tag) ? p.tag : null,
       card: cardIdx(p.card),
+      tile: cardIdx(p.tile),
       stats: { duels: int(st.duels), wins: int(st.wins), bestSolo: int(st.bestSolo), streak: Math.min(int(st.streak), 5000) },
     };
   }
@@ -6993,10 +6998,12 @@ var SubjectIcons = (function () {
             <div id="p-preview">${Profile.card(Profile.shared())}</div>
             <div class="lbl" style="margin:14px 0 8px">Цвет карточки</div>
             <div class="card-colors">${Profile.CARDS.map((c, i) => `<button type="button" class="cc${(Profile.me.card | 0) === i ? ' on' : ''}${c ? '' : ' none'}" data-card="${i}" style="${c ? '--pc:' + c : ''}" title="${c ? 'Цвет ' + i : 'Стандартный'}" aria-label="${c ? 'Цвет ' + i : 'Стандартный цвет'}"></button>`).join('')}</div>
+            <div class="lbl" style="margin:14px 0 8px">Цвет плиток статистики</div>
+            <div class="card-colors">${Profile.CARDS.map((c, i) => `<button type="button" class="cc${(Profile.me.tile | 0) === i ? ' on' : ''}${c ? '' : ' none'}" data-tile="${i}" style="${c ? '--pc:' + c : ''}" title="${c ? 'Цвет ' + i : 'Стандартный'}" aria-label="${c ? 'Цвет плиток ' + i : 'Стандартный цвет плиток'}"></button>`).join('')}</div>
           </section>
           <section class="card">
             <h3>Статистика</h3>
-            <div class="pstats">
+            <div class="pstats" id="my-stats"${tileAttr(Profile.me)}>
               <div class="stat"><b>${st.duels}</b><span>дуэлей</span></div>
               <div class="stat"><b>${st.wins}</b><span>побед</span></div>
               <div class="stat"><b>${st.losses}</b><span>поражений</span></div>
@@ -7019,6 +7026,12 @@ var SubjectIcons = (function () {
       Profile.me.card = +b.dataset.card; Profile.save();
       $$('[data-card]').forEach((x) => x.classList.toggle('on', x === b));
       updateProfilePreview();
+    }));
+    $$('[data-tile]').forEach((b) => (b.onclick = () => {
+      Profile.me.tile = +b.dataset.tile; Profile.save();
+      $$('[data-tile]').forEach((x) => x.classList.toggle('on', x === b));
+      const ms = $('#my-stats'), c = Profile.CARDS[Profile.me.tile | 0];
+      if (ms) { ms.removeAttribute('data-tc'); ms.classList.toggle('tc', !!c); if (c) ms.style.setProperty('--tc', c); else ms.style.removeProperty('--tc'); }
     }));
     const bio = $('#p-bio');
     bio.addEventListener('input', () => {
@@ -7140,6 +7153,7 @@ var SubjectIcons = (function () {
       <div id="friends-list"><div class="waiting"><span class="dot-pulse"></span> Загружаем друзей…</div></div>`;
   }
 
+  function tileAttr(p) { const c = p && Profile.CARDS[Math.max(0, Math.min(16, p.tile | 0))]; return c ? ` style="--tc:${c}" data-tc` : ''; }
   function cardColor(fp) { return (fp && Profile.CARDS[Math.max(0, Math.min(16, fp.card | 0))]) || null; }
   function friendRow(fp) {
     const cc = cardColor(fp);
@@ -7192,7 +7206,7 @@ var SubjectIcons = (function () {
       ${fp.tag ? `<div class="pcard-tag">#${esc(fp.tag)}</div>` : ''}
       ${fp.online !== undefined ? `<div class="fr-st pv-st ${fp.online ? 'on' : ''}">${statusHTML(fp)}</div>` : ''}
       ${fp.bio ? `<div class="pcard-bio" style="text-align:center;margin-top:8px">${esc(fp.bio)}</div>` : '<div class="pcard-bio muted" style="text-align:center;margin-top:8px">Без описания</div>'}
-      <div class="pstats" style="margin-top:14px;width:100%">
+      <div class="pstats${(Profile.CARDS[fp.tile | 0]) ? ' tc' : ''}" style="margin-top:14px;width:100%${Profile.CARDS[fp.tile | 0] ? ';--tc:' + Profile.CARDS[fp.tile | 0] : ''}">
         <div class="stat"><b>${st.duels || 0}</b><span>дуэлей</span></div>
         <div class="stat"><b>${Profile.winRate(st)}%</b><span>побед</span></div>
         <div class="stat"><b>${st.solved || 0}</b><span>задач решено</span></div>
