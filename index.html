@@ -597,6 +597,32 @@ body.on-home .login-btn:not(.hide), body.on-home .login-btn.hide + .streak-btn {
 .pview-name { font-family: "Unbounded", sans-serif; font-size: 20px; font-weight: 700; margin-top: 10px; overflow-wrap: anywhere; }
 .pview .pstats { grid-template-columns: repeat(2, 1fr); }
 .pview-show { width: 100%; text-align: left; }
+/* плавное появление окна профиля: фон проявляется, карточка всплывает, содержимое выезжает по очереди */
+.modal.anim.show { animation: pm-fade .28s ease both; }
+.modal.anim.show .modal-box { animation: pm-pop .42s cubic-bezier(.2, .9, .3, 1.15) both; }
+.modal.anim.show .pview > *, .modal.anim.show .pview .pstats > .stat, .modal.anim.show .modal-box > .actions { animation: pm-up .4s cubic-bezier(.22, .9, .3, 1) both; }
+.modal.anim.show .pview > .ava, .modal.anim.show .pview > :first-child { animation: pm-ava .5s cubic-bezier(.2, .9, .3, 1.3) .08s both; }
+.modal.anim.show .pview > :nth-child(2) { animation-delay: .14s; }
+.modal.anim.show .pview > :nth-child(3) { animation-delay: .18s; }
+.modal.anim.show .pview > :nth-child(4) { animation-delay: .22s; }
+.modal.anim.show .pview > :nth-child(5) { animation-delay: .26s; }
+.modal.anim.show .pview > .pstats { animation: none; }
+.modal.anim.show .pview .pstats > .stat:nth-child(1) { animation-delay: .3s; }
+.modal.anim.show .pview .pstats > .stat:nth-child(2) { animation-delay: .35s; }
+.modal.anim.show .pview .pstats > .stat:nth-child(3) { animation-delay: .4s; }
+.modal.anim.show .pview .pstats > .stat:nth-child(4) { animation-delay: .45s; }
+.modal.anim.show .pview .pstats > .stat:nth-child(n+5) { animation-delay: .5s; }
+.modal.anim.show .pview > .pview-show { animation-delay: .52s; }
+.modal.anim.show .modal-box > .actions { animation-delay: .56s; }
+.modal.anim.closing { animation: pm-fade-out .22s ease both; }
+.modal.anim.closing .modal-box { animation: pm-pop-out .22s ease both; }
+@keyframes pm-fade { from { background: rgba(0, 0, 0, 0); backdrop-filter: blur(0); } to { background: rgba(0, 0, 0, .45); backdrop-filter: blur(3px); } }
+@keyframes pm-fade-out { from { background: rgba(0, 0, 0, .45); } to { background: rgba(0, 0, 0, 0); } }
+@keyframes pm-pop { from { opacity: 0; transform: translateY(24px) scale(.94); } to { opacity: 1; transform: none; } }
+@keyframes pm-pop-out { to { opacity: 0; transform: translateY(12px) scale(.96); } }
+@keyframes pm-up { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+@keyframes pm-ava { from { opacity: 0; transform: scale(.6); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .modal.anim.show, .modal.anim.show *, .modal.anim.closing, .modal.anim.closing * { animation: none !important; } }
 
 /* ===== звёзды, магазин, цвета карточки, статусы друзей, приглашения ===== */
 .pts-btn { display: inline-flex; align-items: center; gap: 4px; border: 0; background: var(--bg2); border-radius: 999px; padding: 5px 10px 5px 7px; font-weight: 800; font-size: 14px; color: var(--ink2); margin-left: 6px; cursor: default; }
@@ -8980,9 +9006,17 @@ var SubjectIcons = (function () {
   function modal(html) {
     let m = $('#modal');
     if (!m) { m = document.createElement('div'); m.id = 'modal'; m.className = 'modal'; document.body.appendChild(m); }
+    clearTimeout(m._t); m.classList.remove('closing', 'anim'); // новое окно поверх ещё закрывающегося
     m.innerHTML = `<div class="modal-box card" role="dialog">${html}</div>`;
     m.classList.add('show');
-    const close = () => { m.classList.remove('show'); document.removeEventListener('keydown', onKey); };
+    let closed = false;
+    const close = () => {
+      if (closed) return; closed = true;
+      document.removeEventListener('keydown', onKey);
+      if (!m.classList.contains('anim') || matchMedia('(prefers-reduced-motion: reduce)').matches) { m.classList.remove('show', 'anim'); return; }
+      m.classList.add('closing'); // плавное закрытие, затем прячем
+      m._t = setTimeout(() => m.classList.remove('show', 'closing', 'anim'), 220);
+    };
     const onKey = (e) => { if (e.key === 'Escape') close(); };
     document.addEventListener('keydown', onKey);
     m.onclick = (e) => { if (e.target === m) close(); };
@@ -9016,6 +9050,7 @@ var SubjectIcons = (function () {
       : isFriend ? (fp.online ? '<button type="button" class="btn" id="fr-invite">⚔️ Позвать в дуэль</button>' : '') + '<button type="button" class="btn danger" id="fr-remove">Удалить из друзей</button>'
       : '<button type="button" class="btn" id="fr-add">＋ Добавить в друзья</button>';
     const m = modal(`<div class="row" style="justify-content:flex-end"><button type="button" class="modal-x" data-close aria-label="Закрыть">×</button></div>${profileBlock(fp)}${btn ? `<div class="actions" style="justify-content:center">${btn}</div>` : ''}`);
+    m.el.classList.add('anim'); // плавное появление профиля
     const cc = cardColor(fp), box = $('.modal-box', m.el);
     if (cc && box) { box.classList.add('tinted'); box.style.setProperty('--pc', cc); }
     const add = $('#fr-add', m.el), rem = $('#fr-remove', m.el), inv = $('#fr-invite', m.el);
