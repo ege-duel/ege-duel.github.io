@@ -7221,10 +7221,10 @@ var SubjectIcons = (function () {
   function showProfileModal(fp) {
     const isMe = fp.self || (Cloud.user && fp.uid === Cloud.user.uid);
     const isFriend = (Profile.me.friends || []).indexOf(fp.uid) >= 0;
-    const btn = isMe ? '<div class="notice" style="width:100%;text-align:center">Это ваш профиль</div>'
+    const btn = isMe ? ''
       : isFriend ? (fp.online ? '<button type="button" class="btn" id="fr-invite">⚔️ Позвать в дуэль</button>' : '') + '<button type="button" class="btn danger" id="fr-remove">Удалить из друзей</button>'
       : '<button type="button" class="btn" id="fr-add">＋ Добавить в друзья</button>';
-    const m = modal(`<div class="row" style="justify-content:flex-end"><button type="button" class="modal-x" data-close aria-label="Закрыть">×</button></div>${profileBlock(fp)}<div class="actions" style="justify-content:center">${btn}</div>`);
+    const m = modal(`<div class="row" style="justify-content:flex-end"><button type="button" class="modal-x" data-close aria-label="Закрыть">×</button></div>${profileBlock(fp)}${btn ? `<div class="actions" style="justify-content:center">${btn}</div>` : ''}`);
     const cc = cardColor(fp), box = $('.modal-box', m.el);
     if (cc && box) { box.classList.add('tinted'); box.style.setProperty('--pc', cc); }
     const add = $('#fr-add', m.el), rem = $('#fr-remove', m.el), inv = $('#fr-invite', m.el);
