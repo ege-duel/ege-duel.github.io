@@ -598,7 +598,7 @@ body.on-home .login-btn:not(.hide), body.on-home .login-btn.hide + .streak-btn {
 .pview .pstats { grid-template-columns: repeat(2, 1fr); }
 .pview-show { width: 100%; text-align: left; }
 
-/* ===== баллы, магазин, цвета карточки, статусы друзей, приглашения ===== */
+/* ===== звёзды, магазин, цвета карточки, статусы друзей, приглашения ===== */
 .pts-btn { display: inline-flex; align-items: center; gap: 4px; border: 0; background: var(--bg2); border-radius: 999px; padding: 5px 10px 5px 7px; font-weight: 800; font-size: 14px; color: var(--ink2); margin-left: 6px; cursor: default; }
 .pts-btn:disabled { opacity: 1; }
 .shop-fab { position: fixed; left: 18px; bottom: 18px; z-index: 40; display: inline-flex; align-items: center; gap: 8px; padding: 12px 18px; border-radius: 999px; border: 1px solid var(--line); background: var(--card); color: var(--ink); font-weight: 800; font-size: 15px; cursor: pointer; box-shadow: 0 8px 24px rgba(0,0,0,.14); transition: transform .15s, box-shadow .15s, opacity .2s; }
@@ -761,7 +761,7 @@ body:has(.pe-drawer.open) { overflow: hidden; }
     </nav>
     <button class="btn soft login-btn hide" id="login-btn">Войти</button>
     <button class="streak-btn" id="streak-btn" aria-label="Огонёк — серия дней"></button>
-    <button class="pts-btn" id="pts-btn" type="button" disabled title="Баллы — скоро появятся" aria-label="Баллы: 0"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><circle cx="12" cy="12" r="10.5" fill="#f08c00"/><circle cx="12" cy="12" r="8.5" fill="#fcc419"/><circle cx="12" cy="12" r="8.5" fill="none" stroke="#ffe066" stroke-width="1"/><path d="M14.6 7.6H9.6v8.8h2.9a2.45 2.45 0 0 0 0-4.9H9.6" fill="none" stroke="#a35200" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><b>0</b></button>
+    <button class="pts-btn" id="pts-btn" type="button" disabled title="Звёзды — скоро появятся" aria-label="Звёзды: 0"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><defs><linearGradient id="star-g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffd43b"/><stop offset="1" stop-color="#f59f00"/></linearGradient></defs><path d="M12 2.2l2.95 6.1 6.7.9-4.9 4.65 1.2 6.65L12 17.3l-5.95 3.2 1.2-6.65L2.35 9.2l6.7-.9z" fill="url(#star-g)" stroke="#e67700" stroke-width="1.1" stroke-linejoin="round"/><path d="M12 5.6l1.9 3.9" stroke="#fff3bf" stroke-width="1.3" stroke-linecap="round" opacity=".85"/></svg><b>0</b></button>
     <button class="me-btn" id="me-btn" title="Мой профиль" aria-label="Мой профиль"></button>
     <button class="theme-btn" id="theme" title="Светлая / тёмная тема" aria-label="Сменить тему">◐</button>
   </div>
@@ -9247,7 +9247,7 @@ var SubjectIcons = (function () {
         <div class="soon-ic shop-ic">🛒</div>
         <div class="home-kicker">Магазин</div>
         <h1>В разработке</h1>
-        <p class="lead" style="margin:0 auto 18px;max-width:520px">Скоро здесь можно будет тратить баллы 🪙 на оформление профиля и другие приятные вещи.</p>
+        <p class="lead" style="margin:0 auto 18px;max-width:520px">Скоро здесь можно будет тратить звёзды ⭐ на оформление профиля и другие приятные вещи.</p>
         <div class="actions" style="justify-content:center"><button type="button" class="btn big" id="shop-back">← На главную</button></div>
       </section>`;
     $('#shop-back').onclick = () => { app.tab = 'home'; render(); animatePage(); window.scrollTo(0, 0); };
