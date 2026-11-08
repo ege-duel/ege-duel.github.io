@@ -7036,7 +7036,6 @@ var SubjectIcons = (function () {
             <div class="lbl" style="margin:16px 0 8px">Цвет плиток статистики</div>
             <div class="card-colors">${Profile.CARDS.map((c, i) => `<button type="button" class="cc${(Profile.me.tile | 0) === i ? ' on' : ''}${c ? '' : ' none'}" data-tile="${i}" style="${c ? '--pc:' + c : ''}" title="${c ? 'Цвет ' + i : 'Стандартный'}" aria-label="${c ? 'Цвет плиток ' + i : 'Стандартный цвет плиток'}"></button>`).join('')}</div>
           </section>
-          ${Cloud.available ? `<section class="card" id="acc-card">${accountHTML()}</section>` : ''}
         </div>
         <div class="stack p3-info">
           <div class="p3-cap">👤 Профиль и статистика</div>
@@ -7068,6 +7067,7 @@ var SubjectIcons = (function () {
         <div class="stack p3-fr">
           <div class="p3-cap">👥 Друзья</div>
           <section class="card" id="friends-card">${friendsCardHTML()}</section>
+          ${Cloud.available ? `<section class="card" id="acc-card">${accountHTML()}</section>` : ''}
         </div>
       </div>
       </div>`;
