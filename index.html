@@ -670,6 +670,21 @@ body.gated { overflow: hidden; }
   .p3-info { order: 1; } .p3-fr { order: 2; } .p3-set { order: 3; }
   .p3 .pstats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
+/* таблица лидеров */
+#top-page { max-width: 760px; margin: 0 auto; }
+.top-card { padding: 14px 16px 16px; }
+.top-mine { padding: 10px 12px; border-radius: 12px; background: color-mix(in srgb, var(--accent) 12%, var(--bg)); font-size: 14.5px; }
+.top-row { cursor: pointer; }
+.top-row.me { outline: 2px solid var(--accent); outline-offset: 1px; }
+.top-place { width: 30px; flex: none; text-align: center; font-family: "Unbounded", sans-serif; font-weight: 700; font-size: 14px; color: var(--ink2); }
+.top-row.podium .top-place { font-size: 22px; }
+.top-row .fr-main { flex: 1; min-width: 0; }
+.top-row .fr-main b, .top-row .fr-main .muted { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.top-you { font-size: 11px; font-weight: 700; padding: 1px 6px; border-radius: 6px; background: var(--accent); color: #fff; vertical-align: 2px; }
+.top-score { flex: none; display: flex; flex-direction: column; align-items: flex-end; line-height: 1.1; }
+.top-score b { font-family: "Unbounded", sans-serif; font-size: 17px; }
+.top-score small { font-size: 11.5px; color: var(--ink3); }
+@media (max-width: 420px) { .top-place { width: 22px; } .top-card { padding: 10px; } }
 
 </style>
 </head>
@@ -682,6 +697,7 @@ body.gated { overflow: hidden; }
       <button data-tab="duel">Дуэль</button>
       <button data-tab="solo">Соло</button>
       <button data-tab="rules">Правила</button>
+      <button data-tab="top">🏆 Лидеры</button>
     </nav>
     <button class="btn soft login-btn hide" id="login-btn">Войти</button>
     <button class="streak-btn" id="streak-btn" aria-label="Огонёк — серия дней"></button>
@@ -5979,6 +5995,18 @@ var Cloud = (function () {
     const list = await Promise.all((Profile.me.friends || []).map((uid) => getProfile(uid).catch(() => null)));
     return list.filter(Boolean);
   }
+  /* ---- таблица лидеров: топ-100 по числу решённых задач ---- */
+  async function leaderboard() {
+    if (!user) throw new Error('Войдите через Google, чтобы видеть таблицу лидеров');
+    const snap = await db.collection('profiles').where('stats.solved', '>', 0).orderBy('stats.solved', 'desc').limit(100).get();
+    const list = [];
+    snap.forEach((d) => {
+      const x = d.data();
+      const seen = x.lastSeen && x.lastSeen.toMillis ? x.lastSeen.toMillis() : 0;
+      list.push(Object.assign({ uid: d.id, online: !!seen && Date.now() - seen < ONLINE_MS }, Profile.sanitizePublic(x)));
+    });
+    return list;
+  }
   async function addFriend(uid) {
     if (!user || uid === user.uid) return;
     const f = Profile.me.friends || (Profile.me.friends = []);
@@ -6055,7 +6083,7 @@ var Cloud = (function () {
   }
 
   return {
-    init, signIn, signOut, schedulePush, sendInvite, cancelInvite, dropInvite, onInvites: (f) => { inviteCb = f; }, findByTag, friendsProfiles, addFriend, removeFriend, getProfile, normTag,
+    init, signIn, signOut, schedulePush, sendInvite, cancelInvite, dropInvite, onInvites: (f) => { inviteCb = f; }, findByTag, friendsProfiles, leaderboard, addFriend, removeFriend, getProfile, normTag,
     on: (f) => subs.push(f),
     get available() { return available(); },
     get ready() { return ready; },
@@ -6776,6 +6804,7 @@ var SubjectIcons = (function () {
     else if (app.tab === 'shop') renderShop();
     else if (app.tab === 'duel') renderDuelHome();
     else if (app.tab === 'solo') renderSoloHome();
+    else if (app.tab === 'top') renderTop();
     else renderRules();
   }
 
@@ -7569,6 +7598,49 @@ var SubjectIcons = (function () {
         <div class="actions" style="justify-content:center"><button type="button" class="btn big" id="shop-back">← На главную</button></div>
       </section>`;
     $('#shop-back').onclick = () => { app.tab = 'home'; render(); animatePage(); window.scrollTo(0, 0); };
+  }
+
+  /* ---------- таблица лидеров ---------- */
+  function topRow(fp, i) {
+    const cc = cardColor(fp);
+    const isMe = Cloud.user && fp.uid === Cloud.user.uid;
+    const place = i < 3 ? ['🥇', '🥈', '🥉'][i] : String(i + 1);
+    return `<div class="friend-row top-row${cc ? ' tinted' : ''}${isMe ? ' me' : ''}${i < 3 ? ' podium' : ''}"${cc ? ` style="--pc:${cc}"` : ''} role="button" tabindex="0" data-top="${i}">
+      <span class="top-place">${place}</span>${Profile.avatar(fp, 40)}
+      <span class="fr-main"><b>${esc(fp.name || 'Игрок')}${isMe ? ' <span class="top-you">вы</span>' : ''}</b><span class="muted"><span class="fr-st ${fp.online ? 'on' : ''}">${statusHTML(fp)}</span>${fp.tag ? ' · ID ' + esc(fp.tag) : ''}</span></span>
+      <span class="top-score"><b>${(fp.stats && fp.stats.solved) || 0}</b><small>задач</small></span></div>`;
+  }
+
+  function renderTop() {
+    main().innerHTML = `
+      <div id="top-page">
+        <div class="home-kicker">Все предметы</div>
+        <h1>🏆 Таблица лидеров</h1>
+        <p class="lead">Топ-100 игроков по числу решённых задач во всех режимах и предметах. Нажмите на игрока, чтобы открыть его профиль.</p>
+        <section class="card top-card"><div id="top-me"></div><div id="top-list"><div class="waiting"><span class="dot-pulse"></span> Загружаем таблицу…</div></div></section>
+      </div>`;
+    bindCommon();
+    loadTop(false);
+  }
+
+  async function loadTop(force) {
+    const box = $('#top-list');
+    if (!box) return;
+    if (!Cloud.available || !Cloud.user) { box.innerHTML = '<p class="muted" style="margin:0">Войдите через Google, чтобы видеть таблицу лидеров.</p>'; return; }
+    try {
+      let list = app.topCache && !force && Date.now() - app.topAt < 60000 ? app.topCache : null;
+      if (!list) { list = await Cloud.leaderboard(); app.topCache = list; app.topAt = Date.now(); }
+      const b2 = $('#top-list'), meBox = $('#top-me');
+      if (!b2) return;
+      const myIdx = list.findIndex((x) => x.uid === Cloud.user.uid);
+      const mySolved = Profile.me.stats ? Profile.me.stats.solved | 0 : 0;
+      if (meBox) meBox.innerHTML = `<div class="top-mine">${myIdx >= 0
+        ? `Вы на <b>${myIdx + 1}-м месте</b> · ${mySolved} задач решено`
+        : mySolved ? `Вы пока не в топ-100 · решено ${mySolved} задач${list.length >= 100 ? ' — чтобы попасть в таблицу, нужно больше ' + ((list[list.length - 1].stats || {}).solved | 0) : ''}`
+        : 'Решите первые задания, чтобы попасть в таблицу'}</div>`;
+      b2.innerHTML = list.length ? list.map(topRow).join('') : '<p class="muted" style="margin:0">Пока никто не решил ни одной задачи. Будьте первым!</p>';
+      $$('[data-top]').forEach((b) => { b.onclick = () => { const fp = list[+b.dataset.top]; if (fp) showProfileModal(fp); }; b.onkeydown = (e) => { if (e.key === 'Enter') b.click(); }; });
+    } catch (e) { box.innerHTML = `<p class="notice bad" style="margin:0">Не удалось загрузить таблицу лидеров. ${esc(e.message || '')}</p>`; }
   }
 
   function renderRules() {
