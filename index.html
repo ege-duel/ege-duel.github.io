@@ -625,6 +625,9 @@ body.on-home .login-btn:not(.hide), body.on-home .login-btn.hide + .streak-btn {
 .ip-text { font-size: 14px; color: var(--ink2); }
 @keyframes ip-in { from { transform: translateY(20px) scale(.96); opacity: 0; } to { transform: none; opacity: 1; } }
 #main { padding-bottom: 84px; }
+.nick-ro { display: flex; align-items: center; gap: 10px; padding: 10px 14px; background: var(--bg); border: 1px solid var(--line); border-radius: 12px; flex-wrap: wrap; }
+.nick-ro b { font-size: 16px; }
+.nick-ro .link { margin-left: auto; font-size: 13px; }
 
 </style>
 </head>
@@ -5498,6 +5501,7 @@ var Profile = (function () {
     p.days = Streak.normalize(p.days);
     p.counts = cleanCounts(p.counts);
     p.card = cardIdx(p.card);
+    p.nameAt = Math.max(0, Math.floor(+p.nameAt || 0));
     p.subj = cleanSubj(p.subj);
     return p;
   }
@@ -5538,6 +5542,7 @@ var Profile = (function () {
       friends: (me.friends || []).filter((x) => typeof x === 'string').slice(0, 200),
       card: cardIdx(me.card),
       subj: cleanSubj(me.subj),
+      nameAt: Math.max(0, Math.floor(+me.nameAt || 0)),
     };
   }
   // Публичная карточка (коллекция profiles): то, что видят другие по #
@@ -5580,6 +5585,7 @@ var Profile = (function () {
     me.counts = cleanCounts(cc);
     if (typeof d.tag === 'string' && /^[A-Z0-9]{6}$/.test(d.tag)) me.tag = d.tag;
     me.card = cardIdx(d.card);
+    me.nameAt = Math.max(0, Math.floor(+d.nameAt || 0));
     const cs = cleanSubj(d.subj), ls = cleanSubj(me.subj);
     Object.keys(ls).forEach((k) => { cs[k] = Math.max(cs[k] || 0, ls[k]); });
     me.subj = cs;
@@ -5613,7 +5619,7 @@ var Profile = (function () {
   }
   // После выхода из аккаунта — чистый профиль на этом устройстве
   function resetLocal() {
-    me = { name: '', bio: '', photo: null, preset: Math.floor(Math.random() * PRESETS.length), color: Math.floor(Math.random() * COLORS.length), stats: Object.assign({}, EMPTY_STATS), days: [], counts: {}, tag: null, friends: [], card: 0, subj: {} };
+    me = { name: '', bio: '', photo: null, preset: Math.floor(Math.random() * PRESETS.length), color: Math.floor(Math.random() * COLORS.length), stats: Object.assign({}, EMPTY_STATS), days: [], counts: {}, tag: null, friends: [], card: 0, subj: {}, nameAt: 0 };
     saveLocal();
   }
 
@@ -5751,6 +5757,25 @@ var Profile = (function () {
     return isNew;
   }
   const streak = () => Streak.info(me.days);
+  /* ---- никнейм: менять можно раз в неделю (первый раз — сразу) ---- */
+  const NICK_WEEK = 7 * 24 * 3600 * 1000;
+  function nickInfo() {
+    const has = !!String(me.name || '').trim();
+    const next = has && me.nameAt ? me.nameAt + NICK_WEEK : 0;
+    return { has, canChange: !has || Date.now() >= next, nextAt: next };
+  }
+  function setNick(raw) {
+    const v = String(raw || '').replace(/\s+/g, ' ').trim();
+    if (v.length < 2) return 'Никнейм — от 2 до 24 символов';
+    if (v.length > 24) return 'Никнейм — не длиннее 24 символов';
+    if (v === me.name) return 'Это ваш текущий никнейм';
+    const ni = nickInfo();
+    if (!ni.canChange) return 'Никнейм можно менять раз в неделю. Следующая смена — ' + new Date(ni.nextAt).toLocaleString('ru-RU', { day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' });
+    if (ni.has) me.nameAt = Date.now(); // первая установка никнейма не запускает отсчёт
+    me.name = v;
+    save();
+    return null;
+  }
   // любимый предмет — тот, по которому решено больше всего заданий
   function favorite() {
     const s = cleanSubj(me.subj);
@@ -5760,7 +5785,7 @@ var Profile = (function () {
   }
 
   return {
-    get me() { return me; }, save, shared, cloudData, publicData, sanitizePublic, applyCloud, fillFromGoogle, resetLocal, markToday, streak, sanitize, fallback, avatar, card, statLine, readPhoto, record, resetStats, favorite, winRate,
+    get me() { return me; }, save, shared, cloudData, publicData, sanitizePublic, applyCloud, fillFromGoogle, resetLocal, markToday, streak, sanitize, fallback, avatar, card, statLine, readPhoto, record, resetStats, favorite, winRate, nickInfo, setNick,
     PRESETS, CARDS, COLORS, BIO_MAX, esc,
   };
 })();
@@ -6353,7 +6378,8 @@ var SubjectIcons = (function () {
   async function createRoom() {
     const st = validSettings(draft('duel'));
     if (!st) return;
-    if (!app.name.trim()) { toast('Введите своё имя'); $('#name-duel') && $('#name-duel').focus(); return; }
+    commitFirstNick();
+    if (!app.name.trim()) { toast('Придумайте никнейм'); $('#name-duel') && $('#name-duel').focus(); return; }
     app.busy = true; render();
     let link;
     try {
@@ -6426,7 +6452,8 @@ var SubjectIcons = (function () {
     const code = Net.normCode(codeRaw);
     app.joinCode = code;
     if (!Net.validCode(code)) { app.joinError = 'Код комнаты — 6 символов, например 2K7MQX.'; render(); return; }
-    if (!app.name.trim()) { app.joinError = 'Введите своё имя.'; render(); return; }
+    commitFirstNick();
+    if (!app.name.trim()) { app.joinError = 'Придумайте никнейм.'; render(); return; }
     app.joinError = ''; app.busy = true; render();
     const pid = (sess.get('egeduel:active', {}) || {}).code === code ? sess.get('egeduel:active').pid : Net.rid(12);
     let link;
@@ -6894,6 +6921,7 @@ var SubjectIcons = (function () {
   function onCloudChange() {
     app.name = Profile.me.name || '';
     renderHeaderAvatar();
+    if (!app.game && (app.tab === 'duel' || app.tab === 'solo') && !$('[data-first-name]:focus')) render();
     if (Cloud.user && Profile.me.isNew) { Profile.me.isNew = false; toast('Аккаунт создан! Профиль сохранён в Google-аккаунте'); }
     if (app.tab === 'profile' && !(app.game && app.tab === (app.game.mode === 'solo' ? 'solo' : 'duel'))) renderProfile();
     else if (!app.game) {
@@ -6943,7 +6971,7 @@ var SubjectIcons = (function () {
               </div>
             </div>
             <h2 style="margin-top:22px">О себе</h2>
-            <div class="field"><label for="p-name">Имя</label><input class="input" id="p-name" maxlength="24" placeholder="Например, Аня" value="${esc(p.name)}" data-name></div>
+            ${nickFieldHTML()}
             <div class="field"><label for="p-bio">Описание</label>
               <textarea class="input" id="p-bio" rows="3" maxlength="${Profile.BIO_MAX}" placeholder="Например: 11 класс, целюсь на 90+, люблю параметры">${esc(p.bio)}</textarea>
               <div class="hint"><span id="bio-count">${p.bio.length}</span>/${Profile.BIO_MAX} · сохраняется автоматически</div>
@@ -6983,6 +7011,7 @@ var SubjectIcons = (function () {
     bindCommon();
     bindAccount();
     bindFriends();
+    bindNick();
     $$('[data-card]').forEach((b) => (b.onclick = () => {
       Profile.me.card = +b.dataset.card; Profile.save();
       $$('[data-card]').forEach((x) => x.classList.toggle('on', x === b));
@@ -7061,13 +7090,43 @@ var SubjectIcons = (function () {
       if (app.game && app.game.S && app.game.S.phase !== 'over') { toast('Сначала завершите текущую игру'); return; }
       if (app.game) leaveGame(true);
       invHidden[iv.id + iv.code] = 1; Cloud.dropInvite(iv.id); showInvites(invList);
-      if (!app.name.trim()) setName(Profile.me.name || 'Игрок');
+      if (!app.name.trim()) app.name = Profile.me.name || 'Игрок';
       app.subject = iv.subject; app.tab = 'duel';
       joinRoom(iv.code);
     };
   }
 
   /* ---------- #, друзья, поиск профилей ---------- */
+  function nickFieldHTML() {
+    const ni = Profile.nickInfo();
+    const when = ni.nextAt ? new Date(ni.nextAt).toLocaleString('ru-RU', { day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' }) : '';
+    const hint = !ni.has ? 'Придумайте никнейм — его увидят соперники и друзья. Потом менять можно раз в неделю.'
+      : ni.canChange ? 'Никнейм можно менять раз в неделю.' : 'Следующая смена никнейма — ' + when + '.';
+    return `<div class="field"><label for="p-name">Никнейм</label>
+      <div class="answer-row"><input class="input" id="p-name" maxlength="24" placeholder="Например, mathking" value="${esc(Profile.me.name)}" ${ni.canChange ? '' : 'disabled'} autocomplete="off"><button type="button" class="btn" id="nick-save" ${ni.canChange ? '' : 'disabled'}>Сохранить</button></div>
+      <div class="hint">${ni.canChange ? '' : '🔒 '}${hint}</div></div>`;
+  }
+  function bindNick() {
+    const inp = $('#p-name'), btn = $('#nick-save');
+    if (!inp || !btn) return;
+    const go = () => {
+      const v = inp.value;
+      if (Profile.me.name && v.trim() !== Profile.me.name && !confirm('Сменить никнейм на «' + v.trim() + '»? Следующий раз его можно будет поменять только через неделю.')) return;
+      const err = Profile.setNick(v);
+      if (err) { toast(err); return; }
+      app.name = Profile.me.name;
+      toast('Никнейм сохранён');
+      renderProfile(); renderHeaderAvatar();
+    };
+    btn.onclick = go;
+    inp.addEventListener('keydown', (e) => { if (e.key === 'Enter') go(); });
+  }
+  // если никнейма ещё нет, а игрок ввёл его на странице дуэли/соло — сохраняем как первый никнейм
+  function commitFirstNick() {
+    if (!Profile.me.name && app.name.trim().length >= 2) { Profile.setNick(app.name); renderHeaderAvatar(); }
+    if (Profile.me.name) app.name = Profile.me.name;
+  }
+
   function friendsCardHTML() {
     if (!Cloud.available) return '<h3>Друзья</h3><p class="muted" style="margin:0">Друзья доступны только на сайте с подключённым входом через Google.</p>';
     if (!Cloud.user) return `<h3>Друзья</h3><p class="muted" style="margin:0 0 12px;font-size:14px">Войдите через Google — вы получите свой уникальный # и сможете находить друзей по их #.</p><button class="btn google wide" id="login2">${GOOGLE_G} Войти через Google</button>`;
@@ -7194,7 +7253,8 @@ var SubjectIcons = (function () {
   }
 
   function nameField(id) {
-    return `<div class="field"><label for="${id}">Ваше имя</label><input class="input" id="${id}" maxlength="24" placeholder="Например, Аня" value="${esc(app.name)}" data-name></div>`;
+    if (Profile.me.name) return `<div class="field"><label>Ваш никнейм</label><div class="nick-ro">${Profile.avatar(Profile.shared(), 28)}<b>${esc(Profile.me.name)}</b><button type="button" class="link" data-nick-edit>изменить в профиле</button></div></div>`;
+    return `<div class="field"><label for="${id}">Придумайте никнейм</label><input class="input" id="${id}" maxlength="24" placeholder="Например, mathking" value="${esc(app.name)}" data-first-name autocomplete="off"></div>`;
   }
 
   function renderDuelHome() {
@@ -7407,7 +7467,11 @@ var SubjectIcons = (function () {
   }
 
   function bindCommon() {
-    $$('[data-name]').forEach((inp) => inp.addEventListener('input', (e) => { setName(e.target.value); }));
+    $$('[data-first-name]').forEach((inp) => {
+      inp.addEventListener('input', (e) => { app.name = e.target.value; $$('[data-first-name]').forEach((o) => { if (o !== inp) o.value = app.name; }); });
+      inp.addEventListener('change', () => { commitFirstNick(); });
+    });
+    $$('[data-nick-edit]').forEach((b) => (b.onclick = () => { app.tab = 'profile'; render(); animatePage(); window.scrollTo(0, 0); }));
     $$('[data-go]').forEach((b) => (b.onclick = () => { app.tab = b.dataset.go; render(); }));
     $$('section.card').forEach((card) => {
       card.addEventListener('click', (e) => {
