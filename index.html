@@ -6996,6 +6996,7 @@ var SubjectIcons = (function () {
           <section class="card">
             <h3>Так вас видит соперник</h3>
             <div id="p-preview">${Profile.card(Profile.shared())}</div>
+            <button type="button" class="btn soft" id="view-me" style="margin-top:10px;width:100%">👁 Посмотреть профиль</button>
             <div class="lbl" style="margin:14px 0 8px">Цвет карточки</div>
             <div class="card-colors">${Profile.CARDS.map((c, i) => `<button type="button" class="cc${(Profile.me.card | 0) === i ? ' on' : ''}${c ? '' : ' none'}" data-card="${i}" style="${c ? '--pc:' + c : ''}" title="${c ? 'Цвет ' + i : 'Стандартный'}" aria-label="${c ? 'Цвет ' + i : 'Стандартный цвет'}"></button>`).join('')}</div>
             <div class="lbl" style="margin:14px 0 8px">Цвет плиток статистики</div>
@@ -7027,6 +7028,7 @@ var SubjectIcons = (function () {
       $$('[data-card]').forEach((x) => x.classList.toggle('on', x === b));
       updateProfilePreview();
     }));
+    if ($('#view-me')) $('#view-me').onclick = () => showProfileModal(Object.assign({ uid: Cloud.user ? Cloud.user.uid : '', self: true, online: true }, Profile.publicData()));
     $$('[data-tile]').forEach((b) => (b.onclick = () => {
       Profile.me.tile = +b.dataset.tile; Profile.save();
       $$('[data-tile]').forEach((x) => x.classList.toggle('on', x === b));
@@ -7217,7 +7219,7 @@ var SubjectIcons = (function () {
   }
 
   function showProfileModal(fp) {
-    const isMe = Cloud.user && fp.uid === Cloud.user.uid;
+    const isMe = fp.self || (Cloud.user && fp.uid === Cloud.user.uid);
     const isFriend = (Profile.me.friends || []).indexOf(fp.uid) >= 0;
     const btn = isMe ? '<div class="notice" style="width:100%;text-align:center">Это ваш профиль</div>'
       : isFriend ? (fp.online ? '<button type="button" class="btn" id="fr-invite">⚔️ Позвать в дуэль</button>' : '') + '<button type="button" class="btn danger" id="fr-remove">Удалить из друзей</button>'
