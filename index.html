@@ -585,6 +585,9 @@ body.on-home .login-btn:not(.hide), body.on-home .login-btn.hide + .streak-btn {
 .my-tag b { font-family: ui-monospace, Consolas, monospace; font-size: 18px; color: var(--accent); letter-spacing: .06em; margin-right: 6px; }
 .friend-row { display: flex; align-items: center; gap: 12px; width: 100%; padding: 10px 12px; margin-top: 8px; border: 1px solid var(--line); background: var(--bg); border-radius: 12px; cursor: pointer; text-align: left; font: inherit; color: inherit; transition: border-color .15s; }
 .friend-row:hover { border-color: var(--accent); }
+.friend-row.tinted { background: color-mix(in srgb, var(--pc) 16%, var(--bg)); border: 2px solid var(--pc); }
+.friend-row.tinted:hover { border-color: color-mix(in srgb, var(--pc) 70%, #fff); }
+.modal-box.tinted { background: color-mix(in srgb, var(--pc) 14%, var(--card)); border: 2px solid var(--pc); }
 .fr-main { display: flex; flex-direction: column; min-width: 0; flex: 1; }
 .fr-main b { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .fr-main .muted { font-size: 13px; }
@@ -7137,8 +7140,10 @@ var SubjectIcons = (function () {
       <div id="friends-list"><div class="waiting"><span class="dot-pulse"></span> Загружаем друзей…</div></div>`;
   }
 
+  function cardColor(fp) { return (fp && Profile.CARDS[Math.max(0, Math.min(16, fp.card | 0))]) || null; }
   function friendRow(fp) {
-    return `<div class="friend-row" role="button" tabindex="0" data-friend="${esc(fp.uid)}">${Profile.avatar(fp, 40)}<span class="fr-main"><b>${esc(fp.name)}</b><span class="muted"><span class="fr-st ${fp.online ? 'on' : ''}">${statusHTML(fp)}</span> · #${esc(fp.tag || '')}${fp.stats && fp.stats.streak ? ' · 🔥 ' + fp.stats.streak : ''}</span></span>${fp.online ? `<button type="button" class="btn soft fr-inv" data-invite="${esc(fp.uid)}">⚔️ Позвать</button>` : ''}<span class="fr-go">›</span></div>`;
+    const cc = cardColor(fp);
+    return `<div class="friend-row${cc ? ' tinted' : ''}"${cc ? ` style="--pc:${cc}"` : ''} role="button" tabindex="0" data-friend="${esc(fp.uid)}">${Profile.avatar(fp, 40)}<span class="fr-main"><b>${esc(fp.name)}</b><span class="muted"><span class="fr-st ${fp.online ? 'on' : ''}">${statusHTML(fp)}</span> · #${esc(fp.tag || '')}${fp.stats && fp.stats.streak ? ' · 🔥 ' + fp.stats.streak : ''}</span></span>${fp.online ? `<button type="button" class="btn soft fr-inv" data-invite="${esc(fp.uid)}">⚔️ Позвать</button>` : ''}<span class="fr-go">›</span></div>`;
   }
 
   async function loadFriends() {
@@ -7204,6 +7209,8 @@ var SubjectIcons = (function () {
       : isFriend ? (fp.online ? '<button type="button" class="btn" id="fr-invite">⚔️ Позвать в дуэль</button>' : '') + '<button type="button" class="btn danger" id="fr-remove">Удалить из друзей</button>'
       : '<button type="button" class="btn" id="fr-add">＋ Добавить в друзья</button>';
     const m = modal(`<div class="row" style="justify-content:flex-end"><button type="button" class="modal-x" data-close aria-label="Закрыть">×</button></div>${profileBlock(fp)}<div class="actions" style="justify-content:center">${btn}</div>`);
+    const cc = cardColor(fp), box = $('.modal-box', m.el);
+    if (cc && box) { box.classList.add('tinted'); box.style.setProperty('--pc', cc); }
     const add = $('#fr-add', m.el), rem = $('#fr-remove', m.el), inv = $('#fr-invite', m.el);
     if (inv) inv.onclick = () => { m.close(); openInviteModal(fp); };
     if (add) add.onclick = async () => {
