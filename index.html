@@ -7150,7 +7150,7 @@ var SubjectIcons = (function () {
     if (!Cloud.user) return `<h3>Друзья</h3><p class="muted" style="margin:0 0 12px;font-size:14px">Войдите через Google — вы получите свой уникальный # и сможете находить друзей по их #.</p><button class="btn google wide" id="login2">${GOOGLE_G} Войти через Google</button>`;
     const tag = Profile.me.tag;
     return `<div class="row" style="align-items:center"><h3 style="margin:0">Друзья</h3><span class="sp"></span><button type="button" class="btn" id="add-friend">＋ Добавить друга</button></div>
-      <div class="my-tag">Ваш #: ${tag ? `<b>#${esc(tag)}</b> <button type="button" class="link" id="copy-tag">Скопировать</button>` : '<span class="muted">выдаётся…</span>'}</div>
+      <div class="my-tag">Ваш ID: ${tag ? `<b>#${esc(tag)}</b> <button type="button" class="link" id="copy-tag">Скопировать</button>` : '<span class="muted">выдаётся…</span>'}</div>
       <div class="hint" style="margin:0 0 12px">Отправьте свой # другу — по нему он найдёт ваш профиль.</div>
       <div id="friends-list"><div class="waiting"><span class="dot-pulse"></span> Загружаем друзей…</div></div>`;
   }
