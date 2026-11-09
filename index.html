@@ -828,6 +828,14 @@ body:has(.pe-drawer.open) { overflow: hidden; }
 .bn-card .pcard-stats { font-size: 12px; margin-top: 4px; }
 .bn-more { display: block; text-align: right; font-size: 12px; font-weight: 700; color: var(--accent); margin-top: 4px; }
 
+/* наблюдатель: ответы игроков и спойлер с разбором */
+.w-ans { display: inline-block; max-width: 100%; margin-top: 6px; padding: 3px 10px; border-radius: 999px; font-size: 13px; font-weight: 800; overflow-wrap: anywhere; }
+.w-ans.ok { background: var(--ok-soft); color: var(--ok); }
+.w-ans.bad { background: var(--bad-soft); color: var(--bad); }
+.w-spoil { margin-top: 18px; }
+.w-spoil > summary { cursor: pointer; font-weight: 700; }
+.w-spoil > summary .muted { font-weight: 600; font-size: 13px; }
+
 </style>
 </head>
 <body>
@@ -8091,10 +8099,30 @@ var SubjectIcons = (function () {
     } else if (g.mode === 'host') {
       g.S.seq++;
       g.S.now = Date.now();
-      if (g.link) g.link.send('state', g.S, { retain: true });
+      if (g.link) { g.link.send('state', g.S, { retain: true }); sendSpec(g); }
       store.set('egeduel:host:' + g.S.code, { S: g.S, P: g.P, t: Date.now() });
     }
     render();
+  }
+
+  // Канал для зрителей: ответ, разбор и ответы игроков ещё до конца раунда.
+  // Игроки на него не подписываются — в общем состоянии этих данных нет.
+  function sendSpec(g) {
+    const S = g.S, P = g.P;
+    if (S.phase !== 'question' || !P || !P.task) return;
+    const t = P.task, ans = {};
+    Object.keys(P.answers || {}).forEach((r) => {
+      const a = P.answers[r];
+      let ok = false;
+      try { ok = !!E.check(t, a.value); } catch (e) {}
+      ans[r] = { value: a.value, ok };
+    });
+    let answer = '';
+    try { answer = E.answerText(t); } catch (e) {}
+    const s = JSON.stringify({ gameNo: S.gameNo || 1, round: S.round, answer, short: t.short || '', ans });
+    if (s === g.specSent) return;
+    g.specSent = s;
+    g.link.send('spec', s, { retain: true });
   }
 
   // ---- соло ----
@@ -9754,6 +9782,11 @@ var SubjectIcons = (function () {
       w.profiles[r] = Profile.sanitize(p);
       if (app.tab === 'watch') renderWatchHead();
     }));
+    w.link.on('spec', (x) => {
+      if (app.watch !== w || !x || typeof x !== 'object') return;
+      w.spec = x;
+      if (app.tab === 'watch') { renderWatchHead(); renderWatchSpec(); }
+    });
     // если состояние так и не пришло — комнаты уже нет
     setTimeout(() => { if (app.watch === w && !w.S) { w.gone = true; if (app.tab === 'watch') renderWatch(); } }, 8000);
   }
@@ -9762,14 +9795,38 @@ var SubjectIcons = (function () {
     app.watch = null;
     if (w && w.link) w.link.close();
   }
+  // данные зрителя для текущего раунда (или null, если ещё не пришли / от прошлого раунда)
+  function curSpec(w) {
+    const x = w && w.spec, S = w && w.S;
+    return x && S && S.phase === 'question' && x.round === S.round && x.gameNo === (S.gameNo || 1) ? x : null;
+  }
+  function renderWatchSpec() {
+    const w = app.watch, el = $('#w-spec');
+    if (!w || !el) return;
+    const x = curSpec(w);
+    const sig = x ? x.gameNo + '|' + x.round + '|' + x.answer + '|' + x.short : '';
+    if (el.dataset.sig === sig) return;
+    el.dataset.sig = sig;
+    if (!x) { el.innerHTML = '<p class="muted w-note">👀 Игроки решают это задание. Ответ и разбор подгружаются…</p>'; return; }
+    el.innerHTML = `<details class="card w-spoil"${w.specOpen ? ' open' : ''}><summary>🔑 Ответ и разбор <span class="muted">— игроки их не видят</span></summary>
+      <div class="right-ans" style="margin-top:12px"><span class="muted">Правильный ответ:</span> <b>${esc(x.answer)}</b></div>
+      ${x.short ? `<div class="sol"><h3>Решение</h3><div class="task-text" style="font-size:16px">${x.short}</div></div>` : ''}</details>`;
+    const d = $('details', el);
+    d.ontoggle = () => { w.specOpen = d.open; };
+    typeset(el);
+  }
   function watchRem(w) { return w.S.deadline ? w.S.deadline - (Date.now() + (w.offset || 0)) : Infinity; }
   function renderWatchHead() {
     const w = app.watch, el = $('#w-head');
     if (!w || !w.S || !el) return;
-    const S = w.S, max = S.settings.lives;
-    const st = (p) => {
+    const S = w.S, max = S.settings.lives, x = curSpec(w);
+    const st = (p, r) => {
       if (p.left) return '<span class="pstat off">🚪 вышел(а)</span>';
       if (p.out) return '<span class="pstat off">💀 выбыл(а)</span>';
+      if (S.phase === 'question' && p.answered && x && x.ans && x.ans[r]) {
+        const a = x.ans[r];
+        return `<span class="w-ans ${a.ok ? 'ok' : 'bad'}" title="${a.ok ? 'Верно' : 'Неверно'}">${a.ok ? '✓' : '✗'} ${esc(a.value)}</span>`;
+      }
       if (S.phase === 'question') return p.answered ? '<span class="pstat ok">✓ ответ дан</span>' : '<span class="pstat">думает…</span>';
       if (S.phase === 'result' || S.phase === 'ready') return p.ready ? '<span class="pstat ok">✓ готов</span>' : '<span class="pstat">читает разбор</span>';
       return '';
@@ -9777,7 +9834,7 @@ var SubjectIcons = (function () {
     const pl = roles(S).map((r) => {
       const p = S.players[r];
       const win = S.phase === 'over' && S.winner === r;
-      return `<div class="w-p${win ? ' win' : ''}">${win ? '<div class="w-crown">👑</div>' : ''}${Profile.avatar(w.profiles[r] || Profile.fallback(p.name), 48)}<b class="w-name">${esc(p.name)}</b>${max ? hearts(p.lives, max) : ''}<span class="w-score">верно: ${okCount(S, r)}</span>${st(p)}</div>`;
+      return `<div class="w-p${win ? ' win' : ''}">${win ? '<div class="w-crown">👑</div>' : ''}${Profile.avatar(w.profiles[r] || Profile.fallback(p.name), 48)}<b class="w-name">${esc(p.name)}</b>${max ? hearts(p.lives, max) : ''}<span class="w-score">верно: ${okCount(S, r)}</span>${st(p, r)}</div>`;
     }).join('<div class="vs">VS</div>');
     let center;
     if (S.phase === 'question') center = `<div class="round-lbl">Раунд ${S.round}${S.settings.rounds ? ' из ' + S.settings.rounds : ''}</div>${S.deadline ? `<div class="timer" id="w-timer">${fmtTime(watchRem(w))}</div>` : '<div class="timer inf">∞</div>'}`;
@@ -9788,7 +9845,7 @@ var SubjectIcons = (function () {
     const S = w.S;
     if (S.phase === 'lobby') return '<section class="card w-wait"><div class="waiting" style="justify-content:center"><span class="dot-pulse"></span> Игроки собираются в комнате…</div></section>';
     if (S.phase === 'ready') return '<section class="card w-wait"><div class="waiting" style="justify-content:center"><span class="dot-pulse"></span> Игроки готовятся к старту…</div></section>';
-    if (S.phase === 'question') return `${taskCard(S)}<p class="muted w-note">👀 Игроки решают это задание. Ответы появятся, когда раунд закончится.</p>`;
+    if (S.phase === 'question') return `${taskCard(S)}<div id="w-spec"></div>`;
     const R = S.result;
     const verdicts = R ? `<div class="verdicts${isTrio(S) ? ' trio' : ''}">${roles(S).filter((r) => R.v[r]).map((r) => {
       const v = R.v[r];
@@ -9823,6 +9880,7 @@ var SubjectIcons = (function () {
         typeset($('#w-body'));
       }
       renderWatchHead();
+      renderWatchSpec();
     }
     const exit = () => { stopWatch(); app.tab = 'profile'; render(); animatePage(); window.scrollTo(0, 0); };
     if ($('#w-exit')) $('#w-exit').onclick = exit;
