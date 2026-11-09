@@ -901,6 +901,14 @@ body:has(.pe-drawer.open) { overflow: hidden; }
 .ach-pop b { display: block; font-size: 16px; }
 @media (prefers-reduced-motion: reduce) { .ach-pop { transition: opacity .2s ease; transform: translate(-50%, 0); } }
 
+/* кнопка Telegram-канала — справа внизу, прячется в играх, как и «Магазин» */
+.tg-fab { position: fixed; right: 18px; bottom: 18px; z-index: 40; width: 52px; height: 52px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; background: #2aabee; color: #fff; box-shadow: 0 8px 24px rgba(0,0,0,.22); transition: transform .15s, box-shadow .15s; }
+.tg-fab svg { transform: translateX(-1px); }
+.tg-fab:hover { transform: translateY(-2px); box-shadow: 0 12px 28px rgba(42,171,238,.4); }
+.tg-fab:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
+.tg-fab.hide { display: none; }
+@media (max-width: 600px) { .tg-fab { right: 12px; bottom: 12px; width: 46px; height: 46px; } .tg-fab svg { width: 23px; height: 23px; } }
+
 </style>
 </head>
 <body>
@@ -924,6 +932,7 @@ body:has(.pe-drawer.open) { overflow: hidden; }
   </div>
 </header>
 <button class="shop-fab" id="shop-btn" type="button" aria-label="Магазин"><span aria-hidden="true">🛒</span> Магазин</button>
+<a class="tg-fab" id="tg-btn" href="https://t.me/egeduel2027" target="_blank" rel="noopener" title="Наш Telegram-канал" aria-label="Наш Telegram-канал (откроется в новой вкладке)"><svg viewBox="0 0 24 24" width="26" height="26" aria-hidden="true"><path d="M20.6 4.3 3.4 11c-.9.4-.9 1.6.1 1.9l4.3 1.4 1.7 5.2c.3.8 1.3 1 1.9.4l2.4-2.3 4.4 3.2c.7.5 1.6.1 1.8-.7l2.9-13.6c.2-1-.8-1.8-1.7-1.4zM9.9 14.3l7.6-6.9-6.1 7.9-.4 2.9-1.1-3.9z" fill="currentColor"/></svg></a>
 <main><div class="wrap" id="main"></div></main>
 <div class="conn" id="conn">Нет связи — переподключаемся…</div>
 <div class="toast" id="toast"></div>
@@ -8708,6 +8717,8 @@ var SubjectIcons = (function () {
     const gameTab = gameTabOf(g);
     if (app.tab !== 'profile' || (g && app.tab === gameTab)) $$('#pe-drawer, #pe-back').forEach((x) => x.remove()); // панель настройки живёт в body
     const shop = $('#shop-btn');
+    const tg = $('#tg-btn');
+    if (tg) tg.classList.toggle('hide', !!(g && app.tab === gameTab && (g.mode === 'train' ? !g.done : g.S && g.S.phase !== 'over')));
     if (shop) { shop.classList.toggle('hide', !!(g && app.tab === gameTab && (g.mode === 'train' ? !g.done : g.S && g.S.phase !== 'over'))); shop.classList.toggle('on', app.tab === 'shop'); }
     if (g && app.tab === gameTab) { if (g.mode === 'train') renderTrain(); else renderGame(); return; }
     app.rendered = null;
