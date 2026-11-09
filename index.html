@@ -784,7 +784,7 @@ body:has(.pe-drawer.open) { overflow: hidden; }
 @keyframes bell-pop-in { from { opacity: 0; transform: translateY(-6px) scale(.96); } to { opacity: 1; transform: none; } }
 @keyframes bell-pop-out { to { opacity: 0; transform: translateY(-4px) scale(.97); } }
 .bn-head { font-family: "Unbounded", sans-serif; font-weight: 700; font-size: 15px; margin: 2px 2px 10px; }
-.bn-item { display: flex; gap: 10px; padding: 10px; border: 1px solid var(--line); border-radius: 12px; background: var(--bg); margin-top: 8px; }
+.bn-item { padding: 10px; border: 1px solid var(--line); border-radius: 12px; background: var(--bg); margin-top: 8px; }
 .bn-ico { font-size: 20px; line-height: 1.2; }
 .bn-main { flex: 1; min-width: 0; }
 .bn-text { font-size: 14px; overflow-wrap: anywhere; }
@@ -812,6 +812,21 @@ body:has(.pe-drawer.open) { overflow: hidden; }
 .w-wait { text-align: center; padding: 36px 20px; }
 @media (max-width: 640px) { .w-p { min-width: 0; } .w-players .vs { display: none; } }
 @media (prefers-reduced-motion: reduce) { .w-live i { animation: none; } }
+
+/* мини-профиль в уведомлении */
+.bn-what { font-size: 13px; font-weight: 700; color: var(--ink2); margin-bottom: 8px; }
+.bn-card { position: relative; display: block; border-radius: 14px; cursor: pointer; transition: transform .15s ease, box-shadow .15s ease; }
+.bn-card:not(.loading):hover { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(0,0,0,.14); }
+.bn-card:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.bn-card.loading { cursor: default; }
+.bn-card .pcard { gap: 10px; }
+.bn-card .pcard:not(.tinted) { border: 1px solid var(--line); border-radius: 14px; padding: 10px; background: var(--card); }
+.bn-card .pcard.tinted { padding: 10px; }
+.bn-card .ava { width: 48px !important; height: 48px !important; font-size: 26px !important; flex: none; }
+.bn-card .pcard-name { font-size: 15px; }
+.bn-card .pcard-bio { font-size: 13px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; white-space: normal; }
+.bn-card .pcard-stats { font-size: 12px; margin-top: 4px; }
+.bn-more { display: block; text-align: right; font-size: 12px; font-weight: 700; color: var(--accent); margin-top: 4px; }
 
 </style>
 </head>
@@ -9045,6 +9060,7 @@ var SubjectIcons = (function () {
   }
   function showInvites(list) {
     invList = list || [];
+    invList.forEach((x) => needProfile(x.from));
     updateBell();
     let box = $('#invite-pop');
     const iv = visibleInvites()[0];
@@ -9064,6 +9080,7 @@ var SubjectIcons = (function () {
     const fresh = (list || []).filter((x) => !freqSeen[x.id]);
     (list || []).forEach((x) => { freqSeen[x.id] = 1; });
     freqList = list || [];
+    freqList.forEach((x) => needProfile(x.from));
     updateBell();
     if (fresh.length && app.freqReady) { toast('👤 ' + fresh[0].name + ' хочет добавить вас в друзья'); ringBell(); }
     app.freqReady = true; // о заявках, которые уже были при входе, не шумим
@@ -9087,19 +9104,44 @@ var SubjectIcons = (function () {
     app.invN = inv;
     if (app.bellOpen) renderBell();
   }
+  // профили отправителей для мини-карточек: uid → профиль | null (грузится) | false (не нашли)
+  const profCache = {};
+  function needProfile(uid) {
+    if (!uid || uid in profCache || !Cloud.user) return;
+    profCache[uid] = null;
+    Cloud.getProfile(uid).then((fp) => { profCache[uid] = fp || false; }).catch(() => { profCache[uid] = false; })
+      .then(() => { if (app.bellOpen) renderBell(); });
+  }
+  // мини-профиль в уведомлении: как «Так вас видит соперник»; нажатие открывает полный профиль
+  function bnCard(uid, name, tag) {
+    const fp = profCache[uid];
+    if (fp) return `<div class="bn-card" role="button" tabindex="0" data-bn-prof="${esc(uid)}" title="Открыть профиль">${Profile.card(fp)}<span class="bn-more">Открыть профиль ›</span></div>`;
+    if (fp === null) return `<div class="bn-card loading"><div class="pcard">${Profile.avatar(Profile.fallback(name), 64)}<div class="pcard-body"><div class="pcard-name">${esc(name)}${tag ? ` <span class="pcard-tag">#${esc(tag)}</span>` : ''}</div><div class="pcard-bio muted"><span class="dot-pulse"></span> Загружаем профиль…</div></div></div></div>`;
+    return `<div class="bn-text"><b>${esc(name)}</b>${tag ? ' <span class="muted">#' + esc(tag) + '</span>' : ''}</div>`;
+  }
   function bellHTML() {
+    if (!Cloud.user) return '<div class="bn-head">Уведомления</div><div class="bn-empty">Войдите через Google, чтобы получать заявки в друзья и приглашения в дуэль.</div>';
     const reqs = freqList.map((r) => `<div class="bn-item">
-        <div class="bn-ico">👤</div>
-        <div class="bn-main"><div class="bn-text"><b>${esc(r.name)}</b>${r.tag ? ' <span class="muted">#' + esc(r.tag) + '</span>' : ''} хочет добавить вас в друзья</div>
-        <div class="bn-act"><button type="button" class="btn" data-fr-yes="${esc(r.id)}">Принять</button><button type="button" class="btn ghost" data-fr-no="${esc(r.id)}">Отклонить</button></div></div>
+        <div class="bn-what">👤 Хочет добавить вас в друзья</div>
+        ${bnCard(r.from, r.name, r.tag)}
+        <div class="bn-act"><button type="button" class="btn" data-fr-yes="${esc(r.id)}">Принять</button><button type="button" class="btn ghost" data-fr-no="${esc(r.id)}">Отклонить</button></div>
       </div>`).join('');
     const invs = visibleInvites().map((iv) => `<div class="bn-item">
-        <div class="bn-ico">⚔️</div>
-        <div class="bn-main"><div class="bn-text"><b>${esc(iv.name)}</b> зовёт вас в дуэль · ${SUBJ_ICON[iv.subject]} ${SUBJ_NAME[iv.subject]}</div>
-        <div class="bn-act"><button type="button" class="btn" data-iv-yes="${esc(iv.id)}">Принять</button><button type="button" class="btn ghost" data-iv-no="${esc(iv.id)}">Отклонить</button></div></div>
+        <div class="bn-what">⚔️ Зовёт вас в дуэль · ${SUBJ_ICON[iv.subject]} ${SUBJ_NAME[iv.subject]}</div>
+        ${bnCard(iv.from, iv.name, iv.tag)}
+        <div class="bn-act"><button type="button" class="btn" data-iv-yes="${esc(iv.id)}">Принять</button><button type="button" class="btn ghost" data-iv-no="${esc(iv.id)}">Отклонить</button></div>
       </div>`).join('');
-    if (!Cloud.user) return '<div class="bn-head">Уведомления</div><div class="bn-empty">Войдите через Google, чтобы получать заявки в друзья и приглашения в дуэль.</div>';
     return `<div class="bn-head">Уведомления</div>${reqs || invs ? invs + reqs : '<div class="bn-empty">🔕 Новых уведомлений нет</div>'}`;
+  }
+  async function acceptFreq(r) {
+    await Cloud.acceptFriend(r.id, r.from);
+    freqList = freqList.filter((x) => x.id !== r.id); updateBell();
+    toast(r.name + ' теперь у вас в друзьях');
+    refreshFriends();
+  }
+  function declineFreq(r) {
+    Cloud.declineFriend(r.id);
+    freqList = freqList.filter((x) => x.id !== r.id); updateBell();
   }
   function renderBell() {
     const p = $('#bell-pop');
@@ -9109,21 +9151,20 @@ var SubjectIcons = (function () {
       const r = freqList.find((x) => x.id === b.dataset.frYes);
       if (!r) return;
       b.disabled = true;
-      try {
-        await Cloud.acceptFriend(r.id, r.from);
-        freqList = freqList.filter((x) => x.id !== r.id); updateBell();
-        toast(r.name + ' теперь у вас в друзьях');
-        refreshFriends();
-      } catch (e) { b.disabled = false; toast('Не удалось принять заявку: ' + (e.message || e)); }
+      try { await acceptFreq(r); } catch (e) { b.disabled = false; toast('Не удалось принять заявку: ' + (e.message || e)); }
     }));
-    $$('[data-fr-no]', p).forEach((b) => (b.onclick = () => {
-      const r = freqList.find((x) => x.id === b.dataset.frNo);
-      if (!r) return;
-      Cloud.declineFriend(r.id);
-      freqList = freqList.filter((x) => x.id !== r.id); updateBell();
-    }));
+    $$('[data-fr-no]', p).forEach((b) => (b.onclick = () => { const r = freqList.find((x) => x.id === b.dataset.frNo); if (r) declineFreq(r); }));
     $$('[data-iv-yes]', p).forEach((b) => (b.onclick = () => { const iv = visibleInvites().find((x) => x.id === b.dataset.ivYes); if (iv) acceptInvite(iv); }));
     $$('[data-iv-no]', p).forEach((b) => (b.onclick = () => { const iv = visibleInvites().find((x) => x.id === b.dataset.ivNo); if (iv) declineInvite(iv); }));
+    $$('[data-bn-prof]', p).forEach((c) => {
+      c.onclick = () => {
+        const fp = profCache[c.dataset.bnProf];
+        if (!fp) return;
+        const freq = freqList.find((x) => x.from === fp.uid) || null;
+        showProfileModal(fp, { freq });
+      };
+      c.onkeydown = (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); c.click(); } };
+    });
   }
   function placeBell() {
     const p = $('#bell-pop'), b = $('#bell-btn');
@@ -9272,10 +9313,12 @@ var SubjectIcons = (function () {
     </div>`;
   }
 
-  function showProfileModal(fp) {
+  function showProfileModal(fp, opts) {
     const isMe = fp.self || (Cloud.user && fp.uid === Cloud.user.uid);
     const isFriend = (Profile.me.friends || []).indexOf(fp.uid) >= 0;
+    const freq = !isMe && !isFriend && opts && opts.freq;
     const btn = isMe ? ''
+      : freq ? '<button type="button" class="btn" id="fr-yes">✓ Принять заявку</button><button type="button" class="btn ghost" id="fr-no">Отклонить</button>'
       : isFriend ? (fp.online && fp.play ? '<button type="button" class="btn" id="fr-watch">👁 Смотреть матч</button>' : fp.online ? '<button type="button" class="btn" id="fr-invite">⚔️ Позвать в дуэль</button>' : '') + '<button type="button" class="btn danger" id="fr-remove">Удалить из друзей</button>'
       : '<button type="button" class="btn" id="fr-add">＋ Добавить в друзья</button>';
     const m = modal(`<div class="row" style="justify-content:flex-end"><button type="button" class="modal-x" data-close aria-label="Закрыть">×</button></div>${profileBlock(fp)}${btn ? `<div class="actions" style="justify-content:center">${btn}</div>` : ''}`);
@@ -9285,6 +9328,13 @@ var SubjectIcons = (function () {
     const add = $('#fr-add', m.el), rem = $('#fr-remove', m.el), inv = $('#fr-invite', m.el), wt = $('#fr-watch', m.el);
     if (inv) inv.onclick = () => { m.close(); openInviteModal(fp); };
     if (wt) wt.onclick = () => { m.close(); watchMatch(fp); };
+    const fy = $('#fr-yes', m.el), fn = $('#fr-no', m.el);
+    if (fy) fy.onclick = async () => {
+      fy.disabled = true;
+      try { await acceptFreq(freq); m.close(); }
+      catch (e) { fy.disabled = false; toast('Не удалось принять заявку: ' + (e.message || e)); }
+    };
+    if (fn) fn.onclick = () => { declineFreq(freq); m.close(); };
     if (add) add.onclick = async () => {
       add.disabled = true;
       try {
