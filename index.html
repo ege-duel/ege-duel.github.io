@@ -836,6 +836,50 @@ body:has(.pe-drawer.open) { overflow: hidden; }
 .w-spoil > summary { cursor: pointer; font-weight: 700; }
 .w-spoil > summary .muted { font-weight: 600; font-size: 13px; }
 
+/* соло: переключатель Флеш / Тренировка */
+.solo-kind { margin: 2px 0 14px; }
+.solo-kind button { padding: 9px 18px; font-size: 15px; }
+.tper-list { display: grid; gap: 6px; max-height: 340px; overflow: auto; padding-right: 2px; }
+.tper { display: flex; align-items: center; gap: 10px; padding: 6px 8px; border: 1px solid var(--line); border-radius: 12px; background: var(--bg); }
+.tper .badge { flex: none; }
+.tper-t { flex: 1; min-width: 0; font-size: 13px; color: var(--ink2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.stepper.sm button { width: 32px; height: 32px; font-size: 17px; }
+.stepper.sm span { min-width: 34px; }
+
+/* тренировка: полоска с номерами вместо таймера */
+.tr-top { margin-bottom: 18px; }
+.tr-head { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.tr-head .round-lbl { text-align: left; }
+.tr-prog { font-size: 15px; color: var(--ink2); margin-top: 2px; }
+.tr-bar { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 14px; }
+.tr-q { min-width: 46px; height: 46px; padding: 0 6px; border-radius: 11px; border: 1.5px solid var(--line); background: var(--bg2); color: var(--ink2); cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 1.05; transition: transform .12s ease, background .15s ease, border-color .15s ease; }
+.tr-q b { font-size: 15px; font-weight: 800; }
+.tr-q small { font-size: 10px; font-weight: 700; opacity: .75; }
+.tr-q:hover { transform: translateY(-1px); border-color: var(--accent); }
+.tr-q.done { background: color-mix(in srgb, var(--accent) 22%, var(--bg2)); border-color: color-mix(in srgb, var(--accent) 45%, transparent); color: var(--ink); }
+.tr-q.cur { border-color: var(--accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 35%, transparent); color: var(--ink); }
+.tr-q.ok { background: var(--ok-soft); border-color: transparent; color: var(--ok); }
+.tr-q.bad { background: var(--bad-soft); border-color: transparent; color: var(--bad); }
+.tr-q.skip { border-style: dashed; opacity: .75; }
+.tr-q:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.tr-saved { margin-top: 10px; padding: 10px 12px; border-radius: 12px; background: color-mix(in srgb, var(--accent) 14%, transparent); font-size: 14px; overflow-wrap: anywhere; }
+.tr-nav { margin-top: 14px; }
+.tr-stats .stat.ok b { color: var(--ok); }
+.tr-stats .stat.bad b { color: var(--bad); }
+.tr-item { border: 1px solid var(--line); border-radius: 14px; margin-top: 10px; background: var(--bg); scroll-margin-top: 80px; }
+.tr-item > summary { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding: 12px 14px; cursor: pointer; list-style: none; }
+.tr-item > summary::-webkit-details-marker { display: none; }
+.tr-mk { flex: none; width: 28px; height: 28px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-weight: 800; background: var(--bg2); color: var(--ink3); }
+.tr-item.ok .tr-mk { background: var(--ok-soft); color: var(--ok); }
+.tr-item.bad .tr-mk { background: var(--bad-soft); color: var(--bad); }
+.tr-it { flex: 1; min-width: 160px; font-size: 14px; }
+.tr-yours { font-size: 13px; color: var(--ink2); overflow-wrap: anywhere; }
+.tr-body { padding: 0 14px 14px; border-top: 1px solid var(--line); }
+.tr-body > .task-text { margin-top: 12px; }
+.tr-full { margin-top: 10px; }
+.tr-full > summary { cursor: pointer; font-weight: 700; color: var(--accent); }
+@media (max-width: 560px) { .tr-head .btn { width: 100%; } }
+
 </style>
 </head>
 <body>
@@ -7908,7 +7952,8 @@ var SubjectIcons = (function () {
     joinError: '',
     busy: false,
   };
-  ['math', 'bio', 'soc', 'phys', 'rus'].forEach((sid) => { app.draft[sid] = { duel: loadDraft(sid, 'duel'), trio: loadDraft(sid, 'trio'), solo: loadDraft(sid, 'solo') }; });
+  ['math', 'bio', 'soc', 'phys', 'rus'].forEach((sid) => { app.draft[sid] = { duel: loadDraft(sid, 'duel'), trio: loadDraft(sid, 'trio'), solo: loadDraft(sid, 'solo'), train: loadDraft(sid, 'train') }; });
+  app.soloKind = store.get('egeduel:soloKind', 'flash');
   const draft = (key) => app.draft[app.subject][key];
   const saveDraft = (key) => store.set(setKey(app.subject, key), app.draft[app.subject][key]);
 
@@ -7943,6 +7988,7 @@ var SubjectIcons = (function () {
     }
     return out.join(', ');
   }
+  const plural = (n, a, b, c) => (n % 10 === 1 && n % 100 !== 11 ? a : n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 10 || n % 100 >= 20) ? b : c);
   const livesWord = (n) => (n % 10 === 1 && n % 100 !== 11 ? 'жизнь' : n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 10 || n % 100 >= 20) ? 'жизни' : 'жизней');
   const hearts = (n, max) => {
     if (!max) return '<div class="hearts inf" aria-label="Жизни не ограничены">' + HEART + '<b>∞</b></div>';
@@ -7973,7 +8019,7 @@ var SubjectIcons = (function () {
   const active = (S) => roles(S).filter((r) => inGame(S, r));
   const okCount = (S, r) => S.history.filter((h) => h[r]).length;
   const roleByPub = (S, pub) => ALL_ROLES.find((r) => r !== 'host' && S.players[r] && S.players[r].pub === pub) || null;
-  const gameTabOf = (g) => (!g ? null : g.mode === 'solo' ? 'solo' : g.trio ? 'trio' : 'duel');
+  const gameTabOf = (g) => (!g ? null : g.mode === 'solo' || g.mode === 'train' ? 'solo' : g.trio ? 'trio' : 'duel');
   // места в трио: оставшиеся в игре выше выбывших, затем по жизням и верным ответам
   function standings(S) {
     const key = (r) => { const p = S.players[r]; return [p.left ? 0 : 1, p.out ? p.outRound || 0 : 1e9, S.settings.lives ? p.lives : 0, okCount(S, r)]; };
@@ -8456,6 +8502,12 @@ var SubjectIcons = (function () {
   async function resume() {
     const a = sess.get('egeduel:active', null);
     if (!a) return;
+    if (a.mode === 'train') {
+      const d = sess.get('egeduel:train', null);
+      if (d && d.items && d.items.length) { app.game = d; app.subject = d.subject || app.subject; render(); }
+      else sess.del('egeduel:active');
+      return;
+    }
     if (a.mode === 'solo') {
       const d = sess.get('egeduel:solo', null);
       if (d && d.S) { app.game = { mode: 'solo', me: 'host', S: d.S, P: d.P || {}, ui: {} }; app.subject = subjOfState(d.S); render(); }
@@ -8527,6 +8579,7 @@ var SubjectIcons = (function () {
   }
 
   function onSettingsClick(key, el) {
+    if (key === 'train') { onTrainClick(el); return; }
     const d = draft(key);
     const k = el.dataset.set, v = el.dataset.v;
     if (k === 'time') d.time = +v;
@@ -8570,8 +8623,8 @@ var SubjectIcons = (function () {
     const gameTab = gameTabOf(g);
     if (app.tab !== 'profile' || (g && app.tab === gameTab)) $$('#pe-drawer, #pe-back').forEach((x) => x.remove()); // панель настройки живёт в body
     const shop = $('#shop-btn');
-    if (shop) { shop.classList.toggle('hide', !!(g && app.tab === gameTab && g.S && g.S.phase !== 'over')); shop.classList.toggle('on', app.tab === 'shop'); }
-    if (g && app.tab === gameTab) { renderGame(); return; }
+    if (shop) { shop.classList.toggle('hide', !!(g && app.tab === gameTab && (g.mode === 'train' ? !g.done : g.S && g.S.phase !== 'over'))); shop.classList.toggle('on', app.tab === 'shop'); }
+    if (g && app.tab === gameTab) { if (g.mode === 'train') renderTrain(); else renderGame(); return; }
     app.rendered = null;
     if (app.tab === 'profile') { if (!$('#profile-page')) renderProfile(); return; }
     if (app.tab === 'watch') { renderWatch(); return; }
@@ -9411,7 +9464,7 @@ var SubjectIcons = (function () {
     if (!g) return '';
     const where = gameTabOf(g);
     if (where === tab) return '';
-    return `<div class="notice" style="margin-bottom:18px">У вас идёт ${g.mode === 'solo' ? 'соло-игра' : g.trio ? 'игра втроём' : 'дуэль'}. <button class="link" data-go="${where}">Вернуться к игре →</button></div>`;
+    return `<div class="notice" style="margin-bottom:18px">У вас идёт ${g.mode === 'train' ? (g.done ? 'разбор тренировки' : 'тренировка') : g.mode === 'solo' ? 'соло-игра' : g.trio ? 'игра втроём' : 'дуэль'}. <button class="link" data-go="${where}">Вернуться к игре →</button></div>`;
   }
 
   function nameField(id) {
@@ -9503,21 +9556,34 @@ var SubjectIcons = (function () {
     $('#code').addEventListener('input', (e) => { app.joinCode = e.target.value; });
   }
 
+  // можно ли начать новую соло-игру (флеш или тренировку) вместо текущей
+  function canStartSolo() {
+    const g = app.game;
+    if (!g) return true;
+    if (g.mode === 'solo') return g.S.phase === 'over' || confirm('Начать заново? Текущая игра будет завершена.');
+    if (g.mode === 'train') return g.done || confirm('Начать заново? Текущая тренировка будет завершена без результатов.');
+    toast('Сначала завершите дуэль');
+    return false;
+  }
+
   function renderSoloHome() {
-    main().innerHTML = `
+    const kind = app.soloKind === 'train' ? 'train' : 'flash';
+    const seg = `<div class="seg solo-kind" role="tablist" aria-label="Режим соло"><button type="button" role="tab" aria-selected="${kind === 'flash'}" class="${kind === 'flash' ? 'on' : ''}" data-kind="flash">⚡ Флеш</button><button type="button" role="tab" aria-selected="${kind === 'train'}" class="${kind === 'train' ? 'on' : ''}" data-kind="train">🎯 Тренировка</button></div>`;
+    main().innerHTML = kind === 'flash' ? `
       ${activeGameBanner('solo')}
       <div class="home-kicker">${SUBJ[app.subject].name}</div>
-      <h1>Соло-тренировка</h1>
-      <p class="lead">Те же правила, что и в дуэли, но без соперника: решайте задания, пока не закончатся жизни. После каждого раунда — разбор решения.</p>
+      <h1>Соло</h1>
+      ${seg}
+      <p class="lead">Флеш — те же правила, что и в дуэли, но без соперника: решайте задания на время, пока не закончатся жизни. После каждого раунда — разбор решения.</p>
       <div class="grid2">
         <section class="card">
           <h2>Настройки</h2>
           ${nameField('name-solo')}
           ${settingsHTML('solo')}
-          <button class="btn big wide" id="solo-start">Начать тренировку</button>
+          <button class="btn big wide" id="solo-start">Начать флеш</button>
         </section>
         <section class="card">
-          <h3>Правила соло</h3>
+          <h3>Правила флеша</h3>
           <ul style="margin:0;padding-left:20px;color:var(--ink2);font-size:14px">
             <li>Верный ответ — жизнь сохраняется.</li>
             <li>Неверный ответ или истёкшее время — минус одна жизнь.</li>
@@ -9525,13 +9591,245 @@ var SubjectIcons = (function () {
             <li>Раунды не идут автоматически — после разбора нажмите «Продолжить».</li>
           </ul>
         </section>
+      </div>` : `
+      ${activeGameBanner('solo')}
+      <div class="home-kicker">${SUBJ[app.subject].name}</div>
+      <h1>Соло</h1>
+      ${seg}
+      <p class="lead">Тренировка — спокойный режим без таймера и жизней. Соберите свой вариант, решайте задания в любом порядке, а ответы и разборы откроются в конце.</p>
+      <div class="grid2">
+        <section class="card" data-skey="train">
+          <h2>Настройки</h2>
+          ${trainSettingsHTML()}
+          <button class="btn big wide" id="train-start">Начать тренировку</button>
+        </section>
+        <section class="card">
+          <h3>Как устроена тренировка</h3>
+          <ul style="margin:0;padding-left:20px;color:var(--ink2);font-size:14px">
+            <li>Нет таймера и жизней — думайте сколько нужно.</li>
+            <li>Выберите номера и сколько раз дать каждый из них.</li>
+            <li>Сверху — полоска с номерами: переключайтесь между заданиями и меняйте ответы когда угодно.</li>
+            <li>Верно или нет, вы узнаете только после кнопки «Завершить тренировку» — как на настоящем экзамене.</li>
+            <li>После завершения — правильные ответы и разбор каждого задания.</li>
+          </ul>
+        </section>
       </div>`;
     bindCommon();
-    $('#solo-start').onclick = () => {
-      if (app.game && app.game.mode === 'solo' && app.game.S.phase !== 'over' && !confirm('Начать новую тренировку? Текущая будет завершена.')) return;
-      if (app.game && app.game.mode !== 'solo') { toast('Сначала завершите дуэль'); return; }
-      startSolo();
+    $$('[data-kind]').forEach((b) => (b.onclick = () => {
+      if (app.soloKind === b.dataset.kind) return;
+      app.soloKind = b.dataset.kind;
+      store.set('egeduel:soloKind', app.soloKind);
+      render();
+    }));
+    if ($('#solo-start')) $('#solo-start').onclick = () => { if (canStartSolo()) startSolo(); };
+    if ($('#train-start')) $('#train-start').onclick = () => { if (canStartSolo()) startTrain(); };
+  }
+
+  /* ---------- соло: тренировка (без таймера и жизней, ответы — в конце) ---------- */
+  const TRAIN_MAX = 100;
+  function trainDraft() {
+    const d = draft('train');
+    if (!d.per || typeof d.per !== 'object') d.per = {};
+    if (!Array.isArray(d.nums)) d.nums = [];
+    return d;
+  }
+  const trainCnt = (d, n) => Math.max(1, Math.min(20, (d.per && d.per[n]) | 0 || 1));
+  const trainTotal = (d) => d.nums.reduce((s, n) => s + trainCnt(d, n), 0);
+
+  function trainSettingsHTML() {
+    const d = trainDraft(), SB = SUBJ[app.subject], all = allNums(app.subject);
+    d.nums = d.nums.filter((n) => all.indexOf(n) >= 0);
+    const sel = d.nums.slice().sort((a, b) => a - b);
+    const total = trainTotal(d);
+    let s = `<div class="field"><span class="lbl">Задания</span><div class="nums">`;
+    all.forEach((n) => { s += `<button type="button" class="num ${n >= SB.part2From ? 'p2' : ''} ${d.nums.indexOf(n) >= 0 ? 'on' : ''}" data-set="tnum" data-v="${n}" title="${esc(titleOf(app.subject, n))}">${n}</button>`; });
+    s += `</div><div class="row" style="margin-top:10px"><button type="button" class="link" data-set="tpreset" data-v="all">Все</button><span class="muted">·</span>${SB.groups.map((g, i) => `<button type="button" class="link" data-set="tpreset" data-v="${i}">${g.label}</button><span class="muted">·</span>`).join('')}<button type="button" class="link" data-set="tpreset" data-v="none">Снять все</button></div></div>`;
+    if (sel.length) {
+      s += `<div class="field"><span class="lbl">Сколько раз дать каждое задание</span>
+        <div class="row" style="gap:6px;margin-bottom:10px"><span class="muted" style="font-size:14px">Всем сразу:</span>${[1, 2, 3, 5, 10].map((v) => `<button type="button" class="chip ${sel.every((n) => trainCnt(d, n) === v) ? 'on' : ''}" data-set="tall" data-v="${v}">${v}</button>`).join('')}</div>
+        <div class="tper-list">${sel.map((n) => `<div class="tper"><span class="badge ${n >= SB.part2From ? 'p2' : ''}">№ ${n}</span><span class="tper-t">${esc(titleOf(app.subject, n))}</span><div class="stepper sm"><button type="button" data-set="tper-" data-v="${n}" aria-label="Меньше заданий № ${n}">−</button><span>${trainCnt(d, n)}</span><button type="button" data-set="tper+" data-v="${n}" aria-label="Больше заданий № ${n}">+</button></div></div>`).join('')}</div></div>`;
+      s += `<div class="field"><span class="lbl">Порядок</span><div class="seg"><button type="button" class="${d.order !== 'seq' ? 'on' : ''}" data-set="torder" data-v="random">Вперемешку</button><button type="button" class="${d.order === 'seq' ? 'on' : ''}" data-set="torder" data-v="seq">По возрастанию</button></div></div>`;
+    }
+    s += `<div class="hint" style="margin-bottom:14px">${sel.length ? `Всего в тренировке: <b>${Math.min(total, TRAIN_MAX)}</b> ${plural(Math.min(total, TRAIN_MAX), 'задание', 'задания', 'заданий')}${total > TRAIN_MAX ? ` (больше ${TRAIN_MAX} нельзя — лишние не войдут)` : ''}.` : 'Выберите номера заданий.'}</div>`;
+    return s;
+  }
+
+  function onTrainClick(el) {
+    const d = trainDraft(), k = el.dataset.set, v = el.dataset.v, n = +v;
+    if (k === 'tnum') { const i = d.nums.indexOf(n); if (i >= 0) d.nums.splice(i, 1); else d.nums.push(n); }
+    else if (k === 'tpreset') d.nums = v === 'none' ? [] : v === 'all' ? allNums(app.subject) : (SUBJ[app.subject].groups[n] || { nums: [] }).nums.slice();
+    else if (k === 'tall') d.nums.forEach((x) => { d.per[x] = n; });
+    else if (k === 'tper-') d.per[n] = Math.max(1, trainCnt(d, n) - 1);
+    else if (k === 'tper+') d.per[n] = Math.min(20, trainCnt(d, n) + 1);
+    else if (k === 'torder') d.order = v === 'seq' ? 'seq' : 'random';
+    else return;
+    saveDraft('train');
+    render();
+  }
+
+  function saveTrain() { if (app.game && app.game.mode === 'train') sess.set('egeduel:train', app.game); }
+
+  function startTrain() {
+    const d = trainDraft(), subj = app.subject, all = allNums(subj);
+    const nums = d.nums.filter((n) => all.indexOf(n) >= 0).sort((a, b) => a - b);
+    if (!nums.length) { toast('Выберите хотя бы одно задание'); return; }
+    let list = [];
+    nums.forEach((n) => { for (let i = 0; i < trainCnt(d, n); i++) list.push(n); });
+    if (d.order !== 'seq') for (let i = list.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [list[i], list[j]] = [list[j], list[i]]; }
+    list = list.slice(0, TRAIN_MAX);
+    E.resetMemory();
+    const items = [];
+    list.forEach((n) => {
+      let t = null;
+      for (let i = 0; i < 5 && !t; i++) { try { t = E.make(n, subj); } catch (e) {} }
+      if (t) items.push({ num: n, t, value: '', draft: '' });
+    });
+    if (!items.length) { toast('Не удалось собрать задания'); return; }
+    if (app.game) leaveGame(true);
+    app.game = { mode: 'train', subject: subj, items, cur: 0, done: false, id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6) };
+    sess.set('egeduel:active', { mode: 'train' });
+    saveTrain();
+    app.tab = 'solo';
+    render(); animatePage(); window.scrollTo(0, 0);
+  }
+
+  function leaveTrain() {
+    sess.del('egeduel:active'); sess.del('egeduel:train');
+    app.game = null;
+    app.tab = 'solo';
+    render(); animatePage(); window.scrollTo(0, 0);
+  }
+
+  function trainBarHTML(g) {
+    return `<div class="tr-bar">${g.items.map((x, i) => {
+      const st = g.done ? (x.value === '' ? ' skip' : x.ok ? ' ok' : ' bad') : x.value !== '' ? ' done' : '';
+      const what = g.done ? (x.value === '' ? 'без ответа' : x.ok ? 'верно' : 'неверно') : x.value !== '' ? 'ответ дан' : 'без ответа';
+      return `<button type="button" class="tr-q${st}${!g.done && i === g.cur ? ' cur' : ''}" data-q="${i}" title="Задание № ${x.num} · ${what}" aria-label="${i + 1}-е задание, № ${x.num}, ${what}"${!g.done && i === g.cur ? ' aria-current="true"' : ''}><b>${i + 1}</b><small>№${x.num}</small></button>`;
+    }).join('')}</div>`;
+  }
+
+  function renderTrain() {
+    const g = app.game;
+    app.rendered = null;
+    if (g.done) return renderTrainResult();
+    const n = g.items.length;
+    g.cur = Math.max(0, Math.min(n - 1, g.cur | 0));
+    const it = g.items[g.cur], t = it.t, subj = g.subject;
+    const answered = g.items.filter((x) => x.value !== '').length;
+    const saved = it.value !== '';
+    const type = t.type;
+    main().innerHTML = `
+      <section class="card tr-top">
+        <div class="tr-head">
+          <div><div class="round-lbl">🎯 Тренировка · ${esc(SUBJ[subj].name)}</div><div class="tr-prog">Отвечено <b>${answered}</b> из ${n}</div></div>
+          <span class="sp"></span>
+          <button type="button" class="btn" id="tr-finish">Завершить тренировку</button>
+        </div>
+        ${trainBarHTML(g)}
+      </section>
+      <section class="card" id="taskcard">
+        <div class="task-head"><span class="badge ${it.num >= SUBJ[subj].part2From ? 'p2' : ''}">№ ${it.num}</span><span class="task-topic">${esc(titleOf(subj, it.num))}</span><span class="src">${g.cur + 1} из ${n}</span></div>
+        <div class="task-text" id="tasktext">${t.text}${t.svg || ''}</div>
+        <div class="answer-box">
+          <label class="lbl" for="ans">Ваш ответ</label>
+          <div class="answer-row"><input class="input" id="ans" autocomplete="off" spellcheck="false" ${type === 'num' ? 'inputmode="decimal"' : type === 'digits' || type === 'digitset' || type === 'numlist' ? 'inputmode="numeric"' : ''} placeholder="${type === 'word' && subj === 'rus' ? 'Впишите слово (буквами)' : PLACEHOLDER[type] || ''}" value="${esc(it.draft !== '' && it.draft !== undefined ? it.draft : it.value)}"><button class="btn big" id="send">${saved ? 'Изменить' : 'Сохранить'}</button></div>
+          <div class="keys">${(KEYS[type] || []).map((k) => `<button type="button" data-k="${esc(k)}">${esc(k === 'log_' ? 'log' : k === '-' ? '−' : k)}</button>`).join('')}</div>
+          <div class="ferr" id="ferr"></div>
+          ${saved ? `<div class="tr-saved">✓ Ответ сохранён: <b>${esc(it.value)}</b><span class="muted"> · верно или нет — узнаете после завершения</span></div>` : ''}
+        </div>
+        <div class="actions tr-nav"><button type="button" class="btn ghost" id="tr-prev" ${g.cur === 0 ? 'disabled' : ''}>← Назад</button><span class="sp"></span><button type="button" class="btn soft" id="tr-next" ${g.cur === n - 1 ? 'disabled' : ''}>Далее →</button></div>
+      </section>`;
+    typeset($('#tasktext'));
+    const go = (i) => { if (i < 0 || i >= n || i === g.cur) return; g.cur = i; saveTrain(); renderTrain(); const top = $('.tr-top'); if (top && top.getBoundingClientRect().top < 0) top.scrollIntoView({ block: 'start', behavior: 'smooth' }); };
+    $$('[data-q]').forEach((b) => (b.onclick = () => go(+b.dataset.q)));
+    $('#tr-prev').onclick = () => go(g.cur - 1);
+    $('#tr-next').onclick = () => go(g.cur + 1);
+    $('#tr-finish').onclick = () => {
+      const left = g.items.filter((x) => x.value === '').length;
+      if (!confirm(left ? `Без ответа: ${left} ${plural(left, 'задание', 'задания', 'заданий')}. Всё равно завершить тренировку и посмотреть результаты?` : 'Завершить тренировку и посмотреть результаты?')) return;
+      finishTrain();
     };
+    const inp = $('#ans');
+    const send = () => {
+      const v = inp.value.trim();
+      if (!v) { $('#ferr').textContent = 'Введите ответ'; inp.focus(); return; }
+      const err = E.formatError(t, v);
+      if (err) { $('#ferr').textContent = err; inp.focus(); return; }
+      it.value = v; it.draft = '';
+      if (Profile.markToday(subj)) renderHeaderAvatar();
+      // к следующему заданию без ответа (после текущего, по кругу)
+      let nx = -1;
+      for (let k = 1; k < n && nx < 0; k++) { const j = (g.cur + k) % n; if (g.items[j].value === '') nx = j; }
+      if (nx >= 0) g.cur = nx;
+      else toast('Все задания решены — можно завершать тренировку');
+      saveTrain(); renderTrain();
+    };
+    $('#send').onclick = send;
+    inp.addEventListener('keydown', (e) => { if (e.key === 'Enter') send(); });
+    inp.addEventListener('input', () => { it.draft = inp.value; $('#ferr').textContent = ''; saveTrain(); });
+    $$('.keys button').forEach((b) => b.addEventListener('mousedown', (e) => e.preventDefault()));
+    $$('.keys button').forEach((b) => (b.onclick = () => {
+      const k = b.dataset.k;
+      const s = inp.selectionStart !== null ? inp.selectionStart : inp.value.length, en = inp.selectionEnd !== null ? inp.selectionEnd : inp.value.length;
+      inp.value = inp.value.slice(0, s) + k + inp.value.slice(en);
+      inp.selectionStart = inp.selectionEnd = s + k.length;
+      it.draft = inp.value;
+      inp.focus();
+    }));
+    if (window.matchMedia('(pointer:fine)').matches) inp.focus({ preventScroll: true });
+  }
+
+  function finishTrain() {
+    const g = app.game;
+    g.items.forEach((x) => {
+      let ok = false, ans = '';
+      if (x.value !== '') { try { ok = !!E.check(x.t, x.value); } catch (e) {} }
+      try { ans = E.answerText(x.t); } catch (e) {}
+      x.ok = ok; x.answer = ans;
+    });
+    g.done = true;
+    Profile.record('train:' + g.id, { mode: 'solo', solved: g.items.filter((x) => x.ok).length });
+    saveTrain();
+    render(); animatePage(); window.scrollTo(0, 0);
+  }
+
+  function renderTrainResult() {
+    const g = app.game, n = g.items.length, subj = g.subject;
+    const ok = g.items.filter((x) => x.ok).length, skip = g.items.filter((x) => x.value === '').length, bad = n - ok - skip;
+    const pct = Math.round((ok / n) * 100);
+    const emoji = pct >= 90 ? '🏆' : pct >= 60 ? '💪' : pct >= 30 ? '📚' : '🌱';
+    main().innerHTML = `
+      <section class="card over">
+        <div class="big-emoji">${emoji}</div>
+        <h1>Тренировка завершена</h1>
+        <p class="lead" style="margin:0 auto 6px">${esc(SUBJ[subj].name)} · верно <b>${ok}</b> из ${n} (${pct}%)</p>
+        <div class="stats tr-stats"><div class="stat ok"><b>${ok}</b><span>верно</span></div><div class="stat bad"><b>${bad}</b><span>неверно</span></div><div class="stat"><b>${skip}</b><span>без ответа</span></div></div>
+        <div class="actions" style="justify-content:center"><button type="button" class="btn big" id="tr-again">Пройти ещё раз</button><button type="button" class="btn ghost big" id="tr-menu">К настройкам</button></div>
+      </section>
+      <section class="card tr-top" style="margin-top:18px"><div class="round-lbl" style="margin-bottom:2px">Нажмите на номер, чтобы открыть разбор</div>${trainBarHTML(g)}</section>
+      <section class="card" style="margin-top:18px"><h2>Ответы и разбор</h2>
+        ${g.items.map((x, i) => {
+          const cls = x.value === '' ? 'skip' : x.ok ? 'ok' : 'bad';
+          const t = x.t;
+          return `<details class="tr-item ${cls}" id="tri-${i}">
+            <summary><span class="tr-mk">${cls === 'ok' ? '✓' : cls === 'bad' ? '✗' : '—'}</span><span class="tr-it"><b>${i + 1}.</b> № ${x.num} · ${esc(titleOf(subj, x.num))}</span><span class="tr-yours">${x.value === '' ? '<span class="muted">без ответа</span>' : 'Ваш: <b>' + esc(x.value) + '</b>'} · Верно: <b>${esc(x.answer)}</b></span></summary>
+            <div class="tr-body">
+              <div class="task-text">${t.text}${t.svg || ''}</div>
+              <div class="right-ans"><span class="muted">Правильный ответ:</span> <b>${esc(x.answer)}</b></div>
+              ${t.short ? `<div class="sol"><h3>${t.full ? 'Краткое решение' : 'Решение'}</h3><div class="task-text" style="font-size:16px">${t.short}</div>${t.full ? `<details class="tr-full"><summary>Подробное решение ▾</summary><div class="task-text" style="font-size:16px">${t.full}</div></details>` : ''}</div>` : ''}
+            </div>
+          </details>`;
+        }).join('')}
+      </section>`;
+    $$('details.tr-item').forEach((d) => d.addEventListener('toggle', () => { if (d.open && !d.dataset.ts) { d.dataset.ts = '1'; typeset(d); } }));
+    $$('[data-q]').forEach((b) => (b.onclick = () => {
+      const d = $('#tri-' + b.dataset.q);
+      if (!d) return;
+      d.open = true;
+      d.scrollIntoView({ block: 'start', behavior: 'smooth' });
+    }));
+    $('#tr-again').onclick = () => startTrain();
+    $('#tr-menu').onclick = () => leaveTrain();
   }
 
   /* ---------- главная страница ---------- */
