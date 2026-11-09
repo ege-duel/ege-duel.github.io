@@ -880,6 +880,27 @@ body:has(.pe-drawer.open) { overflow: hidden; }
 .tr-full > summary { cursor: pointer; font-weight: 700; color: var(--accent); }
 @media (max-width: 560px) { .tr-head .btn { width: 100%; } }
 
+/* достижения */
+.ach-count { font-size: 14px; color: var(--ink2); margin-bottom: 4px; }
+.ach-group { font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: .06em; color: var(--ink3); margin: 12px 0 6px; }
+.ach-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 8px; }
+.ach { display: flex; gap: 10px; align-items: center; padding: 10px 12px; border-radius: 14px; border: 1.5px dashed var(--line); background: var(--bg); min-width: 0; }
+.ach-ic { flex: none; width: 42px; height: 42px; border-radius: 12px; display: inline-flex; align-items: center; justify-content: center; font-size: 24px; background: var(--bg2); filter: grayscale(1); opacity: .45; }
+.ach-txt { min-width: 0; display: flex; flex-direction: column; }
+.ach-txt b { font-size: 14px; color: var(--ink3); }
+.ach-txt small { font-size: 12px; color: var(--ink3); line-height: 1.3; }
+.ach.got { border-style: solid; border-color: color-mix(in srgb, #fcc419 55%, transparent); background: color-mix(in srgb, #fcc419 10%, var(--bg)); }
+.ach.got .ach-ic { filter: none; opacity: 1; background: color-mix(in srgb, #fcc419 22%, var(--bg2)); }
+.ach.got .ach-txt b { color: var(--ink); }
+.ach:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.pview-show .ach-grid { grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); }
+.ach-pop { position: fixed; left: 50%; top: 76px; z-index: 90; display: flex; align-items: center; gap: 12px; padding: 12px 18px 12px 12px; border-radius: 16px; background: var(--card); border: 2px solid #fcc419; box-shadow: 0 14px 40px rgba(0,0,0,.35); cursor: pointer; transform: translate(-50%, -20px) scale(.92); opacity: 0; transition: transform .35s cubic-bezier(.2,.9,.3,1.3), opacity .25s ease; max-width: calc(100vw - 24px); }
+.ach-pop.show { transform: translate(-50%, 0) scale(1); opacity: 1; }
+.ach-pop-ic { font-size: 30px; width: 48px; height: 48px; border-radius: 14px; display: inline-flex; align-items: center; justify-content: center; background: color-mix(in srgb, #fcc419 25%, var(--bg2)); }
+.ach-pop small { display: block; font-size: 12px; font-weight: 700; color: #e8a800; }
+.ach-pop b { display: block; font-size: 16px; }
+@media (prefers-reduced-motion: reduce) { .ach-pop { transition: opacity .2s ease; transform: translate(-50%, 0); } }
+
 </style>
 </head>
 <body>
@@ -7168,6 +7189,52 @@ var Profile = (function () {
   const SUBJ_IDS = ['math', 'rus', 'soc', 'bio', 'phys', 'chem'];
   const cleanSubj = (o) => { const out = {}; SUBJ_IDS.forEach((k) => { const v = Math.max(0, Math.min(1e6, Math.floor(+(o && o[k]) || 0))); if (v) out[k] = v; }); return out; };
   const cardIdx = (v) => { v = Math.floor(+v || 0); return v >= 0 && v < CARDS.length ? v : 0; };
+  /* ---- достижения ----
+     ach: { id: время получения, мс }.
+     ap — прогресс к достижениям:
+       w:  { 'math:5': 1 }   — в прошлый раз в этом номере была ошибка («Работа над ошибками»)
+       s:  { 'math:5': 12 }  — верных подряд в номере («Душнила»)
+       sv: { math: [1, 2] }  — номера, решённые верно хотя бы раз («Энциклопедия»)
+       d, df: день и ошибки по номерам за этот день («День сурка») */
+  const ACH_IDS = ['sniper', 'fix', 'nerd', 'encyc', 'ninja', 'friend', 'king', 'kamikaze', 'groundhog'];
+  const AP_KEY = /^(math|rus|soc|bio|phys|chem):d{1,2}$/;
+  function cleanAch(a) {
+    const o = {};
+    if (a && typeof a === 'object') ACH_IDS.forEach((k) => { const v = Math.floor(+a[k] || 0); if (v > 0) o[k] = Math.min(v, 4102444800000); });
+    return o;
+  }
+  function cleanApMap(m, max) {
+    const o = {};
+    if (m && typeof m === 'object') Object.keys(m).filter((k) => AP_KEY.test(k)).slice(0, 200).forEach((k) => { const v = Math.max(0, Math.min(max, Math.floor(+m[k] || 0))); if (v) o[k] = v; });
+    return o;
+  }
+  function cleanAp(p) {
+    p = p && typeof p === 'object' ? p : {};
+    const sv = {};
+    if (p.sv && typeof p.sv === 'object') SUBJ_IDS.forEach((k) => {
+      if (!Array.isArray(p.sv[k])) return;
+      const a = Array.from(new Set(p.sv[k].map((x) => Math.floor(+x)).filter((x) => x >= 1 && x <= 40))).sort((x, y) => x - y);
+      if (a.length) sv[k] = a;
+    });
+    return { w: cleanApMap(p.w, 1), s: cleanApMap(p.s, 100000), sv, d: /^d{4}-d{2}-d{2}$/.test(p.d || '') ? p.d : '', df: cleanApMap(p.df, 1000) };
+  }
+  // объединение прогресса облака и устройства (ничего не теряем)
+  function mergeAp(a, b) {
+    a = cleanAp(a); b = cleanAp(b);
+    const out = { w: Object.assign({}, a.w, b.w), s: {}, sv: {}, d: a.d > b.d ? a.d : b.d, df: {} };
+    Object.keys(a.s).concat(Object.keys(b.s)).forEach((k) => { out.s[k] = Math.max(a.s[k] || 0, b.s[k] || 0); });
+    SUBJ_IDS.forEach((k) => { const u = Array.from(new Set((a.sv[k] || []).concat(b.sv[k] || []))).sort((x, y) => x - y); if (u.length) out.sv[k] = u; });
+    [a, b].forEach((x) => { if (x.d === out.d) Object.keys(x.df).forEach((k) => { out.df[k] = Math.max(out.df[k] || 0, x.df[k]); }); });
+    return cleanAp(out);
+  }
+  function unlock(id) {
+    me.ach = cleanAch(me.ach);
+    if (ACH_IDS.indexOf(id) < 0 || me.ach[id]) return false;
+    me.ach[id] = Date.now();
+    save();
+    return true;
+  }
+
   const EMPTY_STATS = { duels: 0, wins: 0, losses: 0, draws: 0, solo: 0, bestSolo: 0, solved: 0 };
 
   const esc = (s) => String(s === null || s === undefined ? '' : s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -7188,6 +7255,8 @@ var Profile = (function () {
     p.tile = cardIdx(p.tile);
     p.nameAt = Math.max(0, Math.floor(+p.nameAt || 0));
     p.subj = cleanSubj(p.subj);
+    p.ach = cleanAch(p.ach);
+    p.ap = cleanAp(p.ap);
     return p;
   }
   // Число заданий по дням: { '2026-11-08': 5, ... }, храним последние 400 дней
@@ -7228,6 +7297,8 @@ var Profile = (function () {
       card: cardIdx(me.card), tile: cardIdx(me.tile),
       subj: cleanSubj(me.subj),
       nameAt: Math.max(0, Math.floor(+me.nameAt || 0)),
+      ach: cleanAch(me.ach),
+      ap: cleanAp(me.ap),
     };
   }
   // Публичная карточка (коллекция profiles): то, что видят другие по #
@@ -7238,6 +7309,7 @@ var Profile = (function () {
       preset: me.preset | 0, color: me.color | 0, tag: me.tag, card: cardIdx(me.card), tile: cardIdx(me.tile),
       fav: (favorite() || {}).id || '', favN: (favorite() || {}).count || 0,
       stats: { duels: st.duels, wins: st.wins, bestSolo: st.bestSolo, solved: st.solved, streak: Streak.info(me.days).count, bestStreak: Streak.info(me.days).best },
+      ach: cleanAch(me.ach),
     };
   }
   function sanitizePublic(p) {
@@ -7247,6 +7319,7 @@ var Profile = (function () {
     const int = (v) => Math.max(0, Math.min(1e6, Math.floor(+v || 0)));
     b.tag = typeof p.tag === 'string' && /^[A-Z0-9]{6}$/.test(p.tag) ? p.tag : null;
     b.stats = Object.assign(b.stats, { solved: int(st.solved), streak: int(st.streak), bestStreak: int(st.bestStreak) });
+    b.ach = cleanAch(p.ach);
     b.fav = SUBJ_IDS.indexOf(p.fav) >= 0 && int(p.favN) > 0 ? { id: p.fav, count: int(p.favN) } : null;
     const pl = p && p.play;
     b.play = pl && typeof pl === 'object' && /^[1-3][A-Z2-9]{5}$/.test(String(pl.code || '')) && SUBJ_IDS.indexOf(pl.subject) >= 0
@@ -7281,6 +7354,13 @@ var Profile = (function () {
     Object.keys(ls).forEach((k) => { cs[k] = Math.max(cs[k] || 0, ls[k]); });
     me.subj = cs;
     me.friends = Array.isArray(d.friends) ? d.friends.filter((x) => typeof x === 'string').slice(0, 200) : [];
+    // достижения: объединяем, оставляя самую раннюю дату
+    const ca = cleanAch(d.ach), la = cleanAch(me.ach);
+    Object.keys(la).forEach((k) => { ca[k] = ca[k] ? Math.min(ca[k], la[k]) : la[k]; });
+    const achMore = Object.keys(ca).length > Object.keys(cleanAch(d.ach)).length;
+    me.ach = ca;
+    me.ap = mergeAp(d.ap, me.ap);
+    if (achMore && typeof Cloud !== 'undefined') setTimeout(() => Cloud.schedulePush(), 0);
     saveLocal();
   }
   // При регистрации: имя и фото из Google, если своих нет
@@ -7310,7 +7390,7 @@ var Profile = (function () {
   }
   // После выхода из аккаунта — чистый профиль на этом устройстве
   function resetLocal() {
-    me = { name: '', bio: '', photo: null, preset: Math.floor(Math.random() * PRESETS.length), color: Math.floor(Math.random() * COLORS.length), stats: Object.assign({}, EMPTY_STATS), days: [], counts: {}, tag: null, friends: [], card: 0, tile: 0, subj: {}, nameAt: 0 };
+    me = { name: '', bio: '', photo: null, preset: Math.floor(Math.random() * PRESETS.length), color: Math.floor(Math.random() * COLORS.length), stats: Object.assign({}, EMPTY_STATS), days: [], counts: {}, tag: null, friends: [], card: 0, tile: 0, subj: {}, nameAt: 0, ach: {}, ap: cleanAp(null) };
     saveLocal();
   }
 
@@ -7323,6 +7403,7 @@ var Profile = (function () {
       preset: me.preset | 0,
       color: me.color | 0,
       tag: me.tag || null,
+      uid: (typeof Cloud !== 'undefined' && Cloud.user && Cloud.user.uid) || null,
       card: cardIdx(me.card), tile: cardIdx(me.tile),
       stats: { duels: me.stats.duels, wins: me.stats.wins, bestSolo: me.stats.bestSolo, streak: Streak.info(me.days).count },
     };
@@ -7334,7 +7415,7 @@ var Profile = (function () {
     const photo = typeof p.photo === 'string' && /^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+/=]+$/.test(p.photo) && p.photo.length <= PHOTO_MAX ? p.photo : null;
     const st = p.stats && typeof p.stats === 'object' ? p.stats : {};
     const int = (v) => Math.max(0, Math.min(1e6, Math.floor(+v || 0)));
-    return {
+    const out = {
       name: String(p.name || 'Соперник').slice(0, 24),
       bio: String(p.bio || '').slice(0, BIO_MAX),
       photo,
@@ -7345,6 +7426,9 @@ var Profile = (function () {
       tile: cardIdx(p.tile),
       stats: { duels: int(st.duels), wins: int(st.wins), bestSolo: int(st.bestSolo), streak: Math.min(int(st.streak), 5000) },
     };
+    // uid соперника (для «Друг познаётся в дуэли»); добавляем только если он есть, чтобы не затирать чужой uid
+    if (typeof p.uid === 'string' && /^[A-Za-z0-9]{10,64}$/.test(p.uid)) out.uid = p.uid;
+    return out;
   }
 
   // Профиль-заглушка по имени (если визитка ещё не пришла)
@@ -7480,7 +7564,7 @@ var Profile = (function () {
   }
 
   return {
-    get me() { return me; }, save, shared, cloudData, publicData, sanitizePublic, applyCloud, fillFromGoogle, resetLocal, markToday, streak, sanitize, fallback, avatar, card, statLine, readPhoto, loadImage, cropPhoto, record, resetStats, favorite, winRate, nickInfo, setNick,
+    get me() { return me; }, save, shared, cloudData, publicData, sanitizePublic, applyCloud, fillFromGoogle, resetLocal, markToday, streak, sanitize, fallback, avatar, card, statLine, readPhoto, loadImage, cropPhoto, record, resetStats, favorite, winRate, nickInfo, setNick, unlock, ACH_IDS,
     PRESETS, CARDS, COLORS, BIO_MAX, esc,
   };
 })();
@@ -8619,6 +8703,7 @@ var SubjectIcons = (function () {
     movePill();
     renderHeaderAvatar();
     const g = app.game;
+    if (g && g.S && g.S.result && (g.S.phase === 'result' || g.S.phase === 'over')) achAfterRound(g);
     if (g && g.S && g.S.phase === 'over') recordResult(g);
     const gameTab = gameTabOf(g);
     if (app.tab !== 'profile' || (g && app.tab === gameTab)) $$('#pe-drawer, #pe-back').forEach((x) => x.remove()); // панель настройки живёт в body
@@ -8856,8 +8941,132 @@ var SubjectIcons = (function () {
     const me = myRole();
     const key = (S.code || 'solo') + ':' + (S.id || '') + ':' + (S.gameNo || 1) + ':' + me;
     const solved = S.history.filter((h) => h[me]).length;
-    if (isSolo(S)) Profile.record(key, { mode: 'solo', solved });
-    else Profile.record(key, { mode: 'duel', solved, outcome: S.winner === 'draw' ? 'draw' : S.winner === me ? 'win' : 'loss' });
+    const first = isSolo(S) ? Profile.record(key, { mode: 'solo', solved })
+      : Profile.record(key, { mode: 'duel', solved, outcome: S.winner === 'draw' ? 'draw' : S.winner === me ? 'win' : 'loss' });
+    if (first) achAfterGame(g);
+  }
+
+  /* ======================================================================
+     ДОСТИЖЕНИЯ
+     Проверяются: после каждого раунда (achAfterRound), после конца игры
+     (achAfterGame), после завершения тренировки (finishTrain) и при открытии
+     таблицы лидеров (loadTop). Данные — Profile.me.ach и Profile.me.ap.
+     ====================================================================== */
+  const ACH_GROUPS = [
+    { name: 'Соло', ids: ['sniper', 'fix', 'nerd', 'encyc', 'ninja'] },
+    { name: 'Дуэли', ids: ['friend', 'king', 'kamikaze'] },
+    { name: 'Факапы и жизнь', ids: ['groundhog'] },
+  ];
+  const ACH = {
+    sniper: { icon: '🎯', name: 'Снайпер', desc: 'Пройти Флеш с заданным числом раундов, ответив верно на все задания без единой ошибки.' },
+    fix: { icon: '🔄', name: 'Работа над ошибками', desc: 'Верно решить номер, в котором в прошлый раз была ошибка (в соло или в дуэли).' },
+    nerd: { icon: '🧠', name: 'Душнила', desc: '30 верных ответов подряд в одном номере одного предмета. Ошибка обнуляет серию.' },
+    encyc: { icon: '📚', name: 'Энциклопедия', desc: 'Хотя бы раз верно решить каждый номер одного предмета.' },
+    ninja: { icon: '🥷', name: 'На волосок от гибели', desc: 'Пройти все раунды Флеша, когда к концу осталась ровно 1 жизнь.' },
+    friend: { icon: '🤝', name: 'Друг познаётся в дуэли', desc: 'Победить друга в дуэли всухую: у вас 3 и больше верных ответов, у него — ни одного.' },
+    king: { icon: '👑', name: 'Авторитет на районе', desc: 'Занять 1-е место в таблице лидеров.' },
+    kamikaze: { icon: '🛡️', name: 'Камикадзе', desc: 'Победить в дуэли, когда у обоих оставалось по 1 жизни, — верно ответив на решающий вопрос.' },
+    groundhog: { icon: '🧩', name: 'День сурка', desc: 'Ошибиться в одном и том же номере дважды за один день.' },
+  };
+  const ACH_ORDER = ACH_GROUPS.reduce((a, g) => a.concat(g.ids), []);
+  const achDate = (ms) => new Date(ms).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' });
+
+  // результат одной попытки по номеру: 'ok' — верно, 'bad' — неверный ответ, 'timeout' — не успел
+  function achAttempt(subj, num, res) {
+    const ap = Profile.me.ap, k = subj + ':' + num, got = [];
+    if (res === 'ok') {
+      if (ap.w[k]) { delete ap.w[k]; got.push('fix'); }
+      ap.s[k] = (ap.s[k] || 0) + 1;
+      if (ap.s[k] >= 30) got.push('nerd');
+      const sv = (ap.sv[subj] = ap.sv[subj] || []);
+      if (sv.indexOf(num) < 0) { sv.push(num); sv.sort((a, b) => a - b); }
+      if (allNums(subj).every((n) => sv.indexOf(n) >= 0)) got.push('encyc');
+    } else {
+      ap.w[k] = 1;
+      delete ap.s[k];
+      if (res === 'bad') {
+        const today = Streak.today();
+        if (ap.d !== today) { ap.d = today; ap.df = {}; }
+        ap.df[k] = (ap.df[k] || 0) + 1;
+        if (ap.df[k] >= 2) got.push('groundhog');
+      }
+    }
+    Profile.save();
+    got.forEach(achUnlock);
+  }
+
+  // после раунда флеша/дуэли/трио — один раз на раунд (ключи раундов переживают перезагрузку)
+  function achAfterRound(g) {
+    const S = g.S, me = myRole();
+    const v = S.result && S.result.v && S.result.v[me];
+    const h = S.history[S.history.length - 1];
+    if (!v || !h) return;
+    const key = ['r', S.code || 'solo', S.id || '', S.gameNo || 1, h.round, me].join(':');
+    const done = sess.get('egeduel:achRounds', []);
+    if (done.indexOf(key) >= 0) return;
+    sess.set('egeduel:achRounds', done.concat(key).slice(-60));
+    achAttempt(subjOfState(S), h.num, v.ok ? 'ok' : v.timeout ? 'timeout' : 'bad');
+  }
+
+  // после конца игры (вызывается один раз — из recordResult)
+  function achAfterGame(g) {
+    const S = g.S, st = S.settings;
+    if (isSolo(S)) {
+      if (st.rounds && S.reason === 'rounds') {
+        if (S.history.length >= st.rounds && S.history.every((h) => h.host)) achUnlock('sniper');
+        if (st.lives && S.players.host.lives === 1) achUnlock('ninja');
+      }
+      return;
+    }
+    if (isTrio(S)) return;
+    const me = myRole(), opp = me === 'host' ? 'guest' : 'host';
+    if (S.winner !== me || !S.players[opp] || S.reason === 'leave') return;
+    const last = S.history[S.history.length - 1];
+    // Камикадзе: решающий раунд при 1:1 по жизням — я ответил верно, соперник ошибся
+    if (st.lives && S.reason === 'lives' && last && last[me] && !last[opp] && S.players[me].lives === 1 && S.players[opp].lives === 0) achUnlock('kamikaze');
+    // Друг познаётся в дуэли: сухая победа над другом
+    const myOk = okCount(S, me), oppOk = okCount(S, opp);
+    const oppUid = (oppProfile(S, opp) || {}).uid;
+    if (myOk >= 3 && oppOk === 0 && oppUid && (Profile.me.friends || []).indexOf(oppUid) >= 0) achUnlock('friend');
+  }
+
+  // всплывающее уведомление; несколько подряд показываются по очереди
+  const achQueue = [];
+  function achUnlock(id) {
+    if (!ACH[id] || !Profile.unlock(id)) return;
+    achQueue.push(id);
+    if (achQueue.length === 1) achShowNext();
+    if ($('#profile-page')) renderProfile();
+  }
+  function achShowNext() {
+    const id = achQueue[0];
+    if (!id) return;
+    const a = ACH[id];
+    const el = document.createElement('div');
+    el.className = 'ach-pop';
+    el.setAttribute('role', 'status');
+    el.innerHTML = `<span class="ach-pop-ic">${a.icon}</span><span><small>🏅 Новое достижение</small><b>${esc(a.name)}</b></span>`;
+    document.body.appendChild(el);
+    requestAnimationFrame(() => el.classList.add('show'));
+    el.onclick = () => hide();
+    let t = setTimeout(hide, 4200);
+    function hide() {
+      clearTimeout(t);
+      el.classList.remove('show');
+      setTimeout(() => { el.remove(); achQueue.shift(); achShowNext(); }, 350);
+    }
+  }
+
+  // витрина: full — все 9 (свой профиль), иначе — только полученные (чужой профиль)
+  function achShowHTML(ach, full) {
+    ach = ach || {};
+    const got = ACH_ORDER.filter((id) => ach[id]);
+    const tile = (id) => {
+      const a = ACH[id], at = ach[id];
+      return `<div class="ach${at ? ' got' : ''}" tabindex="0" title="${esc(a.name + ' — ' + a.desc)}"><span class="ach-ic">${a.icon}</span><span class="ach-txt"><b>${esc(a.name)}</b><small>${at ? 'Получено ' + achDate(at) : esc(a.desc)}</small></span></div>`;
+    };
+    if (!full) return got.length ? `<div class="ach-grid">${got.map(tile).join('')}</div>` : '<div class="empty-show">Здесь пока ничего нет(</div>';
+    return `<div class="ach-count">Получено <b>${got.length}</b> из ${ACH_ORDER.length}</div>` + ACH_GROUPS.map((gr) => `<div class="ach-group">${esc(gr.name)}</div><div class="ach-grid">${gr.ids.map(tile).join('')}</div>`).join('');
   }
 
   function renderProfile() {
@@ -8930,7 +9139,7 @@ var SubjectIcons = (function () {
           </section>
           <section class="card">
             <h3>🏅 Витрина достижений</h3>
-            <div class="empty-show">Здесь пока ничего нет(</div>
+            ${achShowHTML(Profile.me.ach, true)}
           </section>
         </div>
         <div class="stack p3-fr">
@@ -9390,7 +9599,7 @@ var SubjectIcons = (function () {
         <div class="stat"><b>🔥 ${st.streak || 0}</b><span>дней подряд</span></div>
         ${favTile(fp.fav || null)}
       </div>
-      <div class="pview-show"><h3 style="margin:14px 0 6px">🏅 Витрина достижений</h3><div class="empty-show">Здесь пока ничего нет(</div></div>
+      <div class="pview-show"><h3 style="margin:14px 0 6px">🏅 Витрина достижений</h3>${achShowHTML(fp.ach, false)}</div>
     </div>`;
   }
 
@@ -9780,7 +9989,7 @@ var SubjectIcons = (function () {
   }
 
   function finishTrain() {
-    const g = app.game;
+    const g = app.game, subj = g.subject;
     g.items.forEach((x) => {
       let ok = false, ans = '';
       if (x.value !== '') { try { ok = !!E.check(x.t, x.value); } catch (e) {} }
@@ -9788,6 +9997,7 @@ var SubjectIcons = (function () {
       x.ok = ok; x.answer = ans;
     });
     g.done = true;
+    g.items.forEach((x) => { if (x.value !== '') achAttempt(subj, x.num, x.ok ? 'ok' : 'bad'); });
     Profile.record('train:' + g.id, { mode: 'solo', solved: g.items.filter((x) => x.ok).length });
     saveTrain();
     render(); animatePage(); window.scrollTo(0, 0);
@@ -9930,6 +10140,7 @@ var SubjectIcons = (function () {
       const b2 = $('#top-list'), meBox = $('#top-me');
       if (!b2) return;
       const myIdx = list.findIndex((x) => x.uid === Cloud.user.uid);
+      if (myIdx === 0 && ((list[0].stats || {}).solved | 0) > 0) achUnlock('king');
       const mySolved = Profile.me.stats ? Profile.me.stats.solved | 0 : 0;
       if (meBox) meBox.innerHTML = `<div class="top-mine">${myIdx >= 0
         ? `Вы на <b>${myIdx + 1}-м месте</b> · ${mySolved} задач решено`

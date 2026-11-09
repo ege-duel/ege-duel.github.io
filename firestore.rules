@@ -22,6 +22,8 @@ service cloud.firestore {
         && p.mode in ['duel', 'trio']
         && p.vs is string && p.vs.size() <= 80;
     }
+    // достижения: { id: время в мс }, не больше 20 штук
+    function achOk(d) { return !('ach' in d) || (d.ach is map && d.ach.size() <= 20); }
     function okCommon(d) {
       return d.name is string && d.name.size() <= 24
         && d.bio is string && d.bio.size() <= 160
@@ -35,7 +37,9 @@ service cloud.firestore {
       allow read, delete: if signedIn() && request.auth.uid == uid;
       allow create, update: if signedIn() && request.auth.uid == uid
         && (resource == null || nickOk(request.resource.data, resource.data))
-        && request.resource.data.keys().hasOnly(['name', 'bio', 'photo', 'preset', 'color', 'stats', 'days', 'counts', 'tag', 'friends', 'card', 'tile', 'subj', 'nameAt', 'updatedAt'])
+        && request.resource.data.keys().hasOnly(['name', 'bio', 'photo', 'preset', 'color', 'stats', 'days', 'counts', 'tag', 'friends', 'card', 'tile', 'subj', 'nameAt', 'ach', 'ap', 'updatedAt'])
+        && achOk(request.resource.data)
+        && (!('ap' in request.resource.data) || (request.resource.data.ap is map && request.resource.data.ap.keys().hasOnly(['w', 's', 'sv', 'd', 'df'])))
         && okCommon(request.resource.data)
         && (!('days' in request.resource.data) || (request.resource.data.days is list && request.resource.data.days.size() <= 400))
         && (!('counts' in request.resource.data) || (request.resource.data.counts is map && request.resource.data.counts.size() <= 400))
@@ -51,7 +55,8 @@ service cloud.firestore {
       allow read: if signedIn();
       allow delete: if signedIn() && request.auth.uid == uid;
       allow create, update: if signedIn() && request.auth.uid == uid
-        && request.resource.data.keys().hasOnly(['name', 'bio', 'photo', 'preset', 'color', 'stats', 'tag', 'card', 'tile', 'fav', 'favN', 'play', 'lastSeen', 'updatedAt'])
+        && request.resource.data.keys().hasOnly(['name', 'bio', 'photo', 'preset', 'color', 'stats', 'tag', 'card', 'tile', 'fav', 'favN', 'play', 'ach', 'lastSeen', 'updatedAt'])
+        && achOk(request.resource.data)
         && (!('play' in request.resource.data) || request.resource.data.play == null || playOk(request.resource.data.play))
         && okCommon(request.resource.data)
         && (!('card' in request.resource.data) || (request.resource.data.card is int && request.resource.data.card >= 0 && request.resource.data.card <= 16))
