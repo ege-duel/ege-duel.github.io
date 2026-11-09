@@ -14,6 +14,14 @@ service cloud.firestore {
         || (d.get('nameAt', 0) is int && d.get('nameAt', 0) > nowMs - 600000 && d.get('nameAt', 0) < nowMs + 600000
             && o.get('nameAt', 0) < nowMs - 604800000);
     }
+    // «сейчас в матче» — код комнаты, чтобы друзья могли наблюдать
+    function playOk(p) {
+      return p is map && p.keys().hasOnly(['code', 'subject', 'mode', 'vs'])
+        && p.code is string && p.code.matches('^[1-3][A-Z0-9]{5}$')
+        && p.subject in ['math', 'rus', 'soc', 'bio', 'phys']
+        && p.mode in ['duel', 'trio']
+        && p.vs is string && p.vs.size() <= 80;
+    }
     function okCommon(d) {
       return d.name is string && d.name.size() <= 24
         && d.bio is string && d.bio.size() <= 160
@@ -27,12 +35,13 @@ service cloud.firestore {
       allow read, delete: if signedIn() && request.auth.uid == uid;
       allow create, update: if signedIn() && request.auth.uid == uid
         && (resource == null || nickOk(request.resource.data, resource.data))
-        && request.resource.data.keys().hasOnly(['name', 'bio', 'photo', 'preset', 'color', 'stats', 'days', 'counts', 'tag', 'friends', 'card', 'subj', 'nameAt', 'updatedAt'])
+        && request.resource.data.keys().hasOnly(['name', 'bio', 'photo', 'preset', 'color', 'stats', 'days', 'counts', 'tag', 'friends', 'card', 'tile', 'subj', 'nameAt', 'updatedAt'])
         && okCommon(request.resource.data)
         && (!('days' in request.resource.data) || (request.resource.data.days is list && request.resource.data.days.size() <= 400))
         && (!('counts' in request.resource.data) || (request.resource.data.counts is map && request.resource.data.counts.size() <= 400))
         && (!('friends' in request.resource.data) || (request.resource.data.friends is list && request.resource.data.friends.size() <= 200))
         && (!('card' in request.resource.data) || (request.resource.data.card is int && request.resource.data.card >= 0 && request.resource.data.card <= 16))
+        && (!('tile' in request.resource.data) || (request.resource.data.tile is int && request.resource.data.tile >= 0 && request.resource.data.tile <= 16))
         && (!('subj' in request.resource.data) || (request.resource.data.subj is map && request.resource.data.subj.size() <= 10))
         && (!('tag' in request.resource.data) || request.resource.data.tag == null || ownsTag(request.resource.data.tag, uid));
     }
@@ -42,9 +51,13 @@ service cloud.firestore {
       allow read: if signedIn();
       allow delete: if signedIn() && request.auth.uid == uid;
       allow create, update: if signedIn() && request.auth.uid == uid
-        && request.resource.data.keys().hasOnly(['name', 'bio', 'photo', 'preset', 'color', 'stats', 'tag', 'card', 'lastSeen', 'updatedAt'])
+        && request.resource.data.keys().hasOnly(['name', 'bio', 'photo', 'preset', 'color', 'stats', 'tag', 'card', 'tile', 'fav', 'favN', 'play', 'lastSeen', 'updatedAt'])
+        && (!('play' in request.resource.data) || request.resource.data.play == null || playOk(request.resource.data.play))
         && okCommon(request.resource.data)
         && (!('card' in request.resource.data) || (request.resource.data.card is int && request.resource.data.card >= 0 && request.resource.data.card <= 16))
+        && (!('tile' in request.resource.data) || (request.resource.data.tile is int && request.resource.data.tile >= 0 && request.resource.data.tile <= 16))
+        && (!('fav' in request.resource.data) || request.resource.data.fav in ['', 'math', 'rus', 'soc', 'bio', 'phys', 'chem'])
+        && (!('favN' in request.resource.data) || (request.resource.data.favN is int && request.resource.data.favN >= 0 && request.resource.data.favN <= 1000000))
         && (!('lastSeen' in request.resource.data) || request.resource.data.lastSeen is timestamp)
         && ownsTag(request.resource.data.tag, uid);
     }
@@ -62,6 +75,24 @@ service cloud.firestore {
         && request.resource.data.code is string && request.resource.data.code.matches('^[0-9A-Z]{4,8}$')
         && request.resource.data.subject in ['math', 'rus', 'soc', 'bio', 'phys']
         && request.resource.data.createdAt == request.time;
+    }
+
+    // Заявка в друзья: id = {кому}_{от кого}. Создаёт отправитель, принимает (status → accepted) только получатель
+    match /freqs/{id} {
+      allow read: if signedIn() && (resource == null || resource.data.to == request.auth.uid || resource.data.from == request.auth.uid);
+      allow create: if signedIn()
+        && request.resource.data.keys().hasOnly(['from', 'to', 'fromName', 'fromTag', 'status', 'createdAt'])
+        && request.resource.data.from == request.auth.uid
+        && request.resource.data.to is string && request.resource.data.to != request.auth.uid
+        && id == request.resource.data.to + '_' + request.auth.uid
+        && request.resource.data.fromName is string && request.resource.data.fromName.size() <= 24
+        && request.resource.data.fromTag is string && request.resource.data.fromTag.size() <= 6
+        && request.resource.data.status == 'pending'
+        && request.resource.data.createdAt == request.time;
+      allow update: if signedIn() && resource.data.to == request.auth.uid
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status'])
+        && request.resource.data.status == 'accepted';
+      allow delete: if signedIn() && (resource.data.to == request.auth.uid || resource.data.from == request.auth.uid);
     }
 
     // # → uid. Создаётся один раз, изменить или удалить нельзя

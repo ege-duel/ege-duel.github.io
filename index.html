@@ -770,6 +770,48 @@ body:has(.pe-drawer.open) { overflow: hidden; }
 .task-text .ttab th, .task-text .ttab td { border: 1px solid var(--line); padding: 5px 10px; text-align: center; white-space: nowrap; }
 .task-text .ttab th { font-weight: 600; text-align: left; background: var(--bg2); }
 .task-text ul { margin: 6px 0 10px; padding-left: 22px; }
+/* ===== колокольчик уведомлений ===== */
+.bell-btn { position: relative; display: inline-grid; place-items: center; width: 38px; height: 34px; border: 0; background: var(--bg2); border-radius: 999px; color: var(--ink2); cursor: pointer; margin-left: 6px; transition: color .15s, background .15s; }
+.bell-btn:hover, .bell-btn[aria-expanded="true"] { color: var(--ink); background: color-mix(in srgb, var(--accent) 18%, var(--bg2)); }
+.bell-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.bell-btn svg { transform-origin: 50% 12%; }
+.bell-btn.ring svg { animation: bell-ring .9s ease; }
+@keyframes bell-ring { 0%, 100% { transform: rotate(0); } 15% { transform: rotate(16deg); } 30% { transform: rotate(-14deg); } 45% { transform: rotate(10deg); } 60% { transform: rotate(-7deg); } 75% { transform: rotate(3deg); } }
+.bell-n { position: absolute; top: -3px; right: -3px; min-width: 18px; height: 18px; padding: 0 5px; border-radius: 999px; background: #fa5252; color: #fff; font-size: 11px; font-weight: 800; line-height: 18px; text-align: center; box-shadow: 0 0 0 2px var(--bg); animation: bell-n-in .3s cubic-bezier(.2, .9, .3, 1.4); }
+@keyframes bell-n-in { from { transform: scale(0); } to { transform: none; } }
+.bell-pop { position: fixed; z-index: 55; padding: 14px; max-height: min(70vh, 520px); overflow-y: auto; box-shadow: 0 18px 50px rgba(0, 0, 0, .3); transform-origin: calc(var(--arrow, 90%)) -8px; animation: bell-pop-in .22s cubic-bezier(.2, .9, .3, 1.15); }
+.bell-pop.closing { animation: bell-pop-out .16s ease forwards; }
+@keyframes bell-pop-in { from { opacity: 0; transform: translateY(-6px) scale(.96); } to { opacity: 1; transform: none; } }
+@keyframes bell-pop-out { to { opacity: 0; transform: translateY(-4px) scale(.97); } }
+.bn-head { font-family: "Unbounded", sans-serif; font-weight: 700; font-size: 15px; margin: 2px 2px 10px; }
+.bn-item { display: flex; gap: 10px; padding: 10px; border: 1px solid var(--line); border-radius: 12px; background: var(--bg); margin-top: 8px; }
+.bn-ico { font-size: 20px; line-height: 1.2; }
+.bn-main { flex: 1; min-width: 0; }
+.bn-text { font-size: 14px; overflow-wrap: anywhere; }
+.bn-act { display: flex; gap: 8px; margin-top: 8px; }
+.bn-act .btn { padding: 6px 12px; font-size: 13px; }
+.bn-empty { color: var(--ink3); font-size: 14px; text-align: center; padding: 18px 6px; }
+@media (prefers-reduced-motion: reduce) { .bell-pop, .bell-pop.closing, .bell-n { animation: none; } }
+/* ===== наблюдение за матчем ===== */
+.friend-row .fr-watch { background: color-mix(in srgb, #2fb344 18%, var(--bg2)); color: #2fb344; }
+.w-bar { display: flex; align-items: center; gap: 12px; padding: 12px 16px; margin-bottom: 14px; }
+.w-live { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 800; letter-spacing: .06em; color: #fa5252; background: color-mix(in srgb, #fa5252 14%, transparent); padding: 4px 9px; border-radius: 999px; }
+.w-live i { width: 8px; height: 8px; border-radius: 50%; background: #fa5252; animation: w-blink 1.2s ease-in-out infinite; }
+@keyframes w-blink { 50% { opacity: .25; } }
+.w-title { font-weight: 700; }
+.w-head { margin-bottom: 16px; padding: 16px; }
+.w-center { text-align: center; margin-bottom: 10px; }
+.w-players { display: flex; align-items: center; justify-content: center; gap: 14px; flex-wrap: wrap; }
+.w-p { position: relative; display: flex; flex-direction: column; align-items: center; gap: 5px; min-width: 130px; flex: 1; max-width: 240px; padding: 12px 10px; border: 1px solid var(--line); border-radius: 14px; background: var(--bg); text-align: center; transition: border-color .3s; }
+.w-p.win { border-color: #fcc419; box-shadow: 0 0 0 2px color-mix(in srgb, #fcc419 40%, transparent); }
+.w-crown { position: absolute; top: -14px; font-size: 20px; }
+.w-name { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.w-score { font-size: 13px; color: var(--ink2); }
+.w-p .hearts { justify-content: center; }
+.w-note { text-align: center; margin: 12px 0 0; }
+.w-wait { text-align: center; padding: 36px 20px; }
+@media (max-width: 640px) { .w-p { min-width: 0; } .w-players .vs { display: none; } }
+@media (prefers-reduced-motion: reduce) { .w-live i { animation: none; } }
 
 </style>
 </head>
@@ -788,6 +830,7 @@ body:has(.pe-drawer.open) { overflow: hidden; }
     <button class="btn soft login-btn hide" id="login-btn">Войти</button>
     <button class="streak-btn" id="streak-btn" aria-label="Огонёк — серия дней"></button>
     <button class="pts-btn" id="pts-btn" type="button" disabled title="Звёзды — скоро появятся" aria-label="Звёзды: 0"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><defs><linearGradient id="star-g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffe45c"/><stop offset="1" stop-color="#fcc419"/></linearGradient></defs><path d="M12 3.6L14.88 8.54 20.5 9.7 16.66 14.01 17.3 19.7 12 17.4 6.7 19.7 7.34 14.01 3.5 9.7 9.12 8.54Z" fill="url(#star-g)" stroke="url(#star-g)" stroke-width="2.6" stroke-linejoin="round"/></svg><b>0</b></button>
+    <button class="bell-btn hide" id="bell-btn" type="button" title="Уведомления" aria-label="Уведомления" aria-haspopup="dialog" aria-expanded="false"><svg viewBox="0 0 24 24" width="19" height="19" aria-hidden="true"><path d="M12 3.2a5.6 5.6 0 0 0-5.6 5.6v3.1c0 .9-.3 1.8-.9 2.5L4.4 15.8c-.6.7-.1 1.8.8 1.8h13.6c.9 0 1.4-1.1.8-1.8l-1.1-1.4a3.9 3.9 0 0 1-.9-2.5V8.8A5.6 5.6 0 0 0 12 3.2z" fill="currentColor"/><path d="M9.6 19.2a2.5 2.5 0 0 0 4.8 0" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/></svg><span class="bell-n hide" id="bell-n">0</span></button>
     <button class="me-btn" id="me-btn" title="Мой профиль" aria-label="Мой профиль"></button>
     <button class="theme-btn" id="theme" title="Светлая / тёмная тема" aria-label="Сменить тему">◐</button>
   </div>
@@ -7138,6 +7181,9 @@ var Profile = (function () {
     b.tag = typeof p.tag === 'string' && /^[A-Z0-9]{6}$/.test(p.tag) ? p.tag : null;
     b.stats = Object.assign(b.stats, { solved: int(st.solved), streak: int(st.streak), bestStreak: int(st.bestStreak) });
     b.fav = SUBJ_IDS.indexOf(p.fav) >= 0 && int(p.favN) > 0 ? { id: p.fav, count: int(p.favN) } : null;
+    const pl = p && p.play;
+    b.play = pl && typeof pl === 'object' && /^[1-3][A-Z2-9]{5}$/.test(String(pl.code || '')) && SUBJ_IDS.indexOf(pl.subject) >= 0
+      ? { code: pl.code, subject: pl.subject, mode: pl.mode === 'trio' ? 'trio' : 'duel', vs: String(pl.vs || '').slice(0, 80) } : null;
     return b;
   }
   function applyCloud(d) {
@@ -7380,6 +7426,8 @@ var Cloud = (function () {
   const CONFIG = window.FIREBASE_CONFIG || null;
   let auth = null, db = null, user = null, ready = false, saveTimer = null, lastError = '';
   let beatTimer = null, inviteUnsub = null, inviteCb = null;
+  let freqUnsub = null, freqOutUnsub = null, freqCb = null, freqAcceptedCb = null;
+  let play = null; // «сейчас в матче»: { code, subject, mode, vs } — видно друзьям, чтобы смотреть игру
   const ONLINE_MS = 150000; // «в сети», если отметка была за последние 2,5 минуты
   const subs = [];
   const emit = () => subs.forEach((f) => { try { f(); } catch (e) {} });
@@ -7483,6 +7531,7 @@ var Cloud = (function () {
     // публичная карточка профиля — по ней друзья находят пользователя по #
     if (Profile.me.tag) {
       const pub = Profile.publicData();
+      pub.play = play;
       pub.updatedAt = firebase.firestore.FieldValue.serverTimestamp();
       pub.lastSeen = firebase.firestore.FieldValue.serverTimestamp();
       await db.collection('profiles').doc(user.uid).set(pub);
@@ -7552,10 +7601,68 @@ var Cloud = (function () {
     beat();
     beatTimer = setInterval(beat, 60000);
     listenInvites();
+    listenFriendReqs();
   }
   function stopPresence() {
     clearInterval(beatTimer); beatTimer = null;
     if (inviteUnsub) { inviteUnsub(); inviteUnsub = null; }
+    if (freqUnsub) { freqUnsub(); freqUnsub = null; }
+    if (freqOutUnsub) { freqOutUnsub(); freqOutUnsub = null; }
+    if (freqCb) freqCb([]);
+  }
+
+  /* ---- «сейчас в матче»: друзья видят это и могут наблюдать за игрой ---- */
+  function setPlay(p) {
+    const next = p ? { code: String(p.code), subject: p.subject, mode: p.mode === 'trio' ? 'trio' : 'duel', vs: String(p.vs || '').slice(0, 80) } : null;
+    if (JSON.stringify(next) === JSON.stringify(play)) return;
+    play = next;
+    if (!user || !Profile.me.tag) return;
+    db.collection('profiles').doc(user.uid).update({ play, lastSeen: firebase.firestore.FieldValue.serverTimestamp() }).catch(() => {});
+  }
+
+  /* ---- заявки в друзья: документ freqs/{кому}_{от кого}; друзьями становятся только после согласия ---- */
+  async function requestFriend(toUid) {
+    if (!user) throw new Error('Войдите через Google');
+    if (toUid === user.uid) return 'self';
+    if ((Profile.me.friends || []).indexOf(toUid) >= 0) return 'already';
+    // встречная заявка от этого человека уже есть — просто принимаем её
+    const back = await db.collection('freqs').doc(user.uid + '_' + toUid).get().catch(() => null);
+    if (back && back.exists && back.data().status === 'pending') { await acceptFriend(back.id, toUid); return 'accepted'; }
+    const r = db.collection('freqs').doc(toUid + '_' + user.uid);
+    const mine = await r.get().catch(() => null);
+    if (mine && mine.exists) return 'pending';
+    await r.set({
+      from: user.uid, to: toUid, fromName: (Profile.me.name || 'Игрок').slice(0, 24), fromTag: Profile.me.tag || '',
+      status: 'pending', createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+    });
+    return 'sent';
+  }
+  async function acceptFriend(id, fromUid) {
+    await addFriend(fromUid);
+    await db.collection('freqs').doc(id).update({ status: 'accepted' });
+  }
+  function declineFriend(id) { return db.collection('freqs').doc(id).delete().catch(() => {}); }
+  function listenFriendReqs() {
+    if (!user || freqUnsub) return;
+    const uid = user.uid;
+    // входящие: показываем в уведомлениях, пока человек не ответит
+    freqUnsub = db.collection('freqs').where('to', '==', uid).onSnapshot((snap) => {
+      const list = [];
+      snap.forEach((d) => {
+        const x = d.data();
+        if (x.status !== 'pending') return;
+        list.push({ id: d.id, from: x.from, name: String(x.fromName || 'Игрок').slice(0, 24), tag: String(x.fromTag || '') });
+      });
+      if (freqCb) freqCb(list);
+    }, () => {});
+    // исходящие: когда заявку приняли — добавляем друга к себе и убираем заявку
+    freqOutUnsub = db.collection('freqs').where('from', '==', uid).onSnapshot((snap) => {
+      snap.forEach((d) => {
+        const x = d.data();
+        if (x.status !== 'accepted') return;
+        addFriend(x.to).then(() => d.ref.delete().catch(() => {})).then(() => { if (freqAcceptedCb) freqAcceptedCb(x.to); }).catch(() => {});
+      });
+    }, () => {});
   }
   if (typeof window !== 'undefined') {
     window.addEventListener('pagehide', () => { goOffline(); });
@@ -7599,7 +7706,9 @@ var Cloud = (function () {
   }
 
   return {
-    init, signIn, signOut, schedulePush, sendInvite, cancelInvite, dropInvite, onInvites: (f) => { inviteCb = f; }, findByTag, friendsProfiles, leaderboard, addFriend, removeFriend, getProfile, normTag,
+    init, signIn, signOut, schedulePush, sendInvite, cancelInvite, dropInvite, onInvites: (f) => { inviteCb = f; }, findByTag, friendsProfiles, leaderboard, removeFriend, getProfile, normTag,
+    requestFriend, acceptFriend, declineFriend, setPlay,
+    onFriendReqs: (f) => { freqCb = f; }, onFriendAccepted: (f) => { freqAcceptedCb = f; },
     on: (f) => subs.push(f),
     get available() { return available(); },
     get ready() { return ready; },
@@ -8400,11 +8509,13 @@ var SubjectIcons = (function () {
 
   function render() {
     // запоминаем страницу для перезагрузки; до init() не пишем — KaTeX может вызвать rerender раньше и затереть запись
-    if (app.inited && app.tab !== 'soon') sess.set('egeduel:view', { tab: app.tab, subject: app.subject });
+    if (app.inited && app.tab !== 'soon' && app.tab !== 'watch') sess.set('egeduel:view', { tab: app.tab, subject: app.subject });
+    if (app.tab !== 'watch' && app.watch) stopWatch(); // ушли со страницы наблюдения — отключаемся от комнаты
+    updatePlay();
     $$('nav.tabs button').forEach((b) => b.classList.toggle('on', b.dataset.tab === app.tab));
     // меню раздела (Дуэль / Соло / Правила) появляется только после выбора предмета
     const navEl = $('nav.tabs');
-    const sectionNav = !(app.tab === 'home' || app.tab === 'soon' || app.tab === 'shop');
+    const sectionNav = !(app.tab === 'home' || app.tab === 'soon' || app.tab === 'shop' || app.tab === 'watch');
     if (navEl) navEl.classList.toggle('nav-hidden', !sectionNav);
     document.body.classList.toggle('on-home', !sectionNav);
     const lsm = $('.logo small');
@@ -8420,6 +8531,7 @@ var SubjectIcons = (function () {
     if (g && app.tab === gameTab) { renderGame(); return; }
     app.rendered = null;
     if (app.tab === 'profile') { if (!$('#profile-page')) renderProfile(); return; }
+    if (app.tab === 'watch') { renderWatch(); return; }
     if (app.tab === 'home') renderHome();
     else if (app.tab === 'soon') renderSoon();
     else if (app.tab === 'shop') renderShop();
@@ -8622,6 +8734,8 @@ var SubjectIcons = (function () {
   function onCloudChange() {
     app.name = Profile.me.name || '';
     renderHeaderAvatar();
+    updateBell();
+    if (!Cloud.user) closeBell();
     updateGate();
     if (!app.game && (app.tab === 'duel' || app.tab === 'trio' || app.tab === 'solo') && !$('[data-first-name]:focus')) render();
     if (Cloud.user && Profile.me.isNew) { Profile.me.isNew = false; toast('Аккаунт создан! Профиль сохранён в Google-аккаунте'); }
@@ -8917,24 +9031,130 @@ var SubjectIcons = (function () {
   }
   let invList = [];
   const invHidden = {};
+  const visibleInvites = () => invList.filter((x) => !invHidden[x.id + x.code]);
+  function declineInvite(iv) { invHidden[iv.id + iv.code] = 1; Cloud.dropInvite(iv.id); showInvites(invList); }
+  function acceptInvite(iv) {
+    if (app.game && app.game.S && app.game.S.phase !== 'over') { toast('Сначала завершите текущую игру'); return; }
+    if (app.game) leaveGame(true);
+    stopWatch();
+    invHidden[iv.id + iv.code] = 1; Cloud.dropInvite(iv.id); showInvites(invList);
+    closeBell();
+    if (!app.name.trim()) app.name = Profile.me.name || 'Игрок';
+    app.subject = iv.subject; app.tab = 'duel';
+    joinRoom(iv.code);
+  }
   function showInvites(list) {
     invList = list || [];
+    updateBell();
     let box = $('#invite-pop');
-    const iv = invList.find((x) => !invHidden[x.id + x.code]);
-    if (!iv) { if (box) box.remove(); return; }
+    const iv = visibleInvites()[0];
+    if (!iv || app.bellOpen) { if (box) box.remove(); return; }
     if (!box) { box = document.createElement('div'); box.id = 'invite-pop'; box.className = 'invite-pop card'; document.body.appendChild(box); }
     box.innerHTML = `<div class="ip-title">⚔️ Приглашение в дуэль</div>
       <div class="ip-text"><b>${esc(iv.name)}</b>${iv.tag ? ' <span class="muted">#' + esc(iv.tag) + '</span>' : ''} зовёт вас сразиться · ${SUBJ_ICON[iv.subject]} ${SUBJ_NAME[iv.subject]}</div>
       <div class="actions" style="margin-top:10px"><button type="button" class="btn" id="ip-yes">Принять</button><button type="button" class="btn ghost" id="ip-no">Отклонить</button></div>`;
-    $('#ip-no').onclick = () => { invHidden[iv.id + iv.code] = 1; Cloud.dropInvite(iv.id); showInvites(invList); };
-    $('#ip-yes').onclick = () => {
-      if (app.game && app.game.S && app.game.S.phase !== 'over') { toast('Сначала завершите текущую игру'); return; }
-      if (app.game) leaveGame(true);
-      invHidden[iv.id + iv.code] = 1; Cloud.dropInvite(iv.id); showInvites(invList);
-      if (!app.name.trim()) app.name = Profile.me.name || 'Игрок';
-      app.subject = iv.subject; app.tab = 'duel';
-      joinRoom(iv.code);
-    };
+    $('#ip-no').onclick = () => declineInvite(iv);
+    $('#ip-yes').onclick = () => acceptInvite(iv);
+  }
+
+  /* ---------- колокольчик: заявки в друзья и приглашения в дуэль ---------- */
+  let freqList = [];
+  const freqSeen = {};
+  function showFriendReqs(list) {
+    const fresh = (list || []).filter((x) => !freqSeen[x.id]);
+    (list || []).forEach((x) => { freqSeen[x.id] = 1; });
+    freqList = list || [];
+    updateBell();
+    if (fresh.length && app.freqReady) { toast('👤 ' + fresh[0].name + ' хочет добавить вас в друзья'); ringBell(); }
+    app.freqReady = true; // о заявках, которые уже были при входе, не шумим
+  }
+  function bellCount() { return freqList.length + visibleInvites().length; }
+  function ringBell() {
+    const b = $('#bell-btn');
+    if (!b || matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    b.classList.remove('ring'); void b.offsetWidth; b.classList.add('ring');
+  }
+  function updateBell() {
+    const b = $('#bell-btn');
+    if (!b) return;
+    b.classList.toggle('hide', !Cloud.user);
+    const n = bellCount();
+    const badge = $('#bell-n');
+    badge.textContent = n > 9 ? '9+' : n;
+    badge.classList.toggle('hide', !n);
+    b.setAttribute('aria-label', n ? 'Уведомления: ' + n : 'Уведомления');
+    const inv = visibleInvites().length;
+    if (inv > (app.invN || 0)) ringBell(); // новое приглашение в дуэль — колокольчик качается
+    app.invN = inv;
+    if (app.bellOpen) renderBell();
+  }
+  function bellHTML() {
+    const reqs = freqList.map((r) => `<div class="bn-item">
+        <div class="bn-ico">👤</div>
+        <div class="bn-main"><div class="bn-text"><b>${esc(r.name)}</b>${r.tag ? ' <span class="muted">#' + esc(r.tag) + '</span>' : ''} хочет добавить вас в друзья</div>
+        <div class="bn-act"><button type="button" class="btn" data-fr-yes="${esc(r.id)}">Принять</button><button type="button" class="btn ghost" data-fr-no="${esc(r.id)}">Отклонить</button></div></div>
+      </div>`).join('');
+    const invs = visibleInvites().map((iv) => `<div class="bn-item">
+        <div class="bn-ico">⚔️</div>
+        <div class="bn-main"><div class="bn-text"><b>${esc(iv.name)}</b> зовёт вас в дуэль · ${SUBJ_ICON[iv.subject]} ${SUBJ_NAME[iv.subject]}</div>
+        <div class="bn-act"><button type="button" class="btn" data-iv-yes="${esc(iv.id)}">Принять</button><button type="button" class="btn ghost" data-iv-no="${esc(iv.id)}">Отклонить</button></div></div>
+      </div>`).join('');
+    return `<div class="bn-head">Уведомления</div>${reqs || invs ? invs + reqs : '<div class="bn-empty">🔕 Новых уведомлений нет</div>'}`;
+  }
+  function renderBell() {
+    const p = $('#bell-pop');
+    if (!p) return;
+    p.innerHTML = bellHTML();
+    $$('[data-fr-yes]', p).forEach((b) => (b.onclick = async () => {
+      const r = freqList.find((x) => x.id === b.dataset.frYes);
+      if (!r) return;
+      b.disabled = true;
+      try {
+        await Cloud.acceptFriend(r.id, r.from);
+        freqList = freqList.filter((x) => x.id !== r.id); updateBell();
+        toast(r.name + ' теперь у вас в друзьях');
+        refreshFriends();
+      } catch (e) { b.disabled = false; toast('Не удалось принять заявку: ' + (e.message || e)); }
+    }));
+    $$('[data-fr-no]', p).forEach((b) => (b.onclick = () => {
+      const r = freqList.find((x) => x.id === b.dataset.frNo);
+      if (!r) return;
+      Cloud.declineFriend(r.id);
+      freqList = freqList.filter((x) => x.id !== r.id); updateBell();
+    }));
+    $$('[data-iv-yes]', p).forEach((b) => (b.onclick = () => { const iv = visibleInvites().find((x) => x.id === b.dataset.ivYes); if (iv) acceptInvite(iv); }));
+    $$('[data-iv-no]', p).forEach((b) => (b.onclick = () => { const iv = visibleInvites().find((x) => x.id === b.dataset.ivNo); if (iv) declineInvite(iv); }));
+  }
+  function placeBell() {
+    const p = $('#bell-pop'), b = $('#bell-btn');
+    if (!p || !b) return;
+    const r = b.getBoundingClientRect();
+    const w = Math.min(360, window.innerWidth - 24);
+    p.style.width = w + 'px';
+    p.style.top = Math.round(r.bottom + 10) + 'px';
+    p.style.left = Math.round(Math.max(12, Math.min(window.innerWidth - w - 12, r.right - w + 18))) + 'px';
+    p.style.setProperty('--arrow', Math.round(r.left + r.width / 2 - parseFloat(p.style.left)) + 'px');
+  }
+  function openBell() {
+    if (app.bellOpen) return;
+    app.bellOpen = true;
+    const pop = $('#invite-pop'); if (pop) pop.remove();
+    const p = document.createElement('div');
+    p.id = 'bell-pop'; p.className = 'bell-pop card'; p.setAttribute('role', 'dialog'); p.setAttribute('aria-label', 'Уведомления');
+    document.body.appendChild(p);
+    renderBell(); placeBell();
+    $('#bell-btn').setAttribute('aria-expanded', 'true');
+  }
+  function closeBell() {
+    if (!app.bellOpen) return;
+    app.bellOpen = false;
+    const p = $('#bell-pop');
+    if (p) { p.classList.add('closing'); setTimeout(() => p.remove(), 160); }
+    const b = $('#bell-btn'); if (b) b.setAttribute('aria-expanded', 'false');
+    showInvites(invList); // вернуть всплывашку приглашения, если оно ещё не разобрано
+  }
+  function refreshFriends() {
+    if (app.tab === 'profile' && $('#friends-list')) loadFriends();
   }
 
   /* ---------- #, друзья, поиск профилей ---------- */
@@ -8982,7 +9202,7 @@ var SubjectIcons = (function () {
   function cardColor(fp) { return (fp && Profile.CARDS[Math.max(0, Math.min(16, fp.card | 0))]) || null; }
   function friendRow(fp) {
     const cc = cardColor(fp);
-    return `<div class="friend-row${cc ? ' tinted' : ''}"${cc ? ` style="--pc:${cc}"` : ''} role="button" tabindex="0" data-friend="${esc(fp.uid)}">${Profile.avatar(fp, 40)}<span class="fr-main"><b>${esc(fp.name)}</b><span class="muted"><span class="fr-st ${fp.online ? 'on' : ''}">${statusHTML(fp)}</span> · #${esc(fp.tag || '')}${fp.stats && fp.stats.streak ? ' · 🔥 ' + fp.stats.streak : ''}</span></span>${fp.online ? `<button type="button" class="btn soft fr-inv" data-invite="${esc(fp.uid)}">⚔️ Позвать</button>` : ''}<span class="fr-go">›</span></div>`;
+    return `<div class="friend-row${cc ? ' tinted' : ''}"${cc ? ` style="--pc:${cc}"` : ''} role="button" tabindex="0" data-friend="${esc(fp.uid)}">${Profile.avatar(fp, 40)}<span class="fr-main"><b>${esc(fp.name)}</b><span class="muted"><span class="fr-st ${fp.online ? 'on' : ''}">${statusHTML(fp)}</span> · #${esc(fp.tag || '')}${fp.stats && fp.stats.streak ? ' · 🔥 ' + fp.stats.streak : ''}</span></span>${fp.online && fp.play ? `<button type="button" class="btn soft fr-inv fr-watch" data-watch="${esc(fp.uid)}" title="Наблюдать за матчем: ${esc(fp.play.vs)}">👁 Смотреть</button>` : fp.online ? `<button type="button" class="btn soft fr-inv" data-invite="${esc(fp.uid)}">⚔️ Позвать</button>` : ''}<span class="fr-go">›</span></div>`;
   }
 
   async function loadFriends() {
@@ -8998,8 +9218,10 @@ var SubjectIcons = (function () {
       const byUid = (id) => (app.friendsCache || []).find((x) => x.uid === id);
       $$('[data-friend]').forEach((b) => { b.onclick = () => { const fp = byUid(b.dataset.friend); if (fp) showProfileModal(fp); }; b.onkeydown = (e) => { if (e.key === 'Enter') b.click(); }; });
       $$('[data-invite]').forEach((b) => (b.onclick = (e) => { e.stopPropagation(); const fp = byUid(b.dataset.invite); if (fp) openInviteModal(fp); }));
+      $$('[data-watch]').forEach((b) => (b.onclick = (e) => { e.stopPropagation(); const fp = byUid(b.dataset.watch); if (fp) watchMatch(fp); }));
       clearTimeout(app.friendsTimer);
-      app.friendsTimer = setTimeout(() => { if (app.tab === 'profile' && $('#friends-list') && !$('#modal.show')) loadFriends(); }, 60000);
+      // чаще обновляем, чтобы «👁 Смотреть» появлялось вскоре после начала матча у друга
+      app.friendsTimer = setTimeout(() => { if (app.tab === 'profile' && $('#friends-list') && !$('#modal.show')) loadFriends(); }, 20000);
     } catch (e) { box.innerHTML = '<p class="notice bad" style="margin:0">Не удалось загрузить друзей. Проверьте интернет.</p>'; }
   }
 
@@ -9054,18 +9276,24 @@ var SubjectIcons = (function () {
     const isMe = fp.self || (Cloud.user && fp.uid === Cloud.user.uid);
     const isFriend = (Profile.me.friends || []).indexOf(fp.uid) >= 0;
     const btn = isMe ? ''
-      : isFriend ? (fp.online ? '<button type="button" class="btn" id="fr-invite">⚔️ Позвать в дуэль</button>' : '') + '<button type="button" class="btn danger" id="fr-remove">Удалить из друзей</button>'
+      : isFriend ? (fp.online && fp.play ? '<button type="button" class="btn" id="fr-watch">👁 Смотреть матч</button>' : fp.online ? '<button type="button" class="btn" id="fr-invite">⚔️ Позвать в дуэль</button>' : '') + '<button type="button" class="btn danger" id="fr-remove">Удалить из друзей</button>'
       : '<button type="button" class="btn" id="fr-add">＋ Добавить в друзья</button>';
     const m = modal(`<div class="row" style="justify-content:flex-end"><button type="button" class="modal-x" data-close aria-label="Закрыть">×</button></div>${profileBlock(fp)}${btn ? `<div class="actions" style="justify-content:center">${btn}</div>` : ''}`);
     m.el.classList.add('anim'); // плавное появление профиля
     const cc = cardColor(fp), box = $('.modal-box', m.el);
     if (cc && box) { box.classList.add('tinted'); box.style.setProperty('--pc', cc); }
-    const add = $('#fr-add', m.el), rem = $('#fr-remove', m.el), inv = $('#fr-invite', m.el);
+    const add = $('#fr-add', m.el), rem = $('#fr-remove', m.el), inv = $('#fr-invite', m.el), wt = $('#fr-watch', m.el);
     if (inv) inv.onclick = () => { m.close(); openInviteModal(fp); };
+    if (wt) wt.onclick = () => { m.close(); watchMatch(fp); };
     if (add) add.onclick = async () => {
       add.disabled = true;
-      try { await Cloud.addFriend(fp.uid); toast(fp.name + ' теперь у вас в друзьях'); m.close(); renderProfile(); }
-      catch (e) { add.disabled = false; toast(e.message || 'Не удалось добавить'); }
+      try {
+        // друзьями становятся только после согласия: отправляем заявку
+        const r = await Cloud.requestFriend(fp.uid);
+        if (r === 'accepted') { toast(fp.name + ' теперь у вас в друзьях'); m.close(); renderProfile(); return; }
+        add.textContent = '✓ Заявка отправлена';
+        toast(r === 'pending' ? 'Заявка уже отправлена — ждём ответа' : r === 'already' ? fp.name + ' уже у вас в друзьях' : 'Заявка отправлена. ' + fp.name + ' увидит её в уведомлениях 🔔');
+      } catch (e) { add.disabled = false; toast(e.message || 'Не удалось отправить заявку'); }
     };
     if (rem) rem.onclick = async () => {
       if (!confirm('Удалить ' + fp.name + ' из друзей?')) return;
@@ -9438,6 +9666,119 @@ var SubjectIcons = (function () {
   }
 
   /* ---------- экран игры ---------- */
+  /* ---------- наблюдение за матчем друга (только чтение: ничего не отправляем в комнату) ---------- */
+  function updatePlay() {
+    if (!Cloud.user) return;
+    const g = app.game, S = g && g.S;
+    let p = null;
+    if (g && g.mode !== 'solo' && S && S.code && ['ready', 'question', 'result'].indexOf(S.phase) >= 0 && (g.mode === 'host' || g.joined)) {
+      p = { code: S.code, subject: subjOfState(S), mode: isTrio(S) ? 'trio' : 'duel', vs: roles(S).map((r) => S.players[r].name).join(' vs ').slice(0, 80) };
+    }
+    Cloud.setPlay(p);
+  }
+  async function watchMatch(fp) {
+    const pl = fp && fp.play;
+    if (!pl) { toast('Матч уже закончился'); return; }
+    if (app.game && app.game.S && app.game.S.phase !== 'over') { toast('Сначала завершите свою игру'); return; }
+    if (app.game) leaveGame(true);
+    stopWatch();
+    const w = { code: pl.code, friend: fp.name, subject: pl.subject, S: null, profiles: {}, offset: 0, link: null, key: null, gone: false };
+    app.watch = w;
+    app.tab = 'watch';
+    render(); animatePage(); window.scrollTo(0, 0);
+    try { w.link = await Net.join(pl.code, () => {}, 'w_' + Net.rid(8)); }
+    catch (e) {
+      if (app.watch !== w) return;
+      toast('Не удалось подключиться к матчу'); stopWatch(); app.tab = 'profile'; render(); return;
+    }
+    if (app.watch !== w) { w.link.close(); return; }
+    w.link.on('state', (S) => {
+      if (app.watch !== w) return;
+      // комнату очистили: если итоги уже показаны — оставляем их, иначе «матч закончился»
+      if (!S || typeof S !== 'object' || !S.players || !S.settings) { if (w.S && w.S.phase !== 'over') w.gone = true; }
+      else { w.S = S; w.gone = false; if (S.now) w.offset = S.now - Date.now(); }
+      if (app.tab === 'watch') renderWatch();
+    });
+    ALL_ROLES.forEach((r) => w.link.on('profile/' + r, (p) => {
+      if (app.watch !== w || !p || typeof p !== 'object') return;
+      w.profiles[r] = Profile.sanitize(p);
+      if (app.tab === 'watch') renderWatchHead();
+    }));
+    // если состояние так и не пришло — комнаты уже нет
+    setTimeout(() => { if (app.watch === w && !w.S) { w.gone = true; if (app.tab === 'watch') renderWatch(); } }, 8000);
+  }
+  function stopWatch() {
+    const w = app.watch;
+    app.watch = null;
+    if (w && w.link) w.link.close();
+  }
+  function watchRem(w) { return w.S.deadline ? w.S.deadline - (Date.now() + (w.offset || 0)) : Infinity; }
+  function renderWatchHead() {
+    const w = app.watch, el = $('#w-head');
+    if (!w || !w.S || !el) return;
+    const S = w.S, max = S.settings.lives;
+    const st = (p) => {
+      if (p.left) return '<span class="pstat off">🚪 вышел(а)</span>';
+      if (p.out) return '<span class="pstat off">💀 выбыл(а)</span>';
+      if (S.phase === 'question') return p.answered ? '<span class="pstat ok">✓ ответ дан</span>' : '<span class="pstat">думает…</span>';
+      if (S.phase === 'result' || S.phase === 'ready') return p.ready ? '<span class="pstat ok">✓ готов</span>' : '<span class="pstat">читает разбор</span>';
+      return '';
+    };
+    const pl = roles(S).map((r) => {
+      const p = S.players[r];
+      const win = S.phase === 'over' && S.winner === r;
+      return `<div class="w-p${win ? ' win' : ''}">${win ? '<div class="w-crown">👑</div>' : ''}${Profile.avatar(w.profiles[r] || Profile.fallback(p.name), 48)}<b class="w-name">${esc(p.name)}</b>${max ? hearts(p.lives, max) : ''}<span class="w-score">верно: ${okCount(S, r)}</span>${st(p)}</div>`;
+    }).join('<div class="vs">VS</div>');
+    let center;
+    if (S.phase === 'question') center = `<div class="round-lbl">Раунд ${S.round}${S.settings.rounds ? ' из ' + S.settings.rounds : ''}</div>${S.deadline ? `<div class="timer" id="w-timer">${fmtTime(watchRem(w))}</div>` : '<div class="timer inf">∞</div>'}`;
+    else center = `<div class="round-lbl">${S.phase === 'lobby' ? 'Сбор игроков' : S.phase === 'ready' ? 'Подготовка' : S.phase === 'over' ? 'Матч окончен' : 'Раунд ' + S.round + ' · разбор'}</div>`;
+    el.innerHTML = `<div class="w-center">${center}</div><div class="w-players${isTrio(S) ? ' trio' : ''}">${pl}</div>`;
+  }
+  function watchBodyHTML(w) {
+    const S = w.S;
+    if (S.phase === 'lobby') return '<section class="card w-wait"><div class="waiting" style="justify-content:center"><span class="dot-pulse"></span> Игроки собираются в комнате…</div></section>';
+    if (S.phase === 'ready') return '<section class="card w-wait"><div class="waiting" style="justify-content:center"><span class="dot-pulse"></span> Игроки готовятся к старту…</div></section>';
+    if (S.phase === 'question') return `${taskCard(S)}<p class="muted w-note">👀 Игроки решают это задание. Ответы появятся, когда раунд закончится.</p>`;
+    const R = S.result;
+    const verdicts = R ? `<div class="verdicts${isTrio(S) ? ' trio' : ''}">${roles(S).filter((r) => R.v[r]).map((r) => {
+      const v = R.v[r];
+      return `<div class="verdict ${v.ok ? 'ok' : 'bad'}"><div class="who">${esc(S.players[r].name)}</div><div class="what">${v.timeout ? '⏰ Время вышло' : (v.ok ? '✓ ' : '✗ ') + esc(v.value)}</div></div>`;
+    }).join('')}</div><div class="right-ans"><span class="muted">Правильный ответ:</span> <b>${esc(R.answer)}</b></div><div class="sol"><h3>Решение</h3><div class="task-text" style="font-size:16px">${R.short}</div></div>` : '';
+    if (S.phase === 'result') return `<section class="card">${verdicts}</section>${taskReview(S)}`;
+    // конец матча
+    let title, emoji;
+    if (S.reason === 'closed') { emoji = '🚪'; title = 'Комната закрыта'; }
+    else if (S.winner === 'draw') { emoji = '🤝'; title = 'Ничья!'; }
+    else if (S.winner && S.players[S.winner]) { emoji = '🏆'; title = 'Победил(а) ' + esc(S.players[S.winner].name); }
+    else { emoji = '🏁'; title = 'Матч окончен'; }
+    const hist = S.history.length ? `<section class="card history" style="margin-top:18px"><h2>История раундов</h2><table><thead><tr><th>Раунд</th><th>Задание</th>${roles(S).map((r) => '<th>' + esc(S.players[r].name) + '</th>').join('')}</tr></thead><tbody>${S.history.map((h) => `<tr><td>${h.round}</td><td>№ ${h.num} · ${esc(titleOf(subjOfState(S), h.num))}</td>${roles(S).map((r) => '<td>' + (h[r] === undefined ? '<span class="muted">—</span>' : h[r] ? '<span class="mk-ok">✓</span>' : '<span class="mk-bad">✗</span>') + '</td>').join('')}</tr>`).join('')}</tbody></table></section>` : '';
+    return `<section class="card over"><div class="big-emoji">${emoji}</div><h1>${title}</h1><div class="actions" style="justify-content:center"><button class="btn big" id="w-exit2">Выйти из просмотра</button></div></section>${R && S.reason !== 'closed' ? `<section class="card" style="margin-top:18px"><h2>Последний раунд</h2>${verdicts}</section>` : ''}${hist}`;
+  }
+  function renderWatch() {
+    const w = app.watch;
+    if (!w) { app.tab = 'profile'; render(); return; }
+    const bar = `<div class="w-bar card"><span class="w-live"><i></i> LIVE</span><span class="w-title">👁 Наблюдение · ${SUBJ_ICON[w.subject] || ''} ${esc(SUBJ_NAME[w.subject] || '')}${w.S ? ' · ' + (isTrio(w.S) ? 'трио' : 'дуэль') : ''}</span><span class="sp"></span><button class="btn ghost" id="w-exit">Выйти</button></div>`;
+    if (!w.S || w.gone) {
+      app.rendered = null; w.key = null;
+      main().innerHTML = bar + (w.gone
+        ? '<section class="card w-wait"><div class="big-emoji">🏁</div><h2>Матч уже закончился</h2><p class="muted">Комната закрыта, смотреть больше нечего.</p><div class="actions" style="justify-content:center"><button class="btn" id="w-exit2">Вернуться</button></div></section>'
+        : `<section class="card w-wait"><div class="waiting" style="justify-content:center"><span class="dot-pulse"></span> Подключаемся к матчу ${esc(w.friend)}…</div></section>`);
+    } else {
+      const S = w.S;
+      const key = [S.code, S.gameNo, S.phase, S.round].join('|');
+      if (w.key !== key || !$('#w-body')) {
+        w.key = key;
+        main().innerHTML = bar + '<div id="w-head" class="w-head card"></div><div id="w-body"></div>';
+        $('#w-body').innerHTML = watchBodyHTML(w);
+        typeset($('#w-body'));
+      }
+      renderWatchHead();
+    }
+    const exit = () => { stopWatch(); app.tab = 'profile'; render(); animatePage(); window.scrollTo(0, 0); };
+    if ($('#w-exit')) $('#w-exit').onclick = exit;
+    if ($('#w-exit2')) $('#w-exit2').onclick = exit;
+  }
+
   function names(S) {
     const me = myRole(), opp = me === 'host' ? 'guest' : 'host';
     return { me, opp, meP: S.players[me], oppP: S.players[opp], opps: roles(S).filter((r) => r !== me) };
@@ -9900,6 +10241,11 @@ var SubjectIcons = (function () {
 
   /* ---------- главный цикл: таймер ---------- */
   setInterval(() => {
+    const w = app.watch;
+    if (w && w.S && w.S.phase === 'question' && w.S.deadline && app.tab === 'watch') {
+      const t = $('#w-timer');
+      if (t) { const rem = watchRem(w); t.textContent = fmtTime(rem); t.classList.toggle('low', rem < 10000); }
+    }
     const g = app.game;
     if (!g || !g.S) return;
     const S = g.S;
@@ -9931,6 +10277,17 @@ var SubjectIcons = (function () {
     $('#streak-btn').onclick = openStreak;
     $('#shop-btn').onclick = () => { if (app.tab === 'shop') return; app.tab = 'shop'; render(); animatePage(); window.scrollTo(0, 0); };
     Cloud.onInvites(showInvites);
+    Cloud.onFriendReqs(showFriendReqs);
+    Cloud.onFriendAccepted((uid) => {
+      Cloud.getProfile(uid).then((fp) => { if (fp) toast('🤝 ' + fp.name + ' принял(а) вашу заявку — теперь вы друзья'); }).catch(() => {});
+      refreshFriends();
+    });
+    const bell = $('#bell-btn');
+    bell.onclick = (e) => { e.stopPropagation(); if (app.bellOpen) closeBell(); else openBell(); };
+    document.addEventListener('click', (e) => { if (app.bellOpen && !e.target.closest('#bell-pop, #bell-btn')) closeBell(); });
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && app.bellOpen) { closeBell(); bell.focus(); } });
+    window.addEventListener('resize', placeBell);
+    updateBell();
     setInterval(renderHeaderAvatar, 60000); // смена суток
     Cloud.on(onCloudChange);
     updateGate();
