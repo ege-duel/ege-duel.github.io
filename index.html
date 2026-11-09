@@ -442,7 +442,7 @@ header.top .wrap { max-width: none; padding-left: 28px; padding-right: 28px; }
 .hm-c.l4 { background: #ff7a00; box-shadow: 0 0 8px rgba(255, 122, 0, .45); }
 .hm-c.skip { background: transparent; box-shadow: inset 0 0 0 1.5px var(--ink3); }
 .hm-c.today { outline: 2px solid var(--accent); outline-offset: 1px; }
-.hm-c.future { background: transparent; }
+.hm-c.future { background: transparent; box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--ink3) 30%, transparent); opacity: .7; }
 .hm-legend { display: flex; align-items: center; gap: 5px; margin-top: 10px; font-size: 12px; color: var(--ink3); font-weight: 600; flex-wrap: wrap; }
 .hm-legend .hm-c { width: 13px; height: 13px; border-radius: 3px; }
 @media (max-width: 640px) { .streak-stats { grid-template-columns: repeat(2, 1fr); } .modal { padding: 10px; } }
@@ -8806,7 +8806,14 @@ var SubjectIcons = (function () {
     const today = new Date();
     const todayKey = Streak.today();
     const monday = Streak.addDays(today, -((today.getDay() + 6) % 7));
-    const start = Streak.addDays(monday, -7 * (weeks - 1));
+    // календарь начинается с недели первой активности: прошлое слева, будущие дни справа.
+    // Когда истории больше, чем помещается, сдвигаем окно, оставляя справа 4 недели будущего.
+    const FUTURE_WEEKS = 4;
+    const keys = Object.keys(counts).concat(p.days || []).filter((k) => /^d{4}-d{2}-d{2}$/.test(k) && k <= todayKey).sort();
+    let firstMon = monday;
+    if (keys.length) { const d0 = Streak.parse(keys[0]); firstMon = Streak.addDays(d0, -((d0.getDay() + 6) % 7)); }
+    const earliest = Streak.addDays(monday, -7 * (weeks - 1 - FUTURE_WEEKS));
+    const start = firstMon < earliest ? earliest : firstMon;
     let cols = '', months = '', lastMonth = -1;
     for (let w = 0; w < weeks; w++) {
       const wStart = Streak.addDays(start, 7 * w);
@@ -8818,7 +8825,7 @@ var SubjectIcons = (function () {
       for (let i = 0; i < 7; i++) {
         const d = Streak.addDays(wStart, i);
         const k = Streak.key(d);
-        if (k > todayKey) { col += '<span class="hm-c future"></span>'; continue; }
+        if (k > todayKey) { col += '<span class="hm-c future" title="' + d.getDate() + ' ' + MON_SHORT[d.getMonth()] + ' — ещё впереди"></span>'; continue; }
         const n = counts[k] || (days.has(k) ? 1 : 0);
         const lv = level(n);
         const cls = 'hm-c l' + lv + (skips.has(k) && !n ? ' skip' : '') + (k === todayKey ? ' today' : '');
@@ -8868,7 +8875,8 @@ var SubjectIcons = (function () {
     if (!m) { m = document.createElement('div'); m.id = 'modal'; m.className = 'modal'; document.body.appendChild(m); }
     m.innerHTML = '<div class="modal-box card streak-modal" role="dialog" aria-label="Огонёк">' + streakCardHTML() + '</div>';
     m.classList.add('show');
-    const sc = $('#hm-scroll'); if (sc) sc.scrollLeft = sc.scrollWidth;
+    const sc = $('#hm-scroll'), tc = sc && $('.hm-c.today', sc);
+    if (sc && tc && tc.offsetLeft + 80 > sc.clientWidth) sc.scrollLeft = tc.offsetLeft - sc.clientWidth + 80; // сегодняшний день всегда виден
     const close = () => { m.classList.remove('show'); document.removeEventListener('keydown', onKey); };
     const onKey = (e) => { if (e.key === 'Escape') close(); };
     document.addEventListener('keydown', onKey);
