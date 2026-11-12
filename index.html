@@ -1152,6 +1152,48 @@ html:has(#main.prof-in) { overflow-x: clip; }
   #main.prof-in #profile-page > h1, #main.prof-in .p3-info > *, #main.prof-in .p3-fr > *, #main.prof-in .p3-info .pstats .stat { animation: none; }
 }
 
+/* ===== возврат по просьбе: закруглённые переключатели и кнопки, шапка светлее фона ===== */
+:root { --head: #1C1C21; --pill: #34343B; }
+@media (prefers-color-scheme: light) { :root:not([data-theme="dark"]) { --head: #FFFFFF; --pill: #FFFFFF; } }
+:root[data-theme="light"] { --head: #FFFFFF; --pill: #FFFFFF; }
+
+/* шапка — светлее фона страницы */
+header.top { background: color-mix(in srgb, var(--head) 94%, transparent); }
+
+/* переключатель разделов (Дуэль / Трио / Соло / Правила) — снова «таблетка» */
+nav.tabs { background: var(--bg2); padding: 4px; gap: 4px; border-radius: 12px; align-self: center; align-items: center; border: 0; }
+nav.tabs button { border-radius: 9px; padding: 7px 14px; text-transform: none; letter-spacing: 0; font-size: 15px; font-weight: 600; color: var(--ink2); }
+nav.tabs button:hover, nav.tabs button.on { color: var(--ink); }
+.tab-pill { top: 4px; bottom: auto; height: calc(100% - 8px); border-radius: 9px; background: var(--pill); box-shadow: 0 1px 2px rgba(0, 0, 0, .25), inset 0 -2px 0 var(--accent); }
+.tab-pill.anim { transition: transform .3s cubic-bezier(.4, 0, .2, 1), width .3s cubic-bezier(.4, 0, .2, 1), opacity .2s ease; }
+@media (max-width: 760px) {
+  nav.tabs { margin-left: 0; order: 3; width: 100%; align-self: auto; }
+  nav.tabs button { flex: 1; padding: 7px 2px; font-size: 14px; }
+}
+
+/* кнопки — закруглённые, обычный регистр, как раньше */
+.btn { border-radius: 12px; text-transform: none; letter-spacing: 0; font-size: 16px; font-weight: 700; }
+.btn.big { border-radius: 14px; font-size: 17px; }
+.login-btn { border-radius: 10px; }
+.bn-act .btn, .friend-row .fr-inv { font-size: 13px; }
+.shop-fab { border-radius: 999px; text-transform: none; letter-spacing: 0; font-size: 15px; }
+.tg-fab { border-radius: 50%; }
+.streak-btn, .pts-btn, .bell-btn { border-radius: 999px; }
+.theme-btn { border-radius: 10px; }
+
+/* остальные переключатели — тоже закруглённые */
+.chip { border-radius: 999px; font-size: 14px; }
+.num { border-radius: 10px; }
+.seg { border-radius: 11px; }
+.seg button { border-radius: 8px; text-transform: none; letter-spacing: 0; font-size: 15px; font-weight: 700; }
+.stepper { border-radius: 11px; }
+.keys button { border-radius: 9px; }
+.tr-q { border-radius: 11px; }
+.input { border-radius: 11px; }
+.cal-nav, .modal-x, .pe-open { border-radius: 10px; }
+@media (max-width: 430px) { .login-btn:not(.hide) { letter-spacing: 0; font-size: 13px !important; } }
+nav.tabs button { white-space: nowrap; }
+
 </style>
 </head>
 <body>
