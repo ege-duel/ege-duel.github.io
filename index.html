@@ -8792,6 +8792,7 @@ var SubjectIcons = (function () {
     if (lsm) lsm.textContent = sectionNav ? SUBJ[(app.game && app.game.S && (app.tab === 'duel' || app.tab === 'trio' || app.tab === 'solo') && subjOfState(app.game.S)) || app.subject].short + ' · 2027' : 'подготовка к ЕГЭ · 2027';
     movePill();
     renderHeaderAvatar();
+    applySubjectAccent();
     const g = app.game;
     if (g && g.S && g.S.result && (g.S.phase === 'result' || g.S.phase === 'over')) achAfterRound(g);
     if (g && g.S && g.S.phase === 'over') recordResult(g);
@@ -8813,6 +8814,26 @@ var SubjectIcons = (function () {
     else if (app.tab === 'solo') renderSoloHome();
     else if (app.tab === 'top') renderTop();
     else renderRules();
+  }
+
+  // В разделах предмета (Дуэль / Трио / Соло / Правила и в самой игре) кнопки и выделения
+  // красятся в цвет предмета с главной; на главной, в профиле и остальном — общий оранжевый.
+  function applySubjectAccent() {
+    const root = document.documentElement.style;
+    let id = null;
+    if (['duel', 'trio', 'solo', 'rules'].includes(app.tab)) {
+      const g = app.game;
+      id = (g && app.tab === gameTabOf(g) && (g.mode === 'train' ? g.subject : g.S && subjOfState(g.S))) || app.subject;
+    }
+    let s = null;
+    try { s = id && SUBJECTS.find((x) => x.id === id); } catch (e) { s = null; }
+    if (!s) { ['--accent', '--accent-ink', '--accent-soft'].forEach((k) => root.removeProperty(k)); return; }
+    const hex = s.color.replace('#', '');
+    const [r, gr, b] = [0, 2, 4].map((i) => parseInt(hex.slice(i, i + 2), 16) / 255).map((c) => (c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4));
+    const lum = 0.2126 * r + 0.7152 * gr + 0.0722 * b;
+    root.setProperty('--accent', s.color);
+    root.setProperty('--accent-ink', lum > 0.3 ? '#1d1b19' : '#ffffff'); // на светлых цветах (биология, общество) текст тёмный
+    root.setProperty('--accent-soft', `color-mix(in srgb, ${s.color} 15%, var(--card))`);
   }
 
   // Подложка активной вкладки плавно переезжает под нажатую кнопку
