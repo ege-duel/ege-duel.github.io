@@ -1071,6 +1071,47 @@ nav.tabs button:hover, nav.tabs button.on { color: var(--ink); }
   header.top .wrap { gap: 5px; }
 }
 
+/* ===== главная: блоки съезжаются на место со всех сторон =====
+   Заголовок приходит сверху, карточки слева — по диагонали слева, справа — по диагонали справа,
+   средние — снизу. Класс home-in вешается на время анимации при переходе на главную. */
+html:has(#main.home-in) { overflow-x: clip; }
+#main.home-in .home-hero,
+#main.home-in .home-feat,
+#main.home-in .home-h2,
+#main.home-in .subject { animation: homeFly .95s cubic-bezier(.16, 1, .3, 1) backwards; }
+@keyframes homeFly {
+  from { opacity: 0; transform: translate(var(--fx, 0), var(--fy, 0)) rotate(var(--fr, 0deg)) scale(.92); }
+  60% { opacity: 1; }
+  to { opacity: 1; transform: none; }
+}
+#main.home-in .home-hero { --fy: -45vh; animation-duration: 1s; }
+#main.home-in .home-feat:nth-child(1) { --fx: -60vw; --fy: 30vh; --fr: -8deg; animation-delay: .18s; }
+#main.home-in .home-feat:nth-child(2) { --fy: 55vh; animation-delay: .24s; }
+#main.home-in .home-feat:nth-child(3) { --fx: 60vw; --fy: 30vh; --fr: 8deg; animation-delay: .3s; }
+#main.home-in .home-h2 { --fx: -50vw; animation-delay: .34s; }
+/* предметы 3×2: левая колонка — с левых углов, правая — с правых, средняя — снизу */
+#main.home-in .subject:nth-child(3n+1) { --fx: -65vw; --fy: -30vh; --fr: -10deg; }
+#main.home-in .subject:nth-child(3n) { --fx: 65vw; --fy: -30vh; --fr: 10deg; }
+#main.home-in .subject:nth-child(3n+2) { --fy: 60vh; }
+#main.home-in .subject:nth-child(n+4):nth-child(3n+1) { --fy: 35vh; }
+#main.home-in .subject:nth-child(n+4):nth-child(3n) { --fy: 35vh; }
+#main.home-in .subject:nth-child(1) { animation-delay: .4s; }
+#main.home-in .subject:nth-child(2) { animation-delay: .46s; }
+#main.home-in .subject:nth-child(3) { animation-delay: .4s; }
+#main.home-in .subject:nth-child(4) { animation-delay: .52s; }
+#main.home-in .subject:nth-child(5) { animation-delay: .58s; }
+#main.home-in .subject:nth-child(6) { animation-delay: .52s; }
+/* телефон: предметы в две колонки — нечётные слева, чётные справа */
+@media (max-width: 760px) {
+  #main.home-in .subject:nth-child(odd) { --fx: -80vw; --fy: 20vh; --fr: -8deg; }
+  #main.home-in .subject:nth-child(even) { --fx: 80vw; --fy: 20vh; --fr: 8deg; }
+  #main.home-in .home-feat:nth-child(odd) { --fx: -80vw; --fy: 10vh; }
+  #main.home-in .home-feat:nth-child(even) { --fx: 80vw; --fy: 10vh; }
+}
+@media (prefers-reduced-motion: reduce) {
+  #main.home-in .home-hero, #main.home-in .home-feat, #main.home-in .home-h2, #main.home-in .subject { animation: none; }
+}
+
 </style>
 </head>
 <body>
@@ -8906,9 +8947,21 @@ var SubjectIcons = (function () {
     pill.style.transform = 'translateX(' + btn.offsetLeft + 'px)';
     pill.style.opacity = '1';
   }
+  /* главная: блоки съезжаются на место со всех сторон */
+  let homeInT = 0;
+  function playHomeIntro() {
+    const m = main();
+    if (!m || !m.querySelector('#home-page')) return;
+    m.classList.remove('page-in', 'home-in');
+    void m.offsetWidth;
+    m.classList.add('home-in');
+    clearTimeout(homeInT);
+    homeInT = setTimeout(() => m.classList.remove('home-in'), 1700);
+  }
   function animatePage() {
     const m = main();
     if (!m) return;
+    if (app.tab === 'home') { playHomeIntro(); return; }
     m.classList.remove('page-in');
     void m.offsetWidth;
     m.classList.add('page-in');
@@ -10255,6 +10308,7 @@ var SubjectIcons = (function () {
       <div class="subjects">
         ${SUBJECTS.map((s) => `<button type="button" class="subject" data-subject="${s.id}" style="--sc:${s.color}"><span class="subject-ic">${SubjectIcons[s.id] || s.icon}</span><span class="subject-name">${esc(s.name)}</span><span class="subject-note">${esc(s.note)}</span><span class="subject-go">→</span></button>`).join('')}
       </div>`;
+    if (!app.homeIntroDone && !document.body.classList.contains('gated')) { app.homeIntroDone = true; requestAnimationFrame(playHomeIntro); }
     $$('[data-go]').forEach((b) => (b.onclick = () => { app.tab = b.dataset.go; render(); }));
     $$('[data-subject]').forEach((b) => (b.onclick = () => {
       app.soonSubject = SUBJECTS.find((s) => s.id === b.dataset.subject);
