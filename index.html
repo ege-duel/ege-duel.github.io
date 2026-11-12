@@ -8060,7 +8060,7 @@ var SubjectIcons = (function () {
     (electron ? `<circle r="3.2" fill="#fff" filter="url(#sic-eglow)"><animateMotion dur="${dur}s" begin="${begin}s" repeatCount="indefinite" path="M7 32 A25 9.5 0 1 0 57 32 A25 9.5 0 1 0 7 32"/></circle>` : ``) + `</g>`;
   const phys = svg(
     `<defs><filter id="sic-eglow" x="-100%" y="-100%" width="300%" height="300%"><feGaussianBlur stdDeviation="2" result="b"/><feFlood flood-color="#e599f7"/><feComposite in2="b" operator="in" result="c"/><feMerge><feMergeNode in="c"/><feMergeNode in="c"/><feMergeNode in="SourceGraphic"/></feMerge></filter>` +
-    `<radialGradient id="sic-nuc"><stop offset="0" stop-color="#fcc2d7"/><stop offset="1" stop-color="#e64980"/></radialGradient></defs>` +
+    `<radialGradient id="sic-nuc"><stop offset="0" stop-color="#ffc9c9"/><stop offset="1" stop-color="#f03e3e"/></radialGradient></defs>` +
     orbit(0, 2.6, 0, true) + orbit(60) + orbit(-60) +
     `<circle class="phys-nuc" cx="32" cy="32" r="5.5" fill="url(#sic-nuc)"/>`,
     'sic-phys');
@@ -10183,8 +10183,8 @@ var SubjectIcons = (function () {
     { id: 'chem', name: 'Химия', icon: '🧪', color: '#12b886', note: 'Реакции, расчёты, органика' },
     { id: 'rus', name: 'Русский язык', icon: '📖', color: '#4c6ef5', note: 'Орфография, пунктуация, сочинение' },
     { id: 'soc', name: 'Общество­знание', icon: '🏛️', color: '#f59f00', note: 'Право, экономика, политика' },
-    { id: 'phys', name: 'Физика', icon: '⚛️', color: '#e64980', note: 'Механика, электричество, оптика' },
-    { id: 'bio', name: 'Биология', icon: '🧬', color: '#40c057', note: 'Клетка, генетика, эволюция' },
+    { id: 'phys', name: 'Физика', icon: '⚛️', color: '#f03e3e', note: 'Механика, электричество, оптика' },
+    { id: 'bio', name: 'Биология', icon: '🧬', color: '#e64980', note: 'Клетка, генетика, эволюция' },
     { id: 'math', name: 'Профильная математика', icon: '📐', color: '#7950f2', note: 'Алгебра, геометрия, вероятности' },
   ];
 
