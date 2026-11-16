@@ -990,6 +990,17 @@ html:has(#main.prof-in) { overflow-x: clip; }
   #main.prof-in #profile-page > h1, #main.prof-in .p3-info > *, #main.prof-in .p3-fr > *, #main.prof-in .p3-info .pstats .stat { animation: none; }
 }
 
+/* профиль: в меню остаётся только таблица лидеров */
+nav.tabs.nav-lite button:not([data-tab="top"]) { display: none; }
+/* витрина: выставленные напоказ */
+.ach.pin { position: relative; }
+.ach.pin::after { content: '📌'; position: absolute; top: -7px; right: -5px; font-size: 15px; }
+.show-pick { display: flex; flex-wrap: wrap; gap: 8px; }
+.show-pick .sp { display: inline-flex; align-items: center; gap: 6px; padding: 7px 12px; border-radius: 999px; border: 1.5px solid var(--line); background: var(--bg); color: var(--ink2); font-weight: 600; font-size: 14px; cursor: pointer; transition: border-color .2s, background .2s, color .2s; }
+.show-pick .sp span { font-size: 17px; }
+.show-pick .sp.on { border-color: color-mix(in srgb, #fcc419 70%, transparent); background: color-mix(in srgb, #fcc419 16%, var(--bg)); color: var(--ink); }
+.show-pick .sp:disabled { opacity: .4; cursor: not-allowed; }
+
 </style>
 </head>
 <body>
@@ -7293,6 +7304,12 @@ var Profile = (function () {
     if (a && typeof a === 'object') ACH_IDS.forEach((k) => { const v = Math.floor(+a[k] || 0); if (v > 0) o[k] = Math.min(v, 4102444800000); });
     return o;
   }
+  // витрина: до 4 достижений, которые видят другие игроки
+  const SHOW_MAX = 4;
+  function cleanShow(a) {
+    if (!Array.isArray(a)) return [];
+    return a.filter((k, i) => ACH_IDS.indexOf(k) >= 0 && a.indexOf(k) === i).slice(0, SHOW_MAX);
+  }
   function cleanApMap(m, max) {
     const o = {};
     if (m && typeof m === 'object') Object.keys(m).filter((k) => AP_KEY.test(k)).slice(0, 200).forEach((k) => { const v = Math.max(0, Math.min(max, Math.floor(+m[k] || 0))); if (v) o[k] = v; });
@@ -7346,6 +7363,7 @@ var Profile = (function () {
     p.nameAt = Math.max(0, Math.floor(+p.nameAt || 0));
     p.subj = cleanSubj(p.subj);
     p.ach = cleanAch(p.ach);
+    p.show = cleanShow(p.show);
     p.ap = cleanAp(p.ap);
     return p;
   }
@@ -7388,6 +7406,7 @@ var Profile = (function () {
       subj: cleanSubj(me.subj),
       nameAt: Math.max(0, Math.floor(+me.nameAt || 0)),
       ach: cleanAch(me.ach),
+      show: cleanShow(me.show),
       ap: cleanAp(me.ap),
     };
   }
@@ -7400,6 +7419,7 @@ var Profile = (function () {
       fav: (favorite() || {}).id || '', favN: (favorite() || {}).count || 0,
       stats: { duels: st.duels, wins: st.wins, bestSolo: st.bestSolo, solved: st.solved, streak: Streak.info(me.days).count, bestStreak: Streak.info(me.days).best },
       ach: cleanAch(me.ach),
+      show: cleanShow(me.show),
     };
   }
   function sanitizePublic(p) {
@@ -7410,6 +7430,7 @@ var Profile = (function () {
     b.tag = typeof p.tag === 'string' && /^[A-Z0-9]{6}$/.test(p.tag) ? p.tag : null;
     b.stats = Object.assign(b.stats, { solved: int(st.solved), streak: int(st.streak), bestStreak: int(st.bestStreak) });
     b.ach = cleanAch(p.ach);
+    b.show = cleanShow(p.show);
     b.fav = SUBJ_IDS.indexOf(p.fav) >= 0 && int(p.favN) > 0 ? { id: p.fav, count: int(p.favN) } : null;
     const pl = p && p.play;
     b.play = pl && typeof pl === 'object' && /^[1-3][A-Z2-9]{5}$/.test(String(pl.code || '')) && SUBJ_IDS.indexOf(pl.subject) >= 0
@@ -7449,6 +7470,7 @@ var Profile = (function () {
     Object.keys(la).forEach((k) => { ca[k] = ca[k] ? Math.min(ca[k], la[k]) : la[k]; });
     const achMore = Object.keys(ca).length > Object.keys(cleanAch(d.ach)).length;
     me.ach = ca;
+    if (Array.isArray(d.show)) me.show = cleanShow(d.show);
     me.ap = mergeAp(d.ap, me.ap);
     if (achMore && typeof Cloud !== 'undefined') setTimeout(() => Cloud.schedulePush(), 0);
     saveLocal();
@@ -7480,7 +7502,7 @@ var Profile = (function () {
   }
   // После выхода из аккаунта — чистый профиль на этом устройстве
   function resetLocal() {
-    me = { name: '', bio: '', photo: null, preset: Math.floor(Math.random() * PRESETS.length), color: Math.floor(Math.random() * COLORS.length), stats: Object.assign({}, EMPTY_STATS), days: [], counts: {}, tag: null, friends: [], card: 0, tile: 0, subj: {}, nameAt: 0, ach: {}, ap: cleanAp(null) };
+    me = { name: '', bio: '', photo: null, preset: Math.floor(Math.random() * PRESETS.length), color: Math.floor(Math.random() * COLORS.length), stats: Object.assign({}, EMPTY_STATS), days: [], counts: {}, tag: null, friends: [], card: 0, tile: 0, subj: {}, nameAt: 0, ach: {}, show: [], ap: cleanAp(null) };
     saveLocal();
   }
 
@@ -7654,7 +7676,7 @@ var Profile = (function () {
   }
 
   return {
-    get me() { return me; }, save, shared, cloudData, publicData, sanitizePublic, applyCloud, fillFromGoogle, resetLocal, markToday, streak, sanitize, fallback, avatar, card, statLine, readPhoto, loadImage, cropPhoto, record, resetStats, favorite, winRate, nickInfo, setNick, unlock, ACH_IDS,
+    get me() { return me; }, save, shared, cloudData, publicData, sanitizePublic, applyCloud, fillFromGoogle, resetLocal, markToday, streak, sanitize, fallback, avatar, card, statLine, readPhoto, loadImage, cropPhoto, record, resetStats, favorite, winRate, nickInfo, setNick, unlock, ACH_IDS, SHOW_MAX, cleanShow,
     PRESETS, CARDS, COLORS, BIO_MAX, esc,
   };
 })();
@@ -8787,6 +8809,9 @@ var SubjectIcons = (function () {
     const navEl = $('nav.tabs');
     const sectionNav = !(app.tab === 'home' || app.tab === 'soon' || app.tab === 'shop' || app.tab === 'watch');
     if (navEl) navEl.classList.toggle('nav-hidden', !sectionNav);
+    // из профиля (и перейдя оттуда в таблицу лидеров) разделы предмета не показываем — только 🏆
+    app.navLite = app.tab === 'profile' || (app.tab === 'top' && !!app.navLite);
+    if (navEl) navEl.classList.toggle('nav-lite', app.navLite);
     document.body.classList.toggle('on-home', !sectionNav);
     const lsm = $('.logo small');
     if (lsm) lsm.textContent = sectionNav ? SUBJ[(app.game && app.game.S && (app.tab === 'duel' || app.tab === 'trio' || app.tab === 'solo') && subjOfState(app.game.S)) || app.subject].short + ' · 2027' : 'подготовка к ЕГЭ · 2027';
@@ -9193,16 +9218,50 @@ var SubjectIcons = (function () {
     }
   }
 
-  // витрина: full — все 9 (свой профиль), иначе — только полученные (чужой профиль)
-  function achShowHTML(ach, full) {
+  // что выставлено напоказ: выбранные (до 4) из полученных; если не выбрано — 4 первых полученных
+  function achPicked(ach, show) {
     ach = ach || {};
     const got = ACH_ORDER.filter((id) => ach[id]);
+    const pick = (Array.isArray(show) ? show : []).filter((id) => ach[id] && ACH[id]);
+    return (pick.length ? pick : got.slice().sort((a, b) => ach[a] - ach[b])).slice(0, Profile.SHOW_MAX);
+  }
+  // витрина: full — все 9 (свой профиль, выставленные отмечены 📌), иначе — только выставленные (до 4)
+  function achShowHTML(ach, full, show) {
+    ach = ach || {};
+    const got = ACH_ORDER.filter((id) => ach[id]);
+    const picked = achPicked(ach, show);
     const tile = (id) => {
       const a = ACH[id], at = ach[id];
-      return `<div class="ach${at ? ' got' : ''}" tabindex="0" title="${esc(a.name + ' — ' + a.desc)}"><span class="ach-ic">${a.icon}</span><span class="ach-txt"><b>${esc(a.name)}</b><small>${at ? 'Получено ' + achDate(at) : esc(a.desc)}</small></span></div>`;
+      return `<div class="ach${at ? ' got' : ''}${full && picked.indexOf(id) >= 0 ? ' pin' : ''}" tabindex="0" title="${esc(a.name + ' — ' + a.desc)}"><span class="ach-ic">${a.icon}</span><span class="ach-txt"><b>${esc(a.name)}</b><small>${at ? 'Получено ' + achDate(at) : esc(a.desc)}</small></span></div>`;
     };
-    if (!full) return got.length ? `<div class="ach-grid">${got.map(tile).join('')}</div>` : '<div class="empty-show">Здесь пока ничего нет(</div>';
-    return `<div class="ach-count">Получено <b>${got.length}</b> из ${ACH_ORDER.length}</div>` + ACH_GROUPS.map((gr) => `<div class="ach-group">${esc(gr.name)}</div><div class="ach-grid">${gr.ids.map(tile).join('')}</div>`).join('');
+    if (!full) return picked.length ? `<div class="ach-grid">${picked.map(tile).join('')}</div>` : '<div class="empty-show">Здесь пока ничего нет(</div>';
+    return `<div class="ach-count">Получено <b>${got.length}</b> из ${ACH_ORDER.length}${got.length ? ' · 📌 напоказ — до ' + Profile.SHOW_MAX + ', выбираются в ✏️ настройке профиля' : ''}</div>` + ACH_GROUPS.map((gr) => `<div class="ach-group">${esc(gr.name)}</div><div class="ach-grid">${gr.ids.map(tile).join('')}</div>`).join('');
+  }
+
+  // выбор до 4 достижений напоказ (в панели настройки профиля)
+  function showPickHTML() {
+    const ach = Profile.me.ach || {};
+    const got = ACH_ORDER.filter((id) => ach[id]);
+    if (!got.length) return '<div class="hint" style="margin:0">Получите первое достижение — и его можно будет выставить напоказ.</div>';
+    const picked = achPicked(ach, Profile.me.show);
+    const max = Profile.SHOW_MAX;
+    return `<div class="hint" style="margin:0 0 10px">Выберите до ${max} достижений — их увидят другие игроки в вашем профиле.</div>
+      <div class="show-pick">${got.map((id) => { const on = picked.indexOf(id) >= 0; return `<button type="button" class="sp${on ? ' on' : ''}" data-show="${id}" aria-pressed="${on}"${!on && picked.length >= max ? ' disabled' : ''} title="${esc(ACH[id].desc)}"><span>${ACH[id].icon}</span>${esc(ACH[id].name)}</button>`; }).join('')}</div>
+      <div class="hint" style="margin:8px 0 0">Выбрано <b>${picked.length}</b> из ${max}</div>`;
+  }
+  function bindShowPick() {
+    $$('[data-show]').forEach((b) => (b.onclick = () => {
+      const id = b.dataset.show;
+      let cur = achPicked(Profile.me.ach, Profile.me.show);
+      if (cur.indexOf(id) >= 0) cur = cur.filter((x) => x !== id);
+      else if (cur.length < Profile.SHOW_MAX) cur.push(id);
+      else { toast('Напоказ можно выставить только ' + Profile.SHOW_MAX + ' достижения'); return; }
+      // пустой выбор означает «по умолчанию», поэтому хотя бы одно остаётся
+      if (!cur.length) { toast('Хотя бы одно достижение остаётся напоказ'); return; }
+      Profile.me.show = cur; Profile.save();
+      const sp = $('#show-pick'); if (sp) { sp.innerHTML = showPickHTML(); bindShowPick(); const f = sp.querySelector('[data-show="' + id + '"]'); if (f) f.focus({ preventScroll: true }); }
+      const ma = $('#my-ach'); if (ma) ma.innerHTML = achShowHTML(Profile.me.ach, true, Profile.me.show);
+    }));
   }
 
   function renderProfile() {
@@ -9248,6 +9307,10 @@ var SubjectIcons = (function () {
             <div class="lbl" style="margin:16px 0 8px">Цвет плиток статистики</div>
             <div class="card-colors">${Profile.CARDS.map((c, i) => `<button type="button" class="cc${(Profile.me.tile | 0) === i ? ' on' : ''}${c ? '' : ' none'}" data-tile="${i}" style="${c ? '--pc:' + c : ''}" title="${c ? 'Цвет ' + i : 'Стандартный'}" aria-label="${c ? 'Цвет плиток ' + i : 'Стандартный цвет плиток'}"></button>`).join('')}</div>
           </section>
+          <section class="card">
+            <h3>🏅 Витрина достижений</h3>
+            <div id="show-pick">${showPickHTML()}</div>
+          </section>
         </div>
       </aside>
       <div class="profile-grid p3">
@@ -9274,8 +9337,8 @@ var SubjectIcons = (function () {
             </div>
           </section>
           <section class="card">
-            <h3>🏅 Витрина достижений</h3>
-            ${achShowHTML(Profile.me.ach, true)}
+            <h3>🏅 Достижения</h3>
+            <div id="my-ach">${achShowHTML(Profile.me.ach, true, Profile.me.show)}</div>
           </section>
         </div>
         <div class="stack p3-fr">
@@ -9312,6 +9375,7 @@ var SubjectIcons = (function () {
       updateProfilePreview();
     }));
     if ($('#view-me')) $('#view-me').onclick = () => showProfileModal(Object.assign({ uid: Cloud.user ? Cloud.user.uid : '', self: true, online: true }, Profile.sanitizePublic(Profile.publicData())));
+    bindShowPick();
     $$('[data-tile]').forEach((b) => (b.onclick = () => {
       Profile.me.tile = +b.dataset.tile; Profile.save();
       $$('[data-tile]').forEach((x) => x.classList.toggle('on', x === b));
@@ -9735,7 +9799,7 @@ var SubjectIcons = (function () {
         <div class="stat"><b>🔥 ${st.streak || 0}</b><span>дней подряд</span></div>
         ${favTile(fp.fav || null)}
       </div>
-      <div class="pview-show"><h3 style="margin:14px 0 6px">🏅 Витрина достижений</h3>${achShowHTML(fp.ach, false)}</div>
+      <div class="pview-show"><h3 style="margin:14px 0 6px">🏅 Витрина достижений</h3>${achShowHTML(fp.ach, false, fp.show)}</div>
     </div>`;
   }
 
