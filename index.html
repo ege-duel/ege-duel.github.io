@@ -1142,6 +1142,101 @@ nav.tabs.nav-lite button:not([data-tab="top"]) { display: none; }
   .shop-tabs button { flex: 1 1 auto; padding: 8px 10px; font-size: 14px; }
 }
 
+/* ===== магазин: вкладки с подложкой и плавная смена раздела ===== */
+.shop-tabs { position: relative; }
+.shop-tabs button { position: relative; z-index: 1; }
+.shop-tabs button.on { background: transparent; box-shadow: none; }
+.shop-pill { position: absolute; left: 0; top: 0; border-radius: 10px; background: var(--card); box-shadow: 0 2px 10px #0003; z-index: 0; pointer-events: none; }
+.shop-pill.anim { transition: transform .38s cubic-bezier(.3, 1.25, .5, 1), width .38s cubic-bezier(.3, 1.25, .5, 1); }
+#shop-body { transition: opacity .14s ease, transform .14s ease; }
+#shop-body.sw-out { opacity: 0; transform: translateY(6px); }
+#shop-body.sw-r { animation: sw-r .42s cubic-bezier(.2, .9, .3, 1) both; }
+#shop-body.sw-l { animation: sw-l .42s cubic-bezier(.2, .9, .3, 1) both; }
+#shop-body.sw-r .shop-item, #shop-body.sw-l .shop-item, #shop-body.sw-in .shop-item { animation: si-in .5s cubic-bezier(.2, .9, .3, 1.1) both; animation-delay: calc(var(--i, 0) * 45ms); }
+@keyframes sw-r { from { opacity: 0; transform: translateX(34px); } to { opacity: 1; transform: none; } }
+@keyframes sw-l { from { opacity: 0; transform: translateX(-34px); } to { opacity: 1; transform: none; } }
+@keyframes si-in { from { opacity: 0; transform: translateY(14px) scale(.97); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .shop-pill.anim, #shop-body { transition: none; } #shop-body.sw-r, #shop-body.sw-l, #shop-body .shop-item { animation: none !important; } }
+.sh-lock { display: inline-block; margin-top: 12px; padding: 7px 12px; border-radius: 12px; background: #0000003a; border: 1px solid #ffffff30; font-size: 13px; font-weight: 700; }
+
+/* мини-профиль в сетке: только аватар на фоне */
+.si-mini { width: 74%; height: 104px; display: grid; place-items: center; border-radius: 16px; box-shadow: 0 10px 26px -14px #000; padding: 0 !important; }
+/* карточка большого профиля в сетке — макет */
+.si-pv { width: 62%; height: 146px; border-radius: 16px; display: flex; flex-direction: column; align-items: center; gap: 7px; padding: 14px 12px !important; box-shadow: 0 12px 28px -14px #000; position: relative; overflow: hidden; }
+.si-pv > i { display: block; height: 7px; border-radius: 4px; background: #ffffffcc; }
+.si-pv > i.l1 { width: 56%; } .si-pv > i.l2 { width: 36%; height: 5px; opacity: .6; }
+.si-pv-st { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; width: 100%; margin-top: auto; }
+.si-pv-st i { height: 16px; border-radius: 6px; background: #00000038; }
+.si-prev.big.auto { height: auto; min-height: 120px; padding: 18px 14px; display: block; }
+.si-prev.big.auto .si-card { width: 100%; }
+.si-full .pview { text-align: center; }
+.modal-box.si-box { max-width: 520px; }
+
+/* ===== большой профиль: оформления «Карточки» ===== */
+.pvt { --ink: #ffffff; --ink2: #ffffffde; --ink3: #ffffffb0; color: #fff; position: relative; overflow: hidden; border-radius: 18px; isolation: isolate; }
+.pview.pvt { padding: 24px 16px 16px; }
+.pvt .pstats .stat, .pvt .ach { background: #00000033; border-color: #ffffff2a; }
+.pvt .pcard-tag { color: #fff; opacity: .85; }
+.pvt .fr-st { color: #ffffffd0; }
+.pv_holo { background: linear-gradient(#0000004d, #0000004d), linear-gradient(125deg, #ff6ec7, #7ab8ff, #6dffc0, #ffe66d, #c38bff, #ff6ec7) 0 0 / 400% 400%; animation: pv-holo 10s linear infinite; }
+@keyframes pv-holo { to { background-position: 0 0, 400% 0; } }
+.pv_gold { background: linear-gradient(135deg, #2e2003 0%, #7a5410 35%, #c99a2e 50%, #7a5410 65%, #2e2003 100%); box-shadow: inset 0 0 0 2px #f0c75e; }
+.pv_gold::after { content: ''; position: absolute; inset: -40% -60%; background: linear-gradient(105deg, transparent 42%, #fff5 50%, transparent 58%); animation: pv-shine 3.6s ease-in-out infinite; z-index: -1; pointer-events: none; }
+@keyframes pv-shine { 0% { transform: translateX(-40%); } 60%, 100% { transform: translateX(40%); } }
+.pv_sakura { background: radial-gradient(6px 4px at 18% 22%, #ffd1e6 60%, transparent), radial-gradient(5px 3px at 72% 14%, #ffc2dd 60%, transparent), radial-gradient(6px 4px at 84% 62%, #ffd1e6 60%, transparent), radial-gradient(4px 3px at 30% 78%, #ffc2dd 60%, transparent), radial-gradient(5px 4px at 56% 40%, #ffe0ee 60%, transparent), linear-gradient(165deg, #4d1d3c 0%, #a43f74 55%, #ec86b2 100%); }
+.pv_city { background: radial-gradient(40% 26% at 50% 62%, #ff8a3d 0%, #ff3d7f 45%, transparent 75%), linear-gradient(transparent 62%, #ff3df033 62%) 0 0 / 100% 100%, repeating-linear-gradient(90deg, #ff3df055 0 1px, transparent 1px 28px) 0 100% / 100% 38% no-repeat, repeating-linear-gradient(#ff3df055 0 1px, transparent 1px 16px) 0 100% / 100% 38% no-repeat, linear-gradient(#0d0626 0%, #2a0b45 60%, #12051f 100%); }
+.pv_cyber { background: repeating-linear-gradient(-45deg, #fcee0a 0 12px, #111 12px 24px) 0 0 / 100% 10px no-repeat, linear-gradient(160deg, #141414, #232323 60%, #2b2a12); box-shadow: inset 0 0 0 2px #fcee0a; }
+.pv_cyber.pview .pview-name { color: #fcee0a; text-shadow: 2px 0 #00f0ff; }
+.pv_marble { background: linear-gradient(118deg, transparent 46%, #d4a84a66 47%, transparent 48.5%), linear-gradient(64deg, transparent 60%, #d4a84a44 61%, transparent 62%), linear-gradient(150deg, transparent 30%, #ffffff14 32%, transparent 36%), radial-gradient(80% 60% at 20% 20%, #3a3a3f, transparent), radial-gradient(70% 70% at 90% 90%, #2c2c31, transparent), #1b1b1f; box-shadow: inset 0 0 0 2px #d4a84a88; }
+@media (prefers-reduced-motion: reduce) { .pv_holo, .pv_gold::after { animation: none; } }
+
+/* ===== апгрейдер ===== */
+.up { display: grid; grid-template-columns: 1fr minmax(260px, 320px) 1fr; gap: 14px; align-items: start; }
+.up-col h3, .up-mid h3 { margin: 0 0 4px; }
+.up-list { display: flex; flex-direction: column; gap: 6px; max-height: 380px; overflow-y: auto; padding: 2px; }
+.up-chip { all: unset; box-sizing: border-box; display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 12px; border: 1.5px solid var(--line); background: var(--bg); cursor: pointer; transition: border-color .2s, background .2s, transform .15s; }
+.up-chip:hover { border-color: color-mix(in srgb, #9b6bff 55%, var(--line)); }
+.up-chip:active { transform: scale(.98); }
+.up-chip.on { border-color: #9b6bff; background: color-mix(in srgb, #9b6bff 14%, var(--bg)); }
+.up-chip:disabled { opacity: .55; cursor: default; }
+.up-chip:focus-visible { outline: 2px solid #9b6bff; outline-offset: 2px; }
+.up-ic { flex: none; width: 36px; height: 36px; border-radius: 10px; display: grid; place-items: center; background: var(--bg2); font-size: 20px; }
+.up-sw { display: block; width: 26px; height: 26px; border-radius: 7px; padding: 0 !important; }
+.up-t { min-width: 0; display: flex; flex-direction: column; }
+.up-t b { font-size: 14px; } .up-t small { font-size: 12px; color: var(--ink3); }
+.up-sum { margin-top: 10px; font-size: 14px; color: var(--ink2); }
+.up-empty { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 4px; padding: 22px 10px; border: 1.5px dashed var(--line); border-radius: 14px; color: var(--ink3); font-size: 28px; }
+.up-empty b { font-size: 15px; color: var(--ink); } .up-empty span { font-size: 13px; }
+.up-mid { display: flex; flex-direction: column; align-items: center; }
+.up-wheel { position: relative; width: 220px; height: 220px; margin: 4px 0 12px; }
+.up-svg { width: 100%; height: 100%; display: block; }
+.up-track { fill: none; stroke: color-mix(in srgb, #e03131 30%, var(--bg2)); stroke-width: 18; }
+.up-win { fill: none; stroke: #2fb344; stroke-width: 18; transition: stroke-dasharray .45s cubic-bezier(.2, .9, .3, 1); filter: drop-shadow(0 0 6px #2fb34488); }
+.up-tick { stroke: var(--ink3); stroke-width: 1.5; opacity: .5; }
+.up-needle { position: absolute; inset: 0; pointer-events: none; }
+.up-needle.spin { transition-property: transform; transition-timing-function: cubic-bezier(.12, .78, .16, 1); }
+.up-needle i { position: absolute; left: 50%; top: 2px; width: 0; height: 0; transform: translateX(-50%); border-left: 9px solid transparent; border-right: 9px solid transparent; border-top: 26px solid #fff; filter: drop-shadow(0 2px 4px #000a); }
+.up-center { position: absolute; inset: 44px; border-radius: 50%; display: flex; flex-direction: column; align-items: center; justify-content: center; background: radial-gradient(circle at 50% 35%, color-mix(in srgb, #9b6bff 22%, var(--card)), var(--card)); box-shadow: inset 0 0 0 1px var(--line); }
+.up-center b { font-family: "Unbounded", sans-serif; font-size: 30px; }
+.up-center small { color: var(--ink3); font-weight: 700; }
+.up-pair { font-weight: 700; font-size: 14px; color: var(--ink2); margin-bottom: 10px; text-align: center; }
+.up-pair span { color: #9b6bff; margin: 0 4px; }
+.up-go { width: 100%; }
+.up-res { margin-top: 10px; font-weight: 800; text-align: center; opacity: 0; transform: scale(.9); }
+.up-res.show { opacity: 1; transform: none; transition: opacity .3s, transform .4s cubic-bezier(.2, .9, .3, 1.4); padding: 8px 12px; border-radius: 12px; }
+.up-res.win { background: #2fb34422; color: #2fb344; } .up-res.lose { background: #e0313122; color: #e03131; }
+@media (max-width: 860px) { .up { grid-template-columns: 1fr; } .up-mid { order: -1; } .up-list { max-height: 260px; } }
+
+/* ===== профиль: кнопки и инвентарь ===== */
+.pv-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px; }
+.pv-btns .btn { width: 100%; }
+.inv-group { font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: .06em; color: var(--ink3); margin: 14px 0 6px; }
+.inv-grid { display: flex; flex-direction: column; gap: 6px; }
+.inv-item { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 12px; border: 1.5px solid var(--line); background: var(--bg); }
+.inv-item.worn { border-color: #2fb344; }
+.inv-item .up-t { flex: 1; }
+.inv-item .btn { padding: 6px 12px; font-size: 13px; }
+
 </style>
 </head>
 <body>
@@ -7446,7 +7541,8 @@ var Profile = (function () {
     return o;
   }
   /* ---- магазин за звёзды ----
-     stars — баланс; own — купленные товары; eq — что надето { frame, bg, fx }.
+     stars — баланс; own — купленные товары; eq — что надето { frame, bg, pv, fx }.
+     bg — фон мини-профиля (карточка в дуэли и превью), pv — оформление большого профиля (окно «Посмотреть профиль»).
      Каталог общий: по нему же проверяются рамки и фоны, пришедшие от других игроков. */
   const SHOP = [
     { id: 'fr_gold', slot: 'frame', name: 'Золото', price: 150, desc: 'Классическая золотая рамка с бликом.' },
@@ -7461,6 +7557,12 @@ var Profile = (function () {
     { id: 'bg_formula', slot: 'bg', name: 'Формулы', price: 350, desc: 'Фон из формул и знаков.' },
     { id: 'bg_space', slot: 'bg', name: 'Космос', price: 400, desc: 'Звёздное небо с туманностью.' },
     { id: 'bg_aurora', slot: 'bg', name: 'Северное сияние', price: 450, desc: 'Переливающийся живой фон.' },
+    { id: 'pv_holo', slot: 'pv', name: 'Голограмма', price: 500, desc: 'Переливается всеми цветами, как наклейка-голограмма.' },
+    { id: 'pv_gold', slot: 'pv', name: 'Золотой билет', price: 600, desc: 'Золото с бегущим бликом.' },
+    { id: 'pv_sakura', slot: 'pv', name: 'Сакура', price: 550, desc: 'Нежно-розовый фон с лепестками.' },
+    { id: 'pv_city', slot: 'pv', name: 'Ночной город', price: 650, desc: 'Неоновая сетка и закат над городом.' },
+    { id: 'pv_cyber', slot: 'pv', name: 'Киберпанк', price: 700, desc: 'Жёлто-чёрный, с предупреждающей полосой.' },
+    { id: 'pv_marble', slot: 'pv', name: 'Мрамор', price: 900, desc: 'Тёмный мрамор с золотыми прожилками.' },
     { id: 'fx_confetti', slot: 'fx', name: 'Конфетти', price: 500, desc: 'Залп разноцветного конфетти.' },
     { id: 'fx_stars', slot: 'fx', name: 'Звездопад', price: 500, desc: 'С неба сыплются золотые звёзды.' },
     { id: 'fx_fireworks', slot: 'fx', name: 'Фейерверк', price: 600, desc: 'Салют в честь победы.' },
@@ -7471,12 +7573,13 @@ var Profile = (function () {
   const SHOP_BY = {};
   SHOP.forEach((x) => { SHOP_BY[x.id] = x; });
   const STARS_MAX = 1e9;
+  const SHOP_OPEN = false; // покупки пока закрыты — магазин работает как витрина
   const cleanStars = (v) => Math.max(0, Math.min(STARS_MAX, Math.floor(+v || 0)));
   const cleanOwn = (a) => (Array.isArray(a) ? a.filter((k, i) => SHOP_BY[k] && a.indexOf(k) === i).slice(0, 100) : []);
   const slotId = (id, slot) => (typeof id === 'string' && SHOP_BY[id] && SHOP_BY[id].slot === slot ? id : null);
   function cleanEq(e) {
     const o = {};
-    if (e && typeof e === 'object') ['frame', 'bg', 'fx'].forEach((k) => { const v = slotId(e[k], k); if (v) o[k] = v; });
+    if (e && typeof e === 'object') ['frame', 'bg', 'pv', 'fx'].forEach((k) => { const v = slotId(e[k], k); if (v) o[k] = v; });
     return o;
   }
   // надетый товар (только если он куплен)
@@ -7495,6 +7598,7 @@ var Profile = (function () {
     if (!it) return 'none';
     me.own = cleanOwn(me.own);
     if (me.own.indexOf(id) >= 0) return 'owned';
+    if (!SHOP_OPEN) return 'closed';
     if (cleanStars(me.stars) < it.price) return 'poor';
     me.stars = cleanStars(me.stars) - it.price;
     me.own.push(id);
@@ -7502,6 +7606,18 @@ var Profile = (function () {
     me.eq[it.slot] = id; // купленное сразу надевается
     save();
     return 'ok';
+  }
+  // апгрейд: предметы give уходят, при удаче приходит target
+  function trade(give, target) {
+    me.own = cleanOwn(me.own);
+    me.eq = cleanEq(me.eq);
+    give = give.filter((id) => me.own.indexOf(id) >= 0);
+    if (!give.length) return false;
+    me.own = me.own.filter((id) => give.indexOf(id) < 0);
+    Object.keys(me.eq).forEach((k) => { if (give.indexOf(me.eq[k]) >= 0) delete me.eq[k]; });
+    if (target && SHOP_BY[target] && me.own.indexOf(target) < 0) me.own.push(target);
+    save();
+    return true;
   }
   function equip(slot, id) {
     me.eq = cleanEq(me.eq);
@@ -7632,7 +7748,7 @@ var Profile = (function () {
       stats: { duels: st.duels, wins: st.wins, bestSolo: st.bestSolo, solved: st.solved, streak: Streak.info(me.days).count, bestStreak: Streak.info(me.days).best },
       ach: cleanAch(me.ach),
       show: cleanShow(me.show),
-      frame: worn('frame') || '', bg: worn('bg') || '',
+      frame: worn('frame') || '', bg: worn('bg') || '', pv: worn('pv') || '',
     };
   }
   function sanitizePublic(p) {
@@ -7734,7 +7850,7 @@ var Profile = (function () {
       tag: me.tag || null,
       uid: (typeof Cloud !== 'undefined' && Cloud.user && Cloud.user.uid) || null,
       card: cardIdx(me.card), tile: cardIdx(me.tile),
-      frame: worn('frame'), bg: worn('bg'),
+      frame: worn('frame'), bg: worn('bg'), pv: worn('pv'),
       stats: { duels: me.stats.duels, wins: me.stats.wins, bestSolo: me.stats.bestSolo, streak: Streak.info(me.days).count },
     };
   }
@@ -7756,6 +7872,7 @@ var Profile = (function () {
       tile: cardIdx(p.tile),
       frame: slotId(p.frame, 'frame'),
       bg: slotId(p.bg, 'bg'),
+      pv: slotId(p.pv, 'pv'),
       stats: { duels: int(st.duels), wins: int(st.wins), bestSolo: int(st.bestSolo), streak: Math.min(int(st.streak), 5000) },
     };
     // uid соперника (для «Друг познаётся в дуэли»); добавляем только если он есть, чтобы не затирать чужой uid
@@ -7903,7 +8020,7 @@ var Profile = (function () {
   }
 
   return {
-    get me() { return me; }, save, shared, cloudData, publicData, sanitizePublic, applyCloud, fillFromGoogle, resetLocal, markToday, streak, sanitize, fallback, avatar, card, statLine, readPhoto, loadImage, cropPhoto, record, resetStats, favorite, winRate, nickInfo, setNick, unlock, ACH_IDS, SHOW_MAX, cleanShow, SHOP, SHOP_BY, addStars, buy, equip, worn, frameWrap,
+    get me() { return me; }, save, shared, cloudData, publicData, sanitizePublic, applyCloud, fillFromGoogle, resetLocal, markToday, streak, sanitize, fallback, avatar, card, statLine, readPhoto, loadImage, cropPhoto, record, resetStats, favorite, winRate, nickInfo, setNick, unlock, ACH_IDS, SHOW_MAX, cleanShow, SHOP, SHOP_BY, SHOP_OPEN, addStars, buy, equip, trade, worn, frameWrap,
     PRESETS, CARDS, COLORS, BIO_MAX, esc,
   };
 })();
@@ -7989,7 +8106,19 @@ var Cloud = (function () {
       Profile.me.isNew = true;
     }
     if (!Profile.me.tag) await claimTag();
+    await claimGrant();
     await push();
+  }
+  // подарок звёзд: сначала удаляем документ (чтобы не начислить дважды), потом добавляем звёзды
+  async function claimGrant() {
+    try {
+      const r = db.collection('grants').doc(user.uid);
+      const g = await r.get();
+      if (!g.exists) return;
+      const n = Math.max(0, Math.min(1e6, Math.floor(+(g.data() || {}).n || 0)));
+      await r.delete();
+      if (n) { Profile.addStars(n); setTimeout(() => window.dispatchEvent(new CustomEvent('egeduel:gift', { detail: n })), 600); }
+    } catch (e) {}
   }
 
   /* ---- уникальный # пользователя: документ tags/{TAG} = { uid } создаётся один раз ---- */
@@ -9771,7 +9900,7 @@ var WinFx = (function () {
           <section class="card">
             <div class="pe-row"><h3>Так вас видит соперник</h3><button type="button" class="pe-open" id="pe-open" title="Редактировать профиль" aria-label="Редактировать профиль">${pen}</button></div>
             <div id="p-preview">${Profile.card(Profile.shared())}</div>
-            <button type="button" class="btn soft" id="view-me" style="margin-top:10px;width:100%">👁 Посмотреть профиль</button>
+            <div class="pv-btns"><button type="button" class="btn soft" id="view-me">👁 Посмотреть профиль</button><button type="button" class="btn soft" id="inv-btn">🎒 Инвентарь</button></div>
           </section>
           <section class="card">
             <h3>Статистика</h3>
@@ -9826,6 +9955,7 @@ var WinFx = (function () {
       $$('[data-card]').forEach((x) => x.classList.toggle('on', x === b));
       updateProfilePreview();
     }));
+    if ($('#inv-btn')) $('#inv-btn').onclick = openInventory;
     if ($('#view-me')) $('#view-me').onclick = () => showProfileModal(Object.assign({ uid: Cloud.user ? Cloud.user.uid : '', self: true, online: true }, Profile.sanitizePublic(Profile.publicData())));
     bindShowPick();
     $$('[data-tile]').forEach((b) => (b.onclick = () => {
@@ -10238,7 +10368,7 @@ var WinFx = (function () {
 
   function profileBlock(fp) {
     const st = fp.stats || {};
-    return `<div class="pview${fp.bg ? ' cbg ' + fp.bg : ''}">
+    return `<div class="pview${fp.pv ? ' pvt ' + fp.pv : ''}">
       ${Profile.avatar(fp, 84)}
       <div class="pview-name">${esc(fp.name)}</div>
       ${fp.tag ? `<div class="pcard-tag">#${esc(fp.tag)}</div>` : ''}
@@ -10750,33 +10880,53 @@ var WinFx = (function () {
 
   /* ---------- магазин за звёзды ---------- */
   const SHOP_TABS = [
-    { id: 'bg', name: 'Карточки', icon: '🖼️', lead: 'Фон вашей карточки — его видят соперники в дуэли и все, кто открывает ваш профиль.' },
+    { id: 'bg', name: 'Мини-профиль', icon: '🪪', lead: 'Фон мини-профиля — карточки, которую видит соперник в дуэли. Нажмите на товар, чтобы открыть полный предпросмотр.' },
+    { id: 'pv', name: 'Карточки', icon: '🖼️', lead: 'Оформление большого профиля — того, что открывается, когда нажимают на ваш профиль. Нажмите на товар, чтобы увидеть его целиком.' },
     { id: 'fx', name: 'Эффекты победы', icon: '✨', lead: 'Проигрываются на весь экран, когда вы побеждаете в дуэли или трио.' },
     { id: 'frame', name: 'Рамки аватаров', icon: '💫', lead: 'Рамка вокруг аватара — в шапке, в профиле, в дуэлях и в таблице лидеров.' },
+    { id: 'up', name: 'Апгрейдер', icon: '🎰', lead: 'Поставьте свои предметы и крутите колесо: повезёт — получите предмет дороже, нет — поставленное сгорит. Чем дороже цель, тем меньше шанс.' },
   ];
+  const SLOT_NAME = { frame: 'Рамка аватара', bg: 'Мини-профиль', pv: 'Карточка профиля', fx: 'Эффект победы' };
   const FX_ICON = { fx_confetti: '🎉', fx_stars: '🌠', fx_fireworks: '🎆', fx_fire: '🔥', fx_storm: '⚡', fx_crown: '👑' };
+  const UP_MAX_CHANCE = 0.8, UP_MAX_GIVE = 6;
+  const myFp = () => Object.assign({ uid: Cloud.user ? Cloud.user.uid : '', self: true, online: true }, Profile.sanitizePublic(Profile.publicData()));
+
   function shopPreview(it, big) {
     const me = Object.assign({}, Profile.shared());
     if (it.slot === 'frame') { me.frame = null; return `<div class="si-ava">${Profile.frameWrap(it.id, big ? 120 : 84, Profile.avatar(me, big ? 120 : 84))}</div>`; }
-    if (it.slot === 'bg') { me.bg = it.id; return `<div class="si-card">${Profile.card(me)}</div>`; }
+    if (it.slot === 'bg') {
+      me.bg = it.id;
+      // в сетке — только аватар на фоне; полная карточка — в окне товара
+      return big ? `<div class="si-card">${Profile.card(me)}</div>` : `<div class="si-mini cbg ${it.id}">${Profile.avatar(me, 62)}</div>`;
+    }
+    if (it.slot === 'pv') {
+      if (big) return `<div class="si-full">${profileBlock(Object.assign(myFp(), { pv: it.id }))}</div>`;
+      return `<div class="si-pv pvt ${it.id}">${Profile.avatar(me, 46)}<i class="l1"></i><i class="l2"></i><span class="si-pv-st"><i></i><i></i><i></i><i></i></span></div>`;
+    }
     return `<div class="si-fx ${it.id}"><span>${FX_ICON[it.id] || '✨'}</span><i></i><i></i><i></i><i></i><i></i></div>`;
   }
   function shopState(it) {
     const own = (Profile.me.own || []).indexOf(it.id) >= 0;
     return { own, worn: own && Profile.worn(it.slot) === it.id };
   }
-  function shopItemHTML(it) {
+  function shopItemHTML(it, i) {
     const { own, worn } = shopState(it);
     const poor = !own && (Profile.me.stars | 0) < it.price;
-    return `<button type="button" class="shop-item${worn ? ' worn' : ''}${own ? ' own' : ''}" data-item="${it.id}">
-      <div class="si-prev si-${it.slot}">${shopPreview(it)}${worn ? '<span class="si-badge">✓ Надето</span>' : own ? '<span class="si-badge ghost">Куплено</span>' : ''}</div>
+    const go = own ? (worn ? 'Снять' : 'Надеть') : Profile.SHOP_OPEN ? 'Купить' : 'Смотреть';
+    return `<button type="button" class="shop-item${worn ? ' worn' : ''}${own ? ' own' : ''}" data-item="${it.id}" style="--i:${i}">
+      <div class="si-prev sp-${it.slot}">${shopPreview(it)}${worn ? '<span class="si-badge">✓ Надето</span>' : own ? '<span class="si-badge ghost">В инвентаре</span>' : ''}</div>
       <div class="si-info"><b>${esc(it.name)}</b><small>${esc(it.desc)}</small>
-        <div class="si-foot">${own ? `<span class="si-own">${worn ? 'Надето' : 'В коллекции'}</span>` : `<span class="si-price${poor ? ' poor' : ''}">⭐ ${it.price}</span>`}<span class="si-go">${own ? (worn ? 'Снять' : 'Надеть') : 'Купить'}</span></div>
+        <div class="si-foot">${own ? `<span class="si-own">${worn ? 'Надето' : 'В инвентаре'}</span>` : `<span class="si-price${poor || !Profile.SHOP_OPEN ? ' poor' : ''}">⭐ ${it.price}</span>`}<span class="si-go">${go}</span></div>
       </div></button>`;
+  }
+  function shopBodyHTML(tab) {
+    if (tab.id === 'up') return `<p class="shop-lead">${esc(tab.lead)}</p>${upgraderHTML()}`;
+    const items = Profile.SHOP.filter((x) => x.slot === tab.id);
+    return `<p class="shop-lead">${esc(tab.lead)}</p><div class="shop-grid">${items.map(shopItemHTML).join('')}</div>`;
   }
   function renderShop() {
     const tab = SHOP_TABS.find((t) => t.id === app.shopTab) || SHOP_TABS[0];
-    const items = Profile.SHOP.filter((x) => x.slot === tab.id);
+    app.shopTab = tab.id;
     const stars = Profile.me.stars | 0;
     main().innerHTML = `
       <div id="shop-page">
@@ -10785,16 +10935,50 @@ var WinFx = (function () {
             <div class="sh-kick">⭐ Магазин за звёзды</div>
             <h1>Прокачай свой профиль</h1>
             <p>Звёзды даются за игру: ⚡ Флеш — +${FLASH_STAR} за каждую верную задачу, ⚔️ дуэль и 👥 трио — ставка за победу. За поражение списывается половина ставки.</p>
+            ${Profile.SHOP_OPEN ? '' : '<div class="sh-lock">🔒 Покупки скоро откроются — пока копите звёзды и присматривайтесь к товарам</div>'}
           </div>
           <div class="sh-bal"><small>Ваш баланс</small><b>⭐ ${stars.toLocaleString('ru-RU')}</b></div>
           <div class="sh-deco" aria-hidden="true"><span>⭐</span><span>✨</span><span>⭐</span></div>
         </section>
-        <nav class="shop-tabs" role="tablist" aria-label="Разделы магазина">${SHOP_TABS.map((t) => `<button type="button" role="tab" aria-selected="${t.id === tab.id}" class="${t.id === tab.id ? 'on' : ''}" data-stab="${t.id}"><span aria-hidden="true">${t.icon}</span> ${t.name}</button>`).join('')}</nav>
-        <p class="shop-lead">${esc(tab.lead)}</p>
-        <div class="shop-grid">${items.map(shopItemHTML).join('')}</div>
+        <nav class="shop-tabs" role="tablist" aria-label="Разделы магазина"><span class="shop-pill" aria-hidden="true"></span>${SHOP_TABS.map((t) => `<button type="button" role="tab" aria-selected="${t.id === tab.id}" class="${t.id === tab.id ? 'on' : ''}" data-stab="${t.id}"><span aria-hidden="true">${t.icon}</span> ${t.name}</button>`).join('')}</nav>
+        <div id="shop-body" class="sw-in">${shopBodyHTML(tab)}</div>
       </div>`;
-    $$('[data-stab]').forEach((b) => (b.onclick = () => { if (app.shopTab === b.dataset.stab) return; app.shopTab = b.dataset.stab; renderShop(); }));
-    $$('[data-item]').forEach((b) => (b.onclick = () => openShopItem(b.dataset.item)));
+    $$('[data-stab]').forEach((x) => (x.onclick = () => setShopTab(x.dataset.stab)));
+    moveShopPill(false);
+    bindShopBody();
+  }
+  // переключение раздела: подложка переезжает под кнопку, содержимое въезжает с той стороны, куда идём
+  function setShopTab(id) {
+    if (app.shopTab === id || !$('#shop-body')) return;
+    const idx = (x) => SHOP_TABS.findIndex((t) => t.id === x);
+    const dir = idx(id) > idx(app.shopTab) ? 'sw-r' : 'sw-l';
+    app.shopTab = id;
+    $$('[data-stab]').forEach((x) => { const on = x.dataset.stab === id; x.classList.toggle('on', on); x.setAttribute('aria-selected', on); });
+    moveShopPill(true);
+    const body = $('#shop-body');
+    body.classList.remove('sw-in', 'sw-l', 'sw-r');
+    body.classList.add('sw-out');
+    clearTimeout(setShopTab._t);
+    setShopTab._t = setTimeout(() => {
+      body.innerHTML = shopBodyHTML(SHOP_TABS[idx(id)]);
+      body.classList.remove('sw-out');
+      void body.offsetWidth;
+      body.classList.add(dir);
+      bindShopBody();
+    }, matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 140);
+  }
+  function moveShopPill(anim) {
+    const pill = $('.shop-pill'), btn = $('.shop-tabs button.on');
+    if (!pill || !btn) return;
+    pill.classList.toggle('anim', !!anim);
+    pill.style.width = btn.offsetWidth + 'px';
+    pill.style.height = btn.offsetHeight + 'px';
+    pill.style.transform = `translate(${btn.offsetLeft}px, ${btn.offsetTop}px)`;
+    btn.scrollIntoView({ block: 'nearest', inline: 'nearest', behavior: anim ? 'smooth' : 'auto' });
+  }
+  function bindShopBody() {
+    $$('[data-item]').forEach((x) => (x.onclick = () => openShopItem(x.dataset.item)));
+    if (app.shopTab === 'up') bindUpgrader();
   }
   function openShopItem(id) {
     const it = Profile.SHOP_BY[id];
@@ -10802,29 +10986,158 @@ var WinFx = (function () {
     const { own, worn } = shopState(it);
     const stars = Profile.me.stars | 0;
     const need = it.price - stars;
-    const slotName = { frame: 'Рамка аватара', bg: 'Фон карточки', fx: 'Эффект победы' }[it.slot];
     let act;
-    if (!own) act = need > 0 ? `<button class="btn big" disabled>⭐ ${it.price}</button><div class="hint" style="width:100%;text-align:center">Не хватает ${need} ⭐. Побеждайте в дуэлях и решайте Флеш.</div>` : `<button class="btn big" id="si-buy">Купить за ⭐ ${it.price}</button>`;
+    if (!own && !Profile.SHOP_OPEN) act = `<button class="btn big" disabled>🔒 Скоро в продаже · ⭐ ${it.price}</button>`;
+    else if (!own) act = need > 0 ? `<button class="btn big" disabled>⭐ ${it.price}</button><div class="hint" style="width:100%;text-align:center">Не хватает ${need} ⭐. Побеждайте в дуэлях и решайте Флеш.</div>` : `<button class="btn big" id="si-buy">Купить за ⭐ ${it.price}</button>`;
     else act = worn ? '<button class="btn ghost big" id="si-off">Снять</button>' : '<button class="btn big" id="si-on">Надеть</button>';
+    const auto = it.slot === 'bg' || it.slot === 'pv';
     const m = modal(`<button type="button" class="modal-x" data-close aria-label="Закрыть">×</button>
       <div class="si-modal">
-        <div class="si-prev big si-${it.slot}">${shopPreview(it, true)}</div>
-        <div class="sh-kick" style="margin-top:14px">${slotName}</div>
+        <div class="si-prev big${auto ? ' auto' : ''} sp-${it.slot}">${shopPreview(it, true)}</div>
+        <div class="sh-kick" style="margin-top:14px">${SLOT_NAME[it.slot]}</div>
         <h2 style="margin:4px 0 6px">${esc(it.name)}</h2>
         <p class="muted" style="margin:0 0 14px">${esc(it.desc)}</p>
         <div class="actions" style="justify-content:center;flex-wrap:wrap">${it.slot === 'fx' ? '<button class="btn soft big" id="si-try">▶ Посмотреть</button>' : ''}${act}</div>
-        ${own ? '' : `<div class="hint" style="text-align:center;margin-top:8px">Баланс: ⭐ ${stars}${need > 0 ? '' : ' → ⭐ ' + (stars - it.price) + ' после покупки'}</div>`}
+        ${own || !Profile.SHOP_OPEN ? '' : `<div class="hint" style="text-align:center;margin-top:8px">Баланс: ⭐ ${stars}${need > 0 ? '' : ' → ⭐ ' + (stars - it.price) + ' после покупки'}</div>`}
       </div>`);
+    m.el.querySelector('.modal-box').classList.add('si-box');
     const done = () => { m.close(); renderShop(); renderHeaderAvatar(); updateProfilePreview(); };
     if ($('#si-try')) $('#si-try').onclick = () => WinFx.play(it.id);
     if ($('#si-buy')) $('#si-buy').onclick = () => {
       const r = Profile.buy(it.id);
-      if (r === 'ok') { toast('Куплено и надето: ' + it.name); bumpStars(-it.price); done(); if (it.slot === 'fx') WinFx.play(it.id); else WinFx.play('fx_stars', { dur: 1800 }); }
+      if (r === 'ok') { toast('Куплено и надето: ' + it.name); bumpStars(-it.price); done(); WinFx.play(it.slot === 'fx' ? it.id : 'fx_stars', it.slot === 'fx' ? undefined : { dur: 1800 }); }
       else if (r === 'poor') toast('Не хватает звёзд');
+      else if (r === 'closed') toast('Покупки пока закрыты');
       else done();
     };
     if ($('#si-on')) $('#si-on').onclick = () => { Profile.equip(it.slot, it.id); toast('Надето: ' + it.name); done(); };
     if ($('#si-off')) $('#si-off').onclick = () => { Profile.equip(it.slot, null); toast('Снято'); done(); };
+  }
+
+  /* ---------- апгрейдер: ставим свои предметы, колесо решает, получим ли предмет дороже ---------- */
+  function upState() {
+    const own = Profile.me.own || [];
+    const u = (app.up = app.up || { give: [], target: null, spin: false, angle: 0 });
+    u.give = u.give.filter((id) => own.indexOf(id) >= 0);
+    const value = u.give.reduce((a, id) => a + Profile.SHOP_BY[id].price, 0);
+    if (u.target && (own.indexOf(u.target) >= 0 || Profile.SHOP_BY[u.target].price <= value)) u.target = null;
+    const chance = u.target && value ? Math.min(UP_MAX_CHANCE, value / Profile.SHOP_BY[u.target].price) : 0;
+    return { u, own, value, chance };
+  }
+  const upPct = (c) => (c * 100).toFixed(c < 0.1 ? 1 : 0) + '%';
+  function upChip(it, on, extra, attr) {
+    return `<button type="button" class="up-chip${on ? ' on' : ''}" ${attr}="${it.id}"><span class="up-ic up-${it.slot}">${upIcon(it)}</span><span class="up-t"><b>${esc(it.name)}</b><small>${SLOT_NAME[it.slot]} · ⭐ ${it.price}${extra || ''}</small></span></button>`;
+  }
+  function upIcon(it) {
+    if (it.slot === 'fx') return FX_ICON[it.id] || '✨';
+    if (it.slot === 'frame') return `<span class="ava-fr ${it.id}" style="--fs:24px;width:24px;height:24px"><span class="ava" style="width:24px;height:24px;background:var(--bg2)"></span></span>`;
+    return `<span class="up-sw cbg ${it.slot === 'pv' ? 'pvt ' : ''}${it.id}"></span>`;
+  }
+  function wheelSVG(chance) {
+    const C = 2 * Math.PI * 90;
+    return `<svg viewBox="0 0 220 220" class="up-svg" aria-hidden="true">
+      <circle cx="110" cy="110" r="90" class="up-track"/>
+      <circle cx="110" cy="110" r="90" class="up-win" stroke-dasharray="${(chance * C).toFixed(1)} ${C.toFixed(1)}" transform="rotate(-90 110 110)"/>
+      ${Array.from({ length: 40 }, (_, i) => `<line x1="110" y1="12" x2="110" y2="${i % 5 ? 18 : 22}" transform="rotate(${i * 9} 110 110)" class="up-tick"/>`).join('')}
+    </svg>`;
+  }
+  function upgraderHTML() {
+    const { u, own, value, chance } = upState();
+    const mine = own.map((id) => Profile.SHOP_BY[id]).filter(Boolean).sort((a, b) => b.price - a.price);
+    const targets = Profile.SHOP.filter((it) => own.indexOf(it.id) < 0 && (!value || it.price > value)).sort((a, b) => a.price - b.price);
+    const left = mine.length
+      ? `<div class="up-list">${mine.map((it) => upChip(it, u.give.indexOf(it.id) >= 0, '', 'data-give')).join('')}</div>`
+      : `<div class="up-empty">🎒<b>Пока нечего ставить</b><span>${Profile.SHOP_OPEN ? 'Купите что-нибудь в магазине — и предмет появится здесь.' : 'Предметы появятся в инвентаре, когда откроется магазин.'}</span></div>`;
+    const right = `<div class="up-list">${targets.map((it) => upChip(it, u.target === it.id, value ? ' · шанс ' + upPct(Math.min(UP_MAX_CHANCE, value / it.price)) : '', 'data-target')).join('')}</div>`;
+    const tgt = u.target && Profile.SHOP_BY[u.target];
+    return `<div class="up">
+      <section class="up-col card"><h3>Ваши предметы</h3><div class="hint" style="margin:0 0 8px">Выберите до ${UP_MAX_GIVE} — они сгорят, если не повезёт.</div>${left}<div class="up-sum">Ставка: <b>⭐ ${value}</b></div></section>
+      <section class="up-mid card">
+        <div class="up-wheel">${wheelSVG(chance)}<div class="up-needle" id="up-needle" style="transform:rotate(${u.angle}deg)"><i></i></div>
+          <div class="up-center"><b id="up-pct">${chance ? upPct(chance) : '—'}</b><small>шанс</small></div></div>
+        <div class="up-pair">${value ? '⭐ ' + value : '⭐ 0'} <span>→</span> ${tgt ? esc(tgt.name) + ' · ⭐ ' + tgt.price : 'выберите цель'}</div>
+        <button type="button" class="btn big up-go" id="up-go"${chance && !u.spin ? '' : ' disabled'}>🎰 Апгрейд</button>
+        <div class="hint" style="text-align:center;margin:8px 0 0">Шанс = ставка ÷ цена цели, но не больше ${UP_MAX_CHANCE * 100}%. Зелёный сектор — выигрыш.</div>
+        <div id="up-res" class="up-res"></div>
+      </section>
+      <section class="up-col card"><h3>Цель</h3><div class="hint" style="margin:0 0 8px">${value ? 'Предметы дороже вашей ставки.' : 'Сначала выберите, что поставить.'}</div>${right}</section>
+    </div>`;
+  }
+  function refreshUpgrader(keepRes) {
+    const body = $('#shop-body');
+    if (!body || app.shopTab !== 'up') return;
+    const res = keepRes && $('#up-res') ? $('#up-res').outerHTML : '';
+    body.innerHTML = `<p class="shop-lead">${esc(SHOP_TABS[4].lead)}</p>${upgraderHTML()}`;
+    if (res) $('#up-res').outerHTML = res;
+    bindUpgrader();
+  }
+  function bindUpgrader() {
+    const u = upState().u;
+    $$('[data-give]').forEach((x) => (x.onclick = () => {
+      if (u.spin) return;
+      const id = x.dataset.give, i = u.give.indexOf(id);
+      if (i >= 0) u.give.splice(i, 1);
+      else if (u.give.length >= UP_MAX_GIVE) { toast('Можно поставить не больше ' + UP_MAX_GIVE + ' предметов'); return; }
+      else u.give.push(id);
+      refreshUpgrader();
+    }));
+    $$('[data-target]').forEach((x) => (x.onclick = () => { if (u.spin) return; u.target = u.target === x.dataset.target ? null : x.dataset.target; refreshUpgrader(); }));
+    if ($('#up-go')) $('#up-go').onclick = spinUpgrade;
+  }
+  function spinUpgrade() {
+    const { u, chance } = upState();
+    if (!chance || u.spin) return;
+    const give = u.give.slice(), target = u.target, tgt = Profile.SHOP_BY[target];
+    const names = give.map((id) => Profile.SHOP_BY[id].name).join(', ');
+    if (!confirm(`Поставить: ${names}?\nШанс получить «${tgt.name}» — ${upPct(chance)}. Если не повезёт, предметы сгорят.`)) return;
+    const rnd = crypto.getRandomValues(new Uint32Array(1))[0] / 4294967296;
+    const win = rnd < chance;
+    u.spin = true;
+    const needle = $('#up-needle'), go = $('#up-go');
+    if (go) go.disabled = true;
+    $$('[data-give], [data-target]').forEach((x) => (x.disabled = true));
+    const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const base = Math.ceil(u.angle / 360) * 360;
+    u.angle = base + (reduce ? 360 : 360 * 6) + rnd * 360;
+    if (needle) { needle.classList.add('spin'); needle.style.transitionDuration = reduce ? '.4s' : '4.6s'; needle.style.transform = `rotate(${u.angle}deg)`; }
+    setTimeout(() => {
+      Profile.trade(give, win ? target : null);
+      u.spin = false; u.give = []; u.target = null;
+      renderHeaderAvatar(); updateProfilePreview();
+      refreshUpgrader();
+      const res = $('#up-res');
+      if (res) { res.className = 'up-res show ' + (win ? 'win' : 'lose'); res.innerHTML = win ? `🎉 Апгрейд удался! «${esc(tgt.name)}» теперь в инвентаре` : '💨 Не повезло — поставленные предметы сгорели'; }
+      if (win) WinFx.play('fx_confetti', { dur: 2400 });
+    }, reduce ? 500 : 4800);
+  }
+
+  /* ---------- инвентарь (кнопка в профиле) ---------- */
+  function inventoryHTML() {
+    const own = (Profile.me.own || []).map((id) => Profile.SHOP_BY[id]).filter(Boolean);
+    if (!own.length) return `<div class="up-empty" style="margin:10px 0">🎒<b>Пока пусто</b><span>Здесь будут рамки, фоны, карточки и эффекты — после покупки в магазине или удачного апгрейда.</span></div>`;
+    return SHOP_TABS.filter((t) => t.id !== 'up').map((t) => {
+      const list = own.filter((it) => it.slot === t.id);
+      if (!list.length) return '';
+      return `<div class="inv-group">${t.icon} ${t.name}</div><div class="inv-grid">${list.map((it) => {
+        const w = Profile.worn(it.slot) === it.id;
+        return `<div class="inv-item${w ? ' worn' : ''}"><span class="up-ic up-${it.slot}">${upIcon(it)}</span><span class="up-t"><b>${esc(it.name)}</b><small>${w ? '✓ надето' : '⭐ ' + it.price}</small></span><button type="button" class="btn ${w ? 'ghost' : 'soft'} sm" data-inv="${it.id}">${w ? 'Снять' : 'Надеть'}</button></div>`;
+      }).join('')}</div>`;
+    }).join('');
+  }
+  function openInventory() {
+    const n = (Profile.me.own || []).length;
+    const m = modal(`<button type="button" class="modal-x" data-close aria-label="Закрыть">×</button>
+      <h2 style="margin:0 0 4px">🎒 Инвентарь</h2><p class="muted" style="margin:0 0 6px">Предметов: ${n}</p>
+      <div id="inv-body">${inventoryHTML()}</div>
+      <div class="actions" style="justify-content:center;margin-top:14px"><button type="button" class="btn soft" id="inv-shop">🛒 В магазин</button></div>`);
+    const bind = () => $$('[data-inv]', m.el).forEach((x) => (x.onclick = () => {
+      const it = Profile.SHOP_BY[x.dataset.inv];
+      Profile.equip(it.slot, Profile.worn(it.slot) === it.id ? null : it.id);
+      $('#inv-body').innerHTML = inventoryHTML(); bind();
+      renderHeaderAvatar(); updateProfilePreview();
+    }));
+    bind();
+    $('#inv-shop').onclick = () => { m.close(); app.tab = 'shop'; render(); animatePage(); window.scrollTo(0, 0); };
   }
 
   /* ---------- таблица лидеров ---------- */
@@ -11622,6 +11935,7 @@ var WinFx = (function () {
     $('#me-btn').onclick = () => { if (app.tab === 'profile') return; app.tab = 'profile'; render(); animatePage(); window.scrollTo(0, 0); };
     $('#login-btn').onclick = doLogin;
     $('#streak-btn').onclick = openStreak;
+    window.addEventListener('egeduel:gift', (e) => { toast('🎁 Вам начислено ' + e.detail + ' ⭐'); bumpStars(e.detail); if (app.tab === 'shop') renderShop(); });
     $('#pts-btn').onclick = () => { if (app.tab === 'shop') return; app.tab = 'shop'; render(); animatePage(); window.scrollTo(0, 0); };
     $('#shop-btn').onclick = () => { if (app.tab === 'shop') return; app.tab = 'shop'; render(); animatePage(); window.scrollTo(0, 0); };
     Cloud.onInvites(showInvites);
