@@ -7573,7 +7573,7 @@ var Profile = (function () {
   const SHOP_BY = {};
   SHOP.forEach((x) => { SHOP_BY[x.id] = x; });
   const STARS_MAX = 1e9;
-  const SHOP_OPEN = false; // покупки пока закрыты — магазин работает как витрина
+  const SHOP_OPEN = true; // false — покупки закрыты, магазин работает как витрина
   const cleanStars = (v) => Math.max(0, Math.min(STARS_MAX, Math.floor(+v || 0)));
   const cleanOwn = (a) => (Array.isArray(a) ? a.filter((k, i) => SHOP_BY[k] && a.indexOf(k) === i).slice(0, 100) : []);
   const slotId = (id, slot) => (typeof id === 'string' && SHOP_BY[id] && SHOP_BY[id].slot === slot ? id : null);
