@@ -1,0 +1,14 @@
+[
+  {
+    "relation": [
+      "delegate_permission/common.handle_all_urls"
+    ],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "io.github.egeduel.app",
+      "sha256_cert_fingerprints": [
+        "72:71:9B:4C:C0:97:75:1B:D7:6B:B5:4A:6A:16:FC:05:D9:62:00:94:A9:F9:E0:1F:5A:99:F1:0A:70:DD:87:D1"
+      ]
+    }
+  }
+]
