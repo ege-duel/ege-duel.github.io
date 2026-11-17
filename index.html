@@ -1520,8 +1520,10 @@ html.in-app input, html.in-app textarea, html.in-app [contenteditable="true"] { 
   .home-hero h1 { font-size: 19px; margin: 2px 0 0; line-height: 1.2; }
   .home-kicker { font-size: 11px; }
 
+  /* магазин: без баннера «Прокачай свой профиль» и без описания раздела под вкладками */
+  #shop-page .shop-hero, #shop-page .shop-lead { display: none; }
   /* магазин: вкладки разделов одной компактной строкой с прокруткой */
-  #shop-page .shop-tabs { width: 100%; flex-wrap: nowrap; overflow-x: auto; gap: 2px; padding: 4px; margin: 14px 0 4px; border-radius: 12px; scrollbar-width: none; }
+  #shop-page .shop-tabs { width: 100%; flex-wrap: nowrap; overflow-x: auto; gap: 2px; padding: 4px; margin: 0 0 14px; border-radius: 12px; scrollbar-width: none; }
   #shop-page .shop-tabs::-webkit-scrollbar { display: none; }
   #shop-page .shop-tabs button { flex: none; padding: 7px 11px; font-size: 13.5px; border-radius: 9px; }
   #shop-page .shop-pill { border-radius: 9px; }
