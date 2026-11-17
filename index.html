@@ -1005,7 +1005,10 @@ nav.tabs.nav-lite button:not([data-tab="top"]) { display: none; }
 .pts-btn { cursor: pointer; transition: background .2s, color .2s, transform .2s; }
 .pts-btn:hover, .pts-btn.on { background: color-mix(in srgb, #fcc419 22%, var(--bg2)); color: var(--ink); }
 .pts-btn.bump { animation: pts-bump .7s cubic-bezier(.2, .9, .3, 1.4); }
-.pts-btn.bump.st-up b { color: #2fb344; } .pts-btn.bump.st-down b { color: #e03131; }
+/* цифра на миг зеленеет/краснеет и плавно возвращается к обычному цвету */
+.pts-btn.bump.st-up b { animation: pts-col-up 1.6s ease-out; } .pts-btn.bump.st-down b { animation: pts-col-down 1.6s ease-out; }
+@keyframes pts-col-up { 0%, 35% { color: #2fb344; } }
+@keyframes pts-col-down { 0%, 35% { color: #e03131; } }
 @keyframes pts-bump { 0% { transform: scale(1); } 30% { transform: scale(1.22); } 100% { transform: scale(1); } }
 
 /* итоги игры: строка со звёздами */
@@ -9932,6 +9935,8 @@ var WinFx = (function () {
     if (!b) return;
     b.classList.remove('bump', 'st-up', 'st-down'); void b.offsetWidth;
     b.classList.add('bump', d > 0 ? 'st-up' : 'st-down');
+    clearTimeout(bumpStars._t);
+    bumpStars._t = setTimeout(() => b.classList.remove('bump', 'st-up', 'st-down'), 1700); // метки снимаем после анимации
     const f = document.createElement('span');
     f.className = 'pts-float ' + (d > 0 ? 'up' : 'down');
     f.textContent = (d > 0 ? '+' : '') + fmtStars(d);
