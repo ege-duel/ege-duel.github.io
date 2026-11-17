@@ -8373,11 +8373,7 @@ var Cloud = (function () {
   }
 
   /* ---- поиск и друзья ---- */
-  // ID набирают и с русской раскладки: похожие русские буквы (С, Т, О, М, А, Н, Е…) превращаем в латинские
-  const CYR_LAT = { А: 'A', В: 'B', Е: 'E', Ё: 'E', К: 'K', М: 'M', Н: 'H', О: 'O', Р: 'P', С: 'C', Т: 'T', У: 'Y', Х: 'X' };
-  const SAY_LAT = { А: 'A', Б: 'B', В: 'V', Г: 'G', Д: 'D', Е: 'E', Ё: 'E', З: 'Z', И: 'I', Й: 'Y', К: 'K', Л: 'L', М: 'M', Н: 'N', О: 'O', П: 'P', Р: 'R', С: 'S', Т: 'T', У: 'U', Ф: 'F', Х: 'H', Ы: 'Y', Э: 'E' };
-  const sayTag = (s) => String(s || '').toUpperCase().replace(/[А-ЯЁ]/g, (c) => SAY_LAT[c] || '').replace(/[^A-Z0-9]/g, '');
-  const normTag = (s) => String(s || '').toUpperCase().replace(/[АВЕЁКМНОРСТУХ]/g, (c) => CYR_LAT[c]).replace(/[^A-Z0-9]/g, '');
+  const normTag = (s) => String(s || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
   async function getProfile(uid) {
     const s = await db.collection('profiles').doc(uid).get();
     if (!s.exists) return null;
@@ -8387,11 +8383,9 @@ var Cloud = (function () {
   }
   async function findByTag(raw) {
     if (!user) throw new Error('Войдите через Google, чтобы искать профили');
-    // два прочтения русских букв: «как выглядит» (С→C, Р→P) и «как звучит» (С→S, Р→R)
-    const tags = [normTag(raw), sayTag(raw)].filter((x, i, l) => /^[A-Z0-9]{6}$/.test(x) && l.indexOf(x) === i);
-    if (!tags.length) throw new Error('ID состоит из 6 латинских букв и цифр, например #K7M2QX');
-    let t = null;
-    for (const tag of tags) { t = await db.collection('tags').doc(tag).get(); if (t.exists) break; }
+    const tag = normTag(raw);
+    if (!/^[A-Z0-9]{6}$/.test(tag)) throw new Error('ID состоит из 6 латинских букв и цифр, например #K7M2QX');
+    const t = await db.collection('tags').doc(tag).get();
     if (!t.exists) return null;
     return getProfile(t.data().uid);
   }
