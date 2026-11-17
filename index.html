@@ -11194,7 +11194,7 @@ var WinFx = (function () {
     return `<div class="friend-row sl ${id}${top ? ' top-row' : ''}">${top ? '<span class="top-place">🥇</span>' : ''}${Profile.avatar(fp, 40)}<span class="fr-main"><b>${esc(fp.name || 'Игрок')}</b><span class="muted"><span class="fr-st on">● Онлайн</span>${fp.tag ? (top ? ' · ID ' : ' · #') + esc(fp.tag) : ''}</span></span>${top ? `<span class="top-score"><b>${(fp.stats && fp.stats.solved) || 0}</b><small>задач</small></span>` : '<span class="fr-go">›</span>'}</div>`;
   }
   const FX_ICON = { fx_confetti: '🎉', fx_stars: '🌠', fx_fireworks: '🎆', fx_fire: '🔥', fx_storm: '⚡', fx_crown: '👑' };
-  const UP_MAX_CHANCE = 0.8, UP_MAX_GIVE = 6;
+  const UP_MAX_CHANCE = 0.75, UP_MAX_GIVE = 6;
   const myFp = () => Object.assign({ uid: Cloud.user ? Cloud.user.uid : '', self: true, online: true }, Profile.sanitizePublic(Profile.publicData()));
 
   function shopPreview(it, big) {
