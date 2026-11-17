@@ -1429,6 +1429,11 @@ nav.tabs.nav-lite button:not([data-tab="top"]) { display: none; }
 }
 @media (prefers-reduced-motion: reduce) { .upg-ph .upg-chev, .upg-pk { animation: none; } .upt { transition: none; } }
 
+/* апгрейдер: продажа выбранных предметов */
+.upg-sell { position: relative; margin-top: 10px; background: color-mix(in srgb, #2fb344 18%, var(--bg2)); color: #2fb344; border: 1.5px solid color-mix(in srgb, #2fb344 45%, transparent); font-weight: 800; animation: si-in .35s cubic-bezier(.2, .9, .3, 1.1) both; }
+.upg-sell:not(:disabled):hover { background: color-mix(in srgb, #2fb344 28%, var(--bg2)); }
+@media (prefers-reduced-motion: reduce) { .upg-sell { animation: none; } }
+
 </style>
 </head>
 <body>
@@ -11414,7 +11419,8 @@ var WinFx = (function () {
     const picked = u.give.map((i) => Profile.SHOP_BY[own[i]]).filter(Boolean);
     const left = picked.length
       ? `<div class="upg-picked n${Math.min(picked.length, 6)}">${picked.map((it) => `<span class="upg-pk upt-${it.slot}">${upArt(it)}<small>${esc(it.name)}</small></span>`).join('')}</div>
-         <div class="upg-sum">Ставка <b>⭐ ${fmtStars(value)}</b> · ${picked.length} из ${UP_MAX_GIVE}</div>`
+         <div class="upg-sum">Ставка <b>⭐ ${fmtStars(value)}</b> · ${picked.length} из ${UP_MAX_GIVE}</div>
+         <button type="button" class="btn upg-sell" id="upg-sell"${u.spin ? ' disabled' : ''}>💰 Продать за ⭐ ${fmtStars(value)}</button>`
       : `<div class="upg-ph">${chev(true)}<span>Выберите предметы из инвентаря ниже</span></div>`;
     const right = tgt
       ? `<div class="upg-big upt-${tgt.slot}">${upArt(tgt)}</div><div class="upg-tname"><small>${SLOT_NAME[tgt.slot]}</small><b>${esc(tgt.name)}</b><span>⭐ ${fmtStars(tgt.price)}${value ? ' · ×' + (tgt.price / value).toFixed(2).replace('.', ',') : ''}</span></div>`
@@ -11481,6 +11487,21 @@ var WinFx = (function () {
     inp('#upg-q', 'q'); inp('#upg-from', 'from'); inp('#upg-to', 'to');
     if ($('#upg-sort')) $('#upg-sort').onclick = () => { u.sort = u.sort === 'asc' ? 'desc' : 'asc'; u.page = 0; refreshUpgrader(); };
     if ($('#up-go')) $('#up-go').onclick = spinUpgrade;
+    if ($('#upg-sell')) $('#upg-sell').onclick = sellPicked;
+  }
+  // продажа выбранных предметов за полную цену магазина
+  function sellPicked() {
+    const { u, own, value } = upState();
+    if (u.spin || !u.give.length || !value) return;
+    const give = u.give.map((i) => own[i]);
+    const names = give.map((id) => Profile.SHOP_BY[id].name).join(', ');
+    if (!confirm(`Продать: ${names}?\nВы получите ${value} ⭐. Предметы исчезнут из инвентаря.`)) return;
+    if (!Profile.trade(give, null)) return;
+    const got = Profile.addStars(value);
+    u.give = []; u.target = null;
+    bumpStars(got); updateProfilePreview();
+    refreshUpgrader();
+    toast(`Продано за ⭐ ${fmtStars(got)}`);
   }
   function spinUpgrade() {
     const { u, own, chance } = upState();
@@ -11493,7 +11514,7 @@ var WinFx = (function () {
     u.spin = true;
     const needle = $('#up-needle'), go = $('#up-go');
     if (go) go.disabled = true;
-    $$('[data-give], [data-target]').forEach((x) => (x.disabled = true));
+    $$('[data-give], [data-target], #upg-sell').forEach((x) => (x.disabled = true));
     const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
     const base = Math.ceil(u.angle / 360) * 360;
     u.angle = base + (reduce ? 360 : 360 * 6) + rnd * 360;
