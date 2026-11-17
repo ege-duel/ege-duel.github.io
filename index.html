@@ -1237,6 +1237,80 @@ nav.tabs.nav-lite button:not([data-tab="top"]) { display: none; }
 .inv-item .up-t { flex: 1; }
 .inv-item .btn { padding: 6px 12px; font-size: 13px; }
 
+
+/* ===== патч 0.30 ===== */
+/* звёзды в шапке: ширина не прыгает, «+100» всплывает над кнопкой */
+.pts-btn { position: relative; }
+.pts-btn b { font-variant-numeric: tabular-nums; white-space: nowrap; }
+.pts-btn.bump { animation: none; }
+.pts-btn.bump svg { animation: pts-bump .7s cubic-bezier(.2, .9, .3, 1.4); }
+.pts-float { position: absolute; left: 50%; top: 100%; transform: translateX(-50%); font-size: 12px; font-weight: 800; white-space: nowrap; pointer-events: none; animation: pts-float 1.25s ease-out both; }
+.pts-float.up { color: #2fb344; } .pts-float.down { color: #e03131; }
+@keyframes pts-float { 0% { opacity: 0; transform: translate(-50%, -4px); } 20% { opacity: 1; } 100% { opacity: 0; transform: translate(-50%, 14px); } }
+@media (prefers-reduced-motion: reduce) { .pts-btn.bump svg, .pts-float { animation: none !important; } .pts-float { display: none; } }
+
+/* ставка */
+.stake-bal { font-weight: 700; color: var(--ink3); font-size: 13px; margin-left: 6px; }
+.chip.no { opacity: .45; cursor: not-allowed; text-decoration: line-through; }
+
+/* колокольчик: заметка об обновлении */
+.bn-patch { border: 1.5px solid color-mix(in srgb, #fcc419 55%, var(--line)); background: color-mix(in srgb, #fcc419 8%, var(--card)); }
+.bn-ptitle { font-family: "Unbounded", sans-serif; font-weight: 700; font-size: 15px; margin: 4px 0 6px; }
+.bn-plist { margin: 0 0 4px; padding-left: 18px; font-size: 13px; color: var(--ink2); display: grid; gap: 4px; }
+.inv-n { font-size: 12px; font-weight: 800; color: #9b6bff; margin-left: 2px; }
+
+/* большой профиль: карточка из магазина на всё окно */
+.modal-box.pvhost { padding: 0; position: relative; border: 0; background: transparent; box-shadow: 0 24px 60px -20px #000; border-radius: 22px; max-height: calc(100vh - 32px); overflow-y: auto; }
+.pvhost > .pview.pvt { border-radius: 22px; padding: 30px 18px 18px; min-height: 100%; }
+.pvhost > .pview.pvt::before { content: ''; position: absolute; inset: 0; border-radius: inherit; box-shadow: inset 0 0 0 2px #ffffff26; pointer-events: none; }
+.pvhost .pv-x { position: absolute; top: 12px; right: 12px; z-index: 3; background: #00000045; color: #fff; backdrop-filter: blur(4px); }
+.pvhost .pv-x:hover { background: #00000070; color: #fff; }
+.pvhost .pview > .actions { margin-top: 16px; width: 100%; justify-content: center; }
+.pvhost .pview-show h3 { color: #fff; }
+.pvt .pstats .stat b, .pvt .pview-name { color: #fff; }
+.pvt .ach .muted, .pvt .ach small { color: #ffffffb8; }
+
+/* выбор: цвет или карточка */
+.card-colors .cc.pvsw { border-radius: 9px; position: relative; overflow: hidden; padding: 0; background: none; box-shadow: none; }
+.card-colors .cc.pvsw > span { position: absolute; inset: 0; border-radius: 7px; box-shadow: inset 0 0 0 1px #ffffff40; }
+.card-colors .cc.pvsw.on { border-color: var(--ink); }
+
+/* ===== «Слайд»: оформление строк друзей и таблицы лидеров ===== */
+.friend-row.sl { position: relative; overflow: hidden; isolation: isolate; border: 2px solid transparent; color: #fff; }
+.friend-row.sl .muted, .friend-row.sl .top-score small { color: #ffffffc0; }
+.friend-row.sl .fr-st.on { color: #6dff9a; }
+.friend-row.sl .fr-go { color: #ffffffb0; }
+.friend-row.sl:hover { filter: brightness(1.08); }
+.sl_gold { background: linear-gradient(100deg, #3a2a06, #6b4c0f 40%, #3a2a06) padding-box, linear-gradient(120deg, #a87914, #ffe08a, #c99a2e, #fff2c4, #a87914) border-box; }
+.sl_gold::after { content: ''; position: absolute; inset: 0; background: linear-gradient(105deg, transparent 40%, #fff3 50%, transparent 60%) 0 0 / 250% 100%; animation: sl-shine 3.2s ease-in-out infinite; z-index: -1; pointer-events: none; }
+@keyframes sl-shine { 0% { background-position: 120% 0; } 60%, 100% { background-position: -120% 0; } }
+.sl_neon { background: linear-gradient(#150b24, #150b24) padding-box, linear-gradient(90deg, #ff3df0, #3dd9ff) border-box; box-shadow: 0 0 14px -2px #ff3df077, inset 0 0 18px -6px #3dd9ff88; animation: sl-neon 2.4s ease-in-out infinite alternate; }
+@keyframes sl-neon { to { box-shadow: 0 0 20px 0 #3dd9ff88, inset 0 0 22px -4px #ff3df088; } }
+.sl_aurora { background: linear-gradient(115deg, #0b3d2e, #1d7a5f, #4b2a8a, #0f6b6b, #0b3d2e) 0 0 / 300% 100%; border-color: #6dffc055; animation: sl-flow 9s linear infinite; }
+@keyframes sl-flow { to { background-position: 300% 0; } }
+.sl_fire { background: radial-gradient(60% 120% at 20% 130%, #ffb34788, transparent 70%), radial-gradient(50% 120% at 75% 140%, #ff5f2e99, transparent 70%), linear-gradient(#2a0d06, #4a1408); border-color: #ff7a3d88; }
+.sl_fire::after { content: ''; position: absolute; left: 0; right: 0; bottom: -30%; height: 90%; background: radial-gradient(30% 60% at 15% 100%, #ffcf5c66, transparent 70%), radial-gradient(25% 70% at 45% 100%, #ff7b2e77, transparent 70%), radial-gradient(30% 60% at 80% 100%, #ffb34766, transparent 70%); animation: sl-flame 1.6s ease-in-out infinite alternate; z-index: -1; pointer-events: none; }
+@keyframes sl-flame { from { transform: translateY(6%) scaleY(.9); opacity: .75; } to { transform: translateY(-4%) scaleY(1.08); opacity: 1; } }
+.sl_galaxy { background: radial-gradient(1.5px 1.5px at 12% 30%, #fff, transparent), radial-gradient(1px 1px at 32% 70%, #fff, transparent), radial-gradient(1.5px 1.5px at 58% 22%, #fff, transparent), radial-gradient(1px 1px at 78% 64%, #fff, transparent), radial-gradient(1.5px 1.5px at 92% 28%, #fff, transparent), radial-gradient(60% 140% at 70% 50%, #7a3dd955, transparent 70%), linear-gradient(100deg, #0d0726, #24104a 60%, #0d0726); border-color: #a77bff66; }
+.sl_galaxy::after { content: ''; position: absolute; inset: 0; background: radial-gradient(1.5px 1.5px at 22% 55%, #fff, transparent), radial-gradient(1.5px 1.5px at 66% 80%, #fff, transparent), radial-gradient(2px 2px at 85% 45%, #e6d8ff, transparent); animation: sl-twinkle 2.2s ease-in-out infinite alternate; z-index: -1; pointer-events: none; }
+@keyframes sl-twinkle { from { opacity: .2; } to { opacity: 1; } }
+.sl_rgb { background: linear-gradient(#141418, #141418) padding-box, conic-gradient(from var(--sl-a, 0deg), #ff4d4d, #ffd84d, #4dff88, #4dd8ff, #b84dff, #ff4d4d) border-box; animation: sl-spin 3s linear infinite; }
+@property --sl-a { syntax: '<angle>'; inherits: false; initial-value: 0deg; }
+@keyframes sl-spin { to { --sl-a: 360deg; } }
+@media (prefers-reduced-motion: reduce) { .friend-row.sl, .friend-row.sl::after, .up-sw.sl { animation: none !important; } }
+.top-row.sl.me { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* витрина слайдов */
+.si-sl { width: 86%; }
+.si-sl .friend-row { margin: 0; padding: 10px 12px; pointer-events: none; }
+.si-sl .fr-main b { display: block; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.si-sl .fr-main i { display: block; width: 60%; height: 6px; border-radius: 3px; background: #ffffff55; margin-top: 6px; }
+.si-slbig { width: 100%; text-align: left; }
+.si-slbig .friend-row { pointer-events: none; }
+.si-sllbl { font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: .05em; color: var(--ink3); margin: 10px 0 0; }
+.si-sllbl:first-child { margin-top: 0; }
+.up-sw.sl { border: 2px solid transparent; }
+
 </style>
 </head>
 <body>
@@ -7541,45 +7615,54 @@ var Profile = (function () {
     return o;
   }
   /* ---- магазин за звёзды ----
-     stars — баланс; own — купленные товары; eq — что надето { frame, bg, pv, fx }.
+     stars — баланс; own — купленные товары (один товар можно купить несколько раз); eq — что надето { frame, bg, pv, fx, sl }.
+     sl — «слайд»: оформление строки в таблице лидеров и в списке друзей.
      bg — фон мини-профиля (карточка в дуэли и превью), pv — оформление большого профиля (окно «Посмотреть профиль»).
      Каталог общий: по нему же проверяются рамки и фоны, пришедшие от других игроков. */
   const SHOP = [
-    { id: 'fr_gold', slot: 'frame', name: 'Золото', price: 150, desc: 'Классическая золотая рамка с бликом.' },
-    { id: 'fr_neon', slot: 'frame', name: 'Неон', price: 150, desc: 'Розово-голубое неоновое свечение.' },
-    { id: 'fr_ice', slot: 'frame', name: 'Лёд', price: 150, desc: 'Холодная ледяная рамка.' },
-    { id: 'fr_fire', slot: 'frame', name: 'Огонёк', price: 250, desc: 'Живое пламя вокруг аватара.' },
-    { id: 'fr_rainbow', slot: 'frame', name: 'Радуга', price: 300, desc: 'Вращающаяся радужная рамка.' },
-    { id: 'fr_orbit', slot: 'frame', name: 'Орбита', price: 400, desc: 'Вокруг аватара кружит звезда.' },
-    { id: 'bg_sunset', slot: 'bg', name: 'Закат', price: 300, desc: 'Тёплый градиент вечернего неба.' },
-    { id: 'bg_ocean', slot: 'bg', name: 'Океан', price: 300, desc: 'Глубокий сине-бирюзовый фон.' },
-    { id: 'bg_grid', slot: 'bg', name: 'Тетрадь в клетку', price: 250, desc: 'Как черновик на экзамене, только красивее.' },
-    { id: 'bg_formula', slot: 'bg', name: 'Формулы', price: 350, desc: 'Фон из формул и знаков.' },
-    { id: 'bg_space', slot: 'bg', name: 'Космос', price: 400, desc: 'Звёздное небо с туманностью.' },
-    { id: 'bg_aurora', slot: 'bg', name: 'Северное сияние', price: 450, desc: 'Переливающийся живой фон.' },
-    { id: 'pv_holo', slot: 'pv', name: 'Голограмма', price: 500, desc: 'Переливается всеми цветами, как наклейка-голограмма.' },
-    { id: 'pv_gold', slot: 'pv', name: 'Золотой билет', price: 600, desc: 'Золото с бегущим бликом.' },
-    { id: 'pv_sakura', slot: 'pv', name: 'Сакура', price: 550, desc: 'Нежно-розовый фон с лепестками.' },
-    { id: 'pv_city', slot: 'pv', name: 'Ночной город', price: 650, desc: 'Неоновая сетка и закат над городом.' },
-    { id: 'pv_cyber', slot: 'pv', name: 'Киберпанк', price: 700, desc: 'Жёлто-чёрный, с предупреждающей полосой.' },
-    { id: 'pv_marble', slot: 'pv', name: 'Мрамор', price: 900, desc: 'Тёмный мрамор с золотыми прожилками.' },
-    { id: 'fx_confetti', slot: 'fx', name: 'Конфетти', price: 500, desc: 'Залп разноцветного конфетти.' },
-    { id: 'fx_stars', slot: 'fx', name: 'Звездопад', price: 500, desc: 'С неба сыплются золотые звёзды.' },
-    { id: 'fx_fireworks', slot: 'fx', name: 'Фейерверк', price: 600, desc: 'Салют в честь победы.' },
-    { id: 'fx_fire', slot: 'fx', name: 'Огненный дождь', price: 650, desc: 'Огненные искры по всему экрану.' },
-    { id: 'fx_storm', slot: 'fx', name: 'Гроза', price: 700, desc: 'Вспышки молний и разряды.' },
-    { id: 'fx_crown', slot: 'fx', name: 'Коронация', price: 800, desc: 'Сверху опускается корона, золотой дождь.' },
+    { id: 'fr_gold', slot: 'frame', name: 'Золото', price: 450, desc: 'Классическая золотая рамка с бликом.' },
+    { id: 'fr_neon', slot: 'frame', name: 'Неон', price: 450, desc: 'Розово-голубое неоновое свечение.' },
+    { id: 'fr_ice', slot: 'frame', name: 'Лёд', price: 450, desc: 'Холодная ледяная рамка.' },
+    { id: 'fr_fire', slot: 'frame', name: 'Огонёк', price: 750, desc: 'Живое пламя вокруг аватара.' },
+    { id: 'fr_rainbow', slot: 'frame', name: 'Радуга', price: 900, desc: 'Вращающаяся радужная рамка.' },
+    { id: 'fr_orbit', slot: 'frame', name: 'Орбита', price: 1200, desc: 'Вокруг аватара кружит звезда.' },
+    { id: 'bg_sunset', slot: 'bg', name: 'Закат', price: 900, desc: 'Тёплый градиент вечернего неба.' },
+    { id: 'bg_ocean', slot: 'bg', name: 'Океан', price: 900, desc: 'Глубокий сине-бирюзовый фон.' },
+    { id: 'bg_grid', slot: 'bg', name: 'Тетрадь в клетку', price: 750, desc: 'Как черновик на экзамене, только красивее.' },
+    { id: 'bg_formula', slot: 'bg', name: 'Формулы', price: 1050, desc: 'Фон из формул и знаков.' },
+    { id: 'bg_space', slot: 'bg', name: 'Космос', price: 1200, desc: 'Звёздное небо с туманностью.' },
+    { id: 'bg_aurora', slot: 'bg', name: 'Северное сияние', price: 1350, desc: 'Переливающийся живой фон.' },
+    { id: 'pv_holo', slot: 'pv', name: 'Голограмма', price: 1500, desc: 'Переливается всеми цветами, как наклейка-голограмма.' },
+    { id: 'pv_gold', slot: 'pv', name: 'Золотой билет', price: 1800, desc: 'Золото с бегущим бликом.' },
+    { id: 'pv_sakura', slot: 'pv', name: 'Сакура', price: 1650, desc: 'Нежно-розовый фон с лепестками.' },
+    { id: 'pv_city', slot: 'pv', name: 'Ночной город', price: 1950, desc: 'Неоновая сетка и закат над городом.' },
+    { id: 'pv_cyber', slot: 'pv', name: 'Киберпанк', price: 2100, desc: 'Жёлто-чёрный, с предупреждающей полосой.' },
+    { id: 'pv_marble', slot: 'pv', name: 'Мрамор', price: 2700, desc: 'Тёмный мрамор с золотыми прожилками.' },
+    { id: 'fx_confetti', slot: 'fx', name: 'Конфетти', price: 1500, desc: 'Залп разноцветного конфетти.' },
+    { id: 'fx_stars', slot: 'fx', name: 'Звездопад', price: 1500, desc: 'С неба сыплются золотые звёзды.' },
+    { id: 'fx_fireworks', slot: 'fx', name: 'Фейерверк', price: 1800, desc: 'Салют в честь победы.' },
+    { id: 'fx_fire', slot: 'fx', name: 'Огненный дождь', price: 1950, desc: 'Огненные искры по всему экрану.' },
+    { id: 'fx_storm', slot: 'fx', name: 'Гроза', price: 2100, desc: 'Вспышки молний и разряды.' },
+    { id: 'fx_crown', slot: 'fx', name: 'Коронация', price: 2400, desc: 'Сверху опускается корона, золотой дождь.' },
+    { id: 'sl_gold', slot: 'sl', name: 'Золотая полоса', price: 900, desc: 'Золотая рамка с бегущим бликом.' },
+    { id: 'sl_neon', slot: 'sl', name: 'Неон', price: 1050, desc: 'Розово-голубое неоновое свечение по краю.' },
+    { id: 'sl_aurora', slot: 'sl', name: 'Северное сияние', price: 1200, desc: 'Переливающийся зелёно-фиолетовый фон.' },
+    { id: 'sl_fire', slot: 'sl', name: 'Пламя', price: 1350, desc: 'Огонь поднимается снизу строки.' },
+    { id: 'sl_galaxy', slot: 'sl', name: 'Галактика', price: 1500, desc: 'Фиолетовый космос с мерцающими звёздами.' },
+    { id: 'sl_rgb', slot: 'sl', name: 'RGB', price: 1800, desc: 'Радужная рамка, которая бежит по кругу.' },
   ];
   const SHOP_BY = {};
   SHOP.forEach((x) => { SHOP_BY[x.id] = x; });
   const STARS_MAX = 1e9;
   const SHOP_OPEN = true; // false — покупки закрыты, магазин работает как витрина
   const cleanStars = (v) => Math.max(0, Math.min(STARS_MAX, Math.floor(+v || 0)));
-  const cleanOwn = (a) => (Array.isArray(a) ? a.filter((k, i) => SHOP_BY[k] && a.indexOf(k) === i).slice(0, 100) : []);
+  const OWN_MAX = 300;
+  const cleanOwn = (a) => (Array.isArray(a) ? a.filter((k) => SHOP_BY[k]).slice(0, OWN_MAX) : []);
+  const ownCount = (id) => (me.own || []).filter((x) => x === id).length;
   const slotId = (id, slot) => (typeof id === 'string' && SHOP_BY[id] && SHOP_BY[id].slot === slot ? id : null);
   function cleanEq(e) {
     const o = {};
-    if (e && typeof e === 'object') ['frame', 'bg', 'pv', 'fx'].forEach((k) => { const v = slotId(e[k], k); if (v) o[k] = v; });
+    if (e && typeof e === 'object') ['frame', 'bg', 'pv', 'fx', 'sl'].forEach((k) => { const v = slotId(e[k], k); if (v) o[k] = v; });
     return o;
   }
   // надетый товар (только если он куплен)
@@ -7597,13 +7680,11 @@ var Profile = (function () {
     const it = SHOP_BY[id];
     if (!it) return 'none';
     me.own = cleanOwn(me.own);
-    if (me.own.indexOf(id) >= 0) return 'owned';
     if (!SHOP_OPEN) return 'closed';
+    if (me.own.length >= OWN_MAX) return 'full';
     if (cleanStars(me.stars) < it.price) return 'poor';
     me.stars = cleanStars(me.stars) - it.price;
-    me.own.push(id);
-    me.eq = cleanEq(me.eq);
-    me.eq[it.slot] = id; // купленное сразу надевается
+    me.own.push(id); // покупка не надевается сама — надеть можно в инвентаре
     save();
     return 'ok';
   }
@@ -7611,11 +7692,13 @@ var Profile = (function () {
   function trade(give, target) {
     me.own = cleanOwn(me.own);
     me.eq = cleanEq(me.eq);
-    give = give.filter((id) => me.own.indexOf(id) >= 0);
-    if (!give.length) return false;
-    me.own = me.own.filter((id) => give.indexOf(id) < 0);
-    Object.keys(me.eq).forEach((k) => { if (give.indexOf(me.eq[k]) >= 0) delete me.eq[k]; });
-    if (target && SHOP_BY[target] && me.own.indexOf(target) < 0) me.own.push(target);
+    // give — список товаров (один и тот же может повторяться); убираем по одной копии на каждый
+    const left = me.own.slice(), took = [];
+    give.forEach((id) => { const i = left.indexOf(id); if (i >= 0) { left.splice(i, 1); took.push(id); } });
+    if (!took.length) return false;
+    me.own = left;
+    Object.keys(me.eq).forEach((k) => { if (me.own.indexOf(me.eq[k]) < 0) delete me.eq[k]; });
+    if (target && SHOP_BY[target] && me.own.length < OWN_MAX) me.own.push(target);
     save();
     return true;
   }
@@ -7748,7 +7831,7 @@ var Profile = (function () {
       stats: { duels: st.duels, wins: st.wins, bestSolo: st.bestSolo, solved: st.solved, streak: Streak.info(me.days).count, bestStreak: Streak.info(me.days).best },
       ach: cleanAch(me.ach),
       show: cleanShow(me.show),
-      frame: worn('frame') || '', bg: worn('bg') || '', pv: worn('pv') || '',
+      frame: worn('frame') || '', bg: worn('bg') || '', pv: worn('pv') || '', sl: worn('sl') || '',
     };
   }
   function sanitizePublic(p) {
@@ -7802,7 +7885,7 @@ var Profile = (function () {
     if (Array.isArray(d.show)) me.show = cleanShow(d.show);
     // звёзды и покупки: в аккаунте — главное значение (звёзды могут и убывать)
     if (d.stars !== undefined) me.stars = cleanStars(d.stars);
-    me.own = cleanOwn((Array.isArray(d.own) ? d.own : []).concat(me.own || []));
+    if (Array.isArray(d.own)) me.own = cleanOwn(d.own); // как и звёзды: копии могут сгореть в апгрейдере
     if (d.eq && typeof d.eq === 'object') me.eq = cleanEq(d.eq);
     me.ap = mergeAp(d.ap, me.ap);
     if (achMore && typeof Cloud !== 'undefined') setTimeout(() => Cloud.schedulePush(), 0);
@@ -7850,7 +7933,7 @@ var Profile = (function () {
       tag: me.tag || null,
       uid: (typeof Cloud !== 'undefined' && Cloud.user && Cloud.user.uid) || null,
       card: cardIdx(me.card), tile: cardIdx(me.tile),
-      frame: worn('frame'), bg: worn('bg'), pv: worn('pv'),
+      frame: worn('frame'), bg: worn('bg'), pv: worn('pv'), sl: worn('sl'), fx: worn('fx'),
       stats: { duels: me.stats.duels, wins: me.stats.wins, bestSolo: me.stats.bestSolo, streak: Streak.info(me.days).count },
     };
   }
@@ -7873,6 +7956,8 @@ var Profile = (function () {
       frame: slotId(p.frame, 'frame'),
       bg: slotId(p.bg, 'bg'),
       pv: slotId(p.pv, 'pv'),
+      sl: slotId(p.sl, 'sl'),
+      fx: slotId(p.fx, 'fx'),
       stats: { duels: int(st.duels), wins: int(st.wins), bestSolo: int(st.bestSolo), streak: Math.min(int(st.streak), 5000) },
     };
     // uid соперника (для «Друг познаётся в дуэли»); добавляем только если он есть, чтобы не затирать чужой uid
@@ -8020,7 +8105,7 @@ var Profile = (function () {
   }
 
   return {
-    get me() { return me; }, save, shared, cloudData, publicData, sanitizePublic, applyCloud, fillFromGoogle, resetLocal, markToday, streak, sanitize, fallback, avatar, card, statLine, readPhoto, loadImage, cropPhoto, record, resetStats, favorite, winRate, nickInfo, setNick, unlock, ACH_IDS, SHOW_MAX, cleanShow, SHOP, SHOP_BY, SHOP_OPEN, addStars, buy, equip, trade, worn, frameWrap,
+    get me() { return me; }, save, shared, cloudData, publicData, sanitizePublic, applyCloud, fillFromGoogle, resetLocal, markToday, streak, sanitize, fallback, avatar, card, statLine, readPhoto, loadImage, cropPhoto, record, resetStats, favorite, winRate, nickInfo, setNick, unlock, ACH_IDS, SHOW_MAX, cleanShow, SHOP, SHOP_BY, SHOP_OPEN, OWN_MAX, ownCount, addStars, buy, equip, trade, worn, frameWrap,
     PRESETS, CARDS, COLORS, BIO_MAX, esc,
   };
 })();
@@ -8290,12 +8375,12 @@ var Cloud = (function () {
 
   /* ---- приглашения в дуэль: документ invites/{кому}_{от кого} ---- */
   const SUBJ_OK = ['math', 'rus', 'soc', 'bio', 'phys'];
-  async function sendInvite(toUid, code, subject) {
+  async function sendInvite(toUid, code, subject, stake) {
     if (!user) throw new Error('Войдите через Google');
     if (SUBJ_OK.indexOf(subject) < 0) throw new Error('Неизвестный предмет');
     await db.collection('invites').doc(toUid + '_' + user.uid).set({
       from: user.uid, to: toUid, fromName: (Profile.me.name || 'Игрок').slice(0, 24), fromTag: Profile.me.tag || '',
-      code: String(code).slice(0, 8), subject, createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+      code: String(code).slice(0, 8), subject, stake: Math.max(0, Math.min(100000, Math.floor(+stake || 0))), createdAt: firebase.firestore.FieldValue.serverTimestamp(),
     });
   }
   function cancelInvite(toUid) {
@@ -8312,7 +8397,7 @@ var Cloud = (function () {
         const at = x.createdAt && x.createdAt.toMillis ? x.createdAt.toMillis() : Date.now();
         if (Date.now() - at > 15 * 60000) { dropInvite(d.id); return; } // старые приглашения убираем
         if (SUBJ_OK.indexOf(x.subject) < 0 || !/^[0-9A-Z]{4,8}$/.test(String(x.code || ''))) return;
-        list.push({ id: d.id, from: x.from, name: String(x.fromName || 'Игрок').slice(0, 24), tag: String(x.fromTag || ''), code: x.code, subject: x.subject });
+        list.push({ id: d.id, from: x.from, name: String(x.fromName || 'Игрок').slice(0, 24), tag: String(x.fromTag || ''), code: x.code, subject: x.subject, stake: Math.max(0, Math.min(100000, Math.floor(+x.stake || 0))) });
       });
       if (inviteCb) inviteCb(list);
     }, () => {});
@@ -8992,6 +9077,9 @@ var WinFx = (function () {
       };
       let role = roleOf(m.pid);
       if (!role && S.phase === 'lobby') {
+        // на ставку не хватает звёзд — не пускаем (старые версии сайта звёзды не присылают)
+        const need = roomStake(S);
+        if (need && m.stars !== undefined && (Math.floor(+m.stars) || 0) < need) { g.link.send('h2g', { type: 'nostars', pub, need }); return; }
         role = seats(S).find((r) => r !== 'host' && !S.players[r]);
         if (!role) return;
         S.players[role] = { pub, name: String(m.name || 'Соперник').slice(0, 24), lives: S.settings.lives, answered: false, ready: false };
@@ -9056,6 +9144,7 @@ var WinFx = (function () {
         const now = Date.now(), rtt = now - m.t;
         if (rtt < g.bestRtt + 30) { g.bestRtt = Math.min(g.bestRtt, rtt); g.offset = m.h - (m.t + rtt / 2); }
       }
+      if (m && m.type === 'nostars' && m.pub === pub && !g.joined && app.game === g) leaveGame(true, noStarsMsg(+m.need || 0));
     });
     link.on('presence/host', (v) => { g.oppOnline = v === '1'; g.online.host = g.oppOnline; render(); });
     ALL_ROLES.forEach((r) => link.on('profile/' + r, (p) => { if (p && typeof p === 'object') { g.profiles[r] = Profile.sanitize(p); render(); } }));
@@ -9088,6 +9177,7 @@ var WinFx = (function () {
     if (!mine) {
       const full = seats(S).every((r) => S.players[r]);
       if (g.joined) return;
+      if (S.phase === 'lobby' && roomStake(S) > myStars()) { leaveGame(true, noStarsMsg(roomStake(S))); return; }
       if (full) { leaveGame(true, isTrio(S) ? 'В этой комнате уже собрались три игрока.' : 'В этой комнате уже идёт игра с другим участником.'); return; }
       g.S = S; render(); return; // ещё не приняты
     }
@@ -9207,7 +9297,7 @@ var WinFx = (function () {
     }
   }
 
-  function joinMsg(g) { return { type: 'join', pid: g.pid, pub: g.pub, name: app.name.trim().slice(0, 24), profile: Profile.shared() }; }
+  function joinMsg(g) { return { type: 'join', pid: g.pid, pub: g.pub, name: app.name.trim().slice(0, 24), profile: Profile.shared(), stars: myStars() }; }
 
   // ---- восстановление после перезагрузки страницы ----
   async function resume() {
@@ -9242,17 +9332,43 @@ var WinFx = (function () {
   }
 
   /* ---------- настройки ---------- */
-  // Ставка в дуэли/трио: победитель получает ставку, у проигравшего списывается половина
+  // Ставка в дуэли/трио: победитель получает ставку, проигравший теряет её целиком.
+  // 0 — игра без ставки: победителю +NOSTAKE_WIN, проигравший ничего не теряет.
   const STAKE_DEF = { duel: 100, trio: 175 };
   const STAKE_MIN = 10, STAKE_MAX = 100000;
-  const STAKE_OPTS = [10, 50, 100, 175, 250, 500, 1000];
-  const stakeOf = (d, key) => Math.max(STAKE_MIN, Math.min(STAKE_MAX, Math.round(+(d && d.stake) || STAKE_DEF[key] || 100)));
-  const lossOf = (stake) => Math.floor(stake / 2);
+  const STAKE_OPTS = [0, 10, 50, 100, 175, 250, 500, 1000];
+  const NOSTAKE_WIN = 25;
+  const myStars = () => Profile.me.stars | 0;
+  // ставка из черновика настроек; если её ещё не выбирали — стандартная, а когда на неё не хватает звёзд — без ставки
+  function stakeOf(d, key) {
+    const v = d && d.stake;
+    if (v === 0 || v === '0') return 0;
+    if (v === undefined || v === null || v === '') { const def = STAKE_DEF[key] || 100; return myStars() >= def ? def : 0; }
+    return Math.max(STAKE_MIN, Math.min(STAKE_MAX, Math.round(+v || STAKE_DEF[key] || 100)));
+  }
+  // ставка уже созданной комнаты (её задал хозяин)
+  const roomStake = (S) => Math.max(0, Math.min(STAKE_MAX, Math.round(+(S && S.settings && S.settings.stake) || 0)));
+  const lossOf = (stake) => stake;
+  // 1300 → «1,3к», 25 000 → «25к», 1 500 000 → «1,5м» (округляем вниз, чтобы не показывать больше, чем есть)
+  function fmtStars(n) {
+    n = Math.floor(+n || 0);
+    const a = Math.abs(n), sg = n < 0 ? '−' : '';
+    if (a < 1000) return sg + a;
+    const d = a < 1e6 ? 1e3 : 1e6, u = a < 1e6 ? 'к' : 'м';
+    const v = a / d, dec = v < 10 ? 2 : v < 100 ? 1 : 0;
+    let t = (Math.floor(v * Math.pow(10, dec)) / Math.pow(10, dec)).toFixed(dec);
+    if (dec) t = t.replace(/0+$/, '').replace(/\.$/, '');
+    return sg + t.replace('.', ',') + u;
+  }
+  const noStarsMsg = (need) => `Недостаточно звёзд: ставка в этой комнате ⭐ ${fmtStars(need)}, а у вас ⭐ ${fmtStars(myStars())}.`;
   const FLASH_STAR = 5; // Флеш: за каждую верно решённую задачу
 
   function validSettings(d, key) {
     const st = { time: Math.max(0, Math.min(3600, Math.round(+d.time || 0))), lives: +d.lives === 0 ? 0 : Math.max(1, Math.min(10, Math.round(+d.lives || 3))), rounds: Math.max(0, Math.min(100, Math.round(+d.rounds || 0))), mode: d.mode === 'pick' ? 'pick' : 'all', subject: app.subject, nums: (d.nums || []).filter((x) => x >= 1 && x <= SUBJ[app.subject].count), order: d.order === 'seq' ? 'seq' : 'random' };
-    if (key === 'duel' || key === 'trio') st.stake = stakeOf(d, key);
+    if (key === 'duel' || key === 'trio') {
+      st.stake = stakeOf(d, key);
+      if (st.stake > myStars()) { toast(`Недостаточно звёзд для ставки ⭐ ${fmtStars(st.stake)} — у вас ⭐ ${fmtStars(myStars())}`); return null; }
+    }
     if (st.mode === 'pick' && !st.nums.length) { toast('Выберите хотя бы один номер задания'); return null; }
     return st;
   }
@@ -9262,12 +9378,15 @@ var WinFx = (function () {
     const custom = TIME_OPTS.indexOf(+d.time) < 0;
     let s = '';
     if (key === 'duel' || key === 'trio') {
-      const sk = stakeOf(d, key), sCustom = STAKE_OPTS.indexOf(sk) < 0;
-      s += `<div class="field stake-field"><span class="lbl">Ставка ⭐</span><div class="chips">`;
-      STAKE_OPTS.forEach((v) => { s += `<button type="button" class="chip ${sk === v ? 'on' : ''}" data-set="stake" data-v="${v}">⭐ ${v}</button>`; });
-      s += `<button type="button" class="chip ${sCustom ? 'on' : ''}" data-set="stake-custom">Своя…</button></div>`;
-      s += `<div class="row ${sCustom ? '' : 'hide'}" style="margin-top:8px"><input class="input" style="max-width:130px" type="number" min="${STAKE_MIN}" max="${STAKE_MAX}" data-set="stake-num" value="${sk}"> <span class="muted">звёзд (не меньше ${STAKE_MIN})</span></div>`;
-      s += `<div class="hint">Победитель получит <b>+${sk} ⭐</b>, у ${key === 'trio' ? 'каждого проигравшего' : 'проигравшего'} спишется <b>−${lossOf(sk)} ⭐</b> — в 2 раза меньше. Ниже нуля звёзды не уходят.${key === 'trio' ? ' При общем первом месте делящие его остаются при своих.' : ' При ничьей звёзды не меняются.'}</div></div>`;
+      const sk = stakeOf(d, key), bal = myStars(), sCustom = STAKE_OPTS.indexOf(sk) < 0;
+      s += `<div class="field stake-field"><span class="lbl">Ставка ⭐ <span class="stake-bal">у вас ⭐ ${fmtStars(bal)}</span></span><div class="chips">`;
+      STAKE_OPTS.forEach((v) => { const no = v > bal; s += `<button type="button" class="chip ${sk === v ? 'on' : ''}${no ? ' no' : ''}" data-set="stake" data-v="${v}"${no ? ' disabled title="Недостаточно звёзд"' : ''}>${v ? '⭐ ' + fmtStars(v) : 'Без ставки'}</button>`; });
+      s += `<button type="button" class="chip ${sCustom ? 'on' : ''}" data-set="stake-custom"${bal < STAKE_MIN ? ' disabled title="Недостаточно звёзд"' : ''}>Своя…</button></div>`;
+      s += `<div class="row ${sCustom ? '' : 'hide'}" style="margin-top:8px"><input class="input" style="max-width:130px" type="number" min="${STAKE_MIN}" max="${Math.max(STAKE_MIN, Math.min(STAKE_MAX, bal))}" data-set="stake-num" value="${sk}"> <span class="muted">звёзд (от ${STAKE_MIN} до ${fmtStars(Math.max(STAKE_MIN, Math.min(STAKE_MAX, bal)))})</span></div>`;
+      if (sk > bal) s += `<div class="notice bad" style="margin-top:8px">Недостаточно звёзд для ставки ⭐ ${fmtStars(sk)}. Выберите ставку поменьше или играйте без ставки.</div>`;
+      s += sk
+        ? `<div class="hint">Победитель получит <b>+${fmtStars(sk)} ⭐</b>, ${key === 'trio' ? 'каждый проигравший' : 'проигравший'} потеряет <b>−${fmtStars(lossOf(sk))} ⭐</b> — всю ставку. Поставить можно не больше, чем у вас есть; игрок, у которого звёзд меньше ставки, войти не сможет.${key === 'trio' ? ' При общем первом месте делящие его остаются при своих.' : ' При ничьей звёзды не меняются.'}</div></div>`
+        : `<div class="hint">Без ставки: победитель получит <b>+${NOSTAKE_WIN} ⭐</b>, проигравший ничего не теряет.</div></div>`;
     }
     s += `<div class="field"><span class="lbl">Время на ответ</span><div class="chips">`;
     TIME_OPTS.forEach((v) => { s += `<button type="button" class="chip ${+d.time === v ? 'on' : ''}" data-set="time" data-v="${v}">${v ? v / 60 + ' мин' : 'Без лимита'}</button>`; });
@@ -9317,7 +9436,7 @@ var WinFx = (function () {
     else if (k === 'lives-inf') d.lives = +d.lives === 0 ? 3 : 0;
     else if (k === 'rounds') d.rounds = +v;
     else if (k === 'stake') d.stake = +v;
-    else if (k === 'stake-custom') { if (STAKE_OPTS.indexOf(stakeOf(d, key)) >= 0) d.stake = 300; }
+    else if (k === 'stake-custom') { if (STAKE_OPTS.indexOf(stakeOf(d, key)) >= 0) d.stake = Math.max(STAKE_MIN, Math.min(300, myStars())); }
     else if (k === 'rounds-custom') { if ([0, 5, 10, 20, 30, 50, 100].indexOf(+d.rounds || 0) >= 0) d.rounds = 15; }
     else if (k === 'mode') d.mode = v;
     else if (k === 'order') d.order = v;
@@ -9442,9 +9561,9 @@ var WinFx = (function () {
     const pb = $('#pts-btn');
     if (pb) {
       const n = Profile.me.stars | 0;
-      pb.querySelector('b').textContent = n.toLocaleString('ru-RU');
+      pb.querySelector('b').textContent = fmtStars(n);
       pb.setAttribute('aria-label', 'Звёзды: ' + n + '. Открыть магазин');
-      pb.title = 'Звёзды — открыть магазин';
+      pb.title = 'Звёзды: ' + n.toLocaleString('ru-RU') + ' — открыть магазин';
       pb.classList.toggle('on', app.tab === 'shop');
     }
     const b = $('#me-btn');
@@ -9639,19 +9758,20 @@ var WinFx = (function () {
   }
 
   const resKey = (S, me) => (S.code || 'solo') + ':' + (S.id || '') + ':' + (S.gameNo || 1) + ':' + me;
-  function stakeLabel(S) { const k = stakeOf(S.settings, isTrio(S) ? 'trio' : 'duel'); return `⭐ ${k} (проигравший −${lossOf(k)})`; }
-  // сколько звёзд положено за конец игры: Флеш — 5 за верную задачу; дуэль/трио — ставка или минус половина
+  function stakeLabel(S) { const k = roomStake(S); return k ? `⭐ ${fmtStars(k)} (проигравший −${fmtStars(lossOf(k))})` : `без ставки (победителю +${NOSTAKE_WIN} ⭐)`; }
+  // сколько звёзд положено за конец игры: Флеш — 5 за верную задачу; дуэль/трио — ставка за победу и минус ставка за поражение,
+  // без ставки — +NOSTAKE_WIN за победу и ничего за поражение
   function starsFor(S, me) {
     if (isSolo(S)) return S.history.filter((h) => h[me]).length * FLASH_STAR;
-    const stake = stakeOf(S.settings, isTrio(S) ? 'trio' : 'duel');
+    const stake = roomStake(S);
     if (S.reason === 'closed') return 0;
-    if (S.winner === me) return stake;
+    if (S.winner === me) return stake || NOSTAKE_WIN;
     if (S.winner === 'draw') {
       if (!isTrio(S)) return 0;
       const mine = standings(S).find((x) => x.r === me);
-      return mine && mine.place === 1 ? 0 : -lossOf(stake);
+      return mine && mine.place === 1 || !stake ? 0 : -lossOf(stake);
     }
-    return -lossOf(stake);
+    return stake ? -lossOf(stake) : 0;
   }
   function recordResult(g) {
     const S = g.S;
@@ -9667,18 +9787,22 @@ var WinFx = (function () {
       const got = want ? Profile.addStars(want) : 0;
       app.starRes = { key, want, got };
       if (got) bumpStars(got);
-      const fx = Profile.worn('fx');
-      if (!isSolo(S) && S.winner === me && fx) setTimeout(() => WinFx.play(fx), 250);
+      // эффект победы видят все участники: свой — из инвентаря, чужой — из визитки победителя
+      if (!isSolo(S) && S.winner && S.winner !== 'draw' && S.reason !== 'closed') {
+        const wp = S.winner === me ? Profile.shared() : oppProfile(S, S.winner);
+        const fx = wp && wp.fx;
+        if (fx && Profile.SHOP_BY[fx]) setTimeout(() => WinFx.play(fx), 250);
+      }
     }
   }
   // строка про звёзды на экране итогов
   function starResHTML(S) {
     const r = app.starRes;
     if (!r || r.key !== resKey(S, myRole())) return '';
-    if (isSolo(S)) return r.got ? `<div class="star-res up">+${r.got} ⭐ <small>по ${FLASH_STAR} за верную задачу</small></div>` : `<div class="star-res"><small>Во Флеше — по ${FLASH_STAR} ⭐ за каждую верную задачу</small></div>`;
-    if (r.want > 0) return `<div class="star-res up">+${r.got} ⭐ <small>за победу</small></div>`;
-    if (r.want < 0) return r.got ? `<div class="star-res down">${r.got} ⭐ <small>${-r.got < -r.want ? 'списано всё, что было' : 'за поражение'}</small></div>` : '<div class="star-res"><small>Звёзд и так 0 — списывать нечего</small></div>';
-    return '<div class="star-res"><small>Ничья — звёзды не изменились</small></div>';
+    if (isSolo(S)) return r.got ? `<div class="star-res up">+${fmtStars(r.got)} ⭐ <small>по ${FLASH_STAR} за верную задачу</small></div>` : `<div class="star-res"><small>Во Флеше — по ${FLASH_STAR} ⭐ за каждую верную задачу</small></div>`;
+    if (r.want > 0) return `<div class="star-res up">+${fmtStars(r.got)} ⭐ <small>за победу${roomStake(S) ? '' : ' без ставки'}</small></div>`;
+    if (r.want < 0) return r.got ? `<div class="star-res down">${fmtStars(r.got)} ⭐ <small>${-r.got < -r.want ? 'списано всё, что было' : 'за поражение'}</small></div>` : '<div class="star-res"><small>Звёзд и так 0 — списывать нечего</small></div>';
+    return `<div class="star-res"><small>${S.winner === 'draw' || S.reason === 'closed' ? 'Ничья — звёзды не изменились' : 'Игра без ставки — звёзды не списаны'}</small></div>`;
   }
   function bumpStars(d) {
     renderHeaderAvatar();
@@ -9686,6 +9810,11 @@ var WinFx = (function () {
     if (!b) return;
     b.classList.remove('bump', 'up', 'down'); void b.offsetWidth;
     b.classList.add('bump', d > 0 ? 'up' : 'down');
+    const f = document.createElement('span');
+    f.className = 'pts-float ' + (d > 0 ? 'up' : 'down');
+    f.textContent = (d > 0 ? '+' : '') + fmtStars(d);
+    b.appendChild(f);
+    setTimeout(() => f.remove(), 1300);
   }
 
   /* ======================================================================
@@ -9883,8 +10012,9 @@ var WinFx = (function () {
           </section>
           <section class="card">
             <h3>🎨 Оформление</h3>
-            <div class="lbl" style="margin:4px 0 8px">Цвет карточки</div>
-            <div class="card-colors">${Profile.CARDS.map((c, i) => `<button type="button" class="cc${(Profile.me.card | 0) === i ? ' on' : ''}${c ? '' : ' none'}" data-card="${i}" style="${c ? '--pc:' + c : ''}" title="${c ? 'Цвет ' + i : 'Стандартный'}" aria-label="${c ? 'Цвет ' + i : 'Стандартный цвет'}"></button>`).join('')}</div>
+            <div class="lbl" style="margin:4px 0 8px">Карточка профиля: цвет или карточка из магазина</div>
+            <div class="card-colors" id="card-pick">${Profile.CARDS.map((c, i) => `<button type="button" class="cc${!Profile.worn('pv') && (Profile.me.card | 0) === i ? ' on' : ''}${c ? '' : ' none'}" data-card="${i}" style="${c ? '--pc:' + c : ''}" title="${c ? 'Цвет ' + i : 'Стандартный'}" aria-label="${c ? 'Цвет ' + i : 'Стандартный цвет'}"></button>`).join('')}${pvPickHTML()}</div>
+            ${Profile.SHOP.some((it) => it.slot === 'pv' && Profile.ownCount(it.id)) ? '' : '<div class="hint">Карточки из магазина (раздел «🖼️ Карточки») тоже появятся здесь — профиль будет оформлен ими целиком.</div>'}
             <div class="lbl" style="margin:16px 0 8px">Цвет плиток статистики</div>
             <div class="card-colors">${Profile.CARDS.map((c, i) => `<button type="button" class="cc${(Profile.me.tile | 0) === i ? ' on' : ''}${c ? '' : ' none'}" data-tile="${i}" style="${c ? '--pc:' + c : ''}" title="${c ? 'Цвет ' + i : 'Стандартный'}" aria-label="${c ? 'Цвет плиток ' + i : 'Стандартный цвет плиток'}"></button>`).join('')}</div>
           </section>
@@ -9950,10 +10080,19 @@ var WinFx = (function () {
       app.peKey = true;
       document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && $('#pe-drawer.open') && !$('.modal.show')) $('#pe-close').click(); });
     }
+    const pickOn = (b) => $$('[data-card], [data-pvsel]').forEach((x) => x.classList.toggle('on', x === b));
     $$('[data-card]').forEach((b) => (b.onclick = () => {
-      Profile.me.card = +b.dataset.card; Profile.save();
-      $$('[data-card]').forEach((x) => x.classList.toggle('on', x === b));
-      updateProfilePreview();
+      Profile.me.card = +b.dataset.card;
+      Profile.equip('pv', null); // цвет вместо карточки
+      pickOn(b);
+      updateProfilePreview(); renderHeaderAvatar();
+    }));
+    $$('[data-pvsel]').forEach((b) => (b.onclick = () => {
+      Profile.me.card = 0;
+      Profile.equip('pv', b.dataset.pvsel); // карточка вместо цвета
+      pickOn(b);
+      updateProfilePreview(); renderHeaderAvatar();
+      toast('Карточка «' + Profile.SHOP_BY[b.dataset.pvsel].name + '» надета — нажмите «Посмотреть профиль»');
     }));
     if ($('#inv-btn')) $('#inv-btn').onclick = openInventory;
     if ($('#view-me')) $('#view-me').onclick = () => showProfileModal(Object.assign({ uid: Cloud.user ? Cloud.user.uid : '', self: true, online: true }, Profile.sanitizePublic(Profile.publicData())));
@@ -10114,13 +10253,14 @@ var WinFx = (function () {
     if (!iv) return;
     app.invite = null;
     app.invitedUid = iv.uid;
-    Cloud.sendInvite(iv.uid, code, iv.subject).then(() => toast('Приглашение отправлено: ' + iv.name)).catch((e) => toast('Не удалось отправить приглашение: ' + (e.message || e)));
+    Cloud.sendInvite(iv.uid, code, iv.subject, app.game && app.game.S ? roomStake(app.game.S) : 0).then(() => toast('Приглашение отправлено: ' + iv.name)).catch((e) => toast('Не удалось отправить приглашение: ' + (e.message || e)));
   }
   let invList = [];
   const invHidden = {};
   const visibleInvites = () => invList.filter((x) => !invHidden[x.id + x.code]);
   function declineInvite(iv) { invHidden[iv.id + iv.code] = 1; Cloud.dropInvite(iv.id); showInvites(invList); }
   function acceptInvite(iv) {
+    if ((iv.stake | 0) > myStars()) { toast(`Недостаточно звёзд: ставка ⭐ ${fmtStars(iv.stake)}, а у вас ⭐ ${fmtStars(myStars())}`); return; }
     if (app.game && app.game.S && app.game.S.phase !== 'over') { toast('Сначала завершите текущую игру'); return; }
     if (app.game) leaveGame(true);
     stopWatch();
@@ -10130,6 +10270,8 @@ var WinFx = (function () {
     app.subject = iv.subject; app.tab = 'duel';
     joinRoom(iv.code);
   }
+  const ivStake = (iv) => (iv.stake ? ` · ставка ⭐ ${fmtStars(iv.stake)}` : ' · без ставки');
+  const ivPoor = (iv) => (iv.stake | 0) > myStars();
   function showInvites(list) {
     invList = list || [];
     invList.forEach((x) => needProfile(x.from));
@@ -10139,8 +10281,8 @@ var WinFx = (function () {
     if (!iv || app.bellOpen) { if (box) box.remove(); return; }
     if (!box) { box = document.createElement('div'); box.id = 'invite-pop'; box.className = 'invite-pop card'; document.body.appendChild(box); }
     box.innerHTML = `<div class="ip-title">⚔️ Приглашение в дуэль</div>
-      <div class="ip-text"><b>${esc(iv.name)}</b>${iv.tag ? ' <span class="muted">#' + esc(iv.tag) + '</span>' : ''} зовёт вас сразиться · ${SUBJ_ICON[iv.subject]} ${SUBJ_NAME[iv.subject]}</div>
-      <div class="actions" style="margin-top:10px"><button type="button" class="btn" id="ip-yes">Принять</button><button type="button" class="btn ghost" id="ip-no">Отклонить</button></div>`;
+      <div class="ip-text"><b>${esc(iv.name)}</b>${iv.tag ? ' <span class="muted">#' + esc(iv.tag) + '</span>' : ''} зовёт вас сразиться · ${SUBJ_ICON[iv.subject]} ${SUBJ_NAME[iv.subject]}${ivStake(iv)}</div>
+      <div class="actions" style="margin-top:10px"><button type="button" class="btn" id="ip-yes"${ivPoor(iv) ? ' disabled' : ''}>${ivPoor(iv) ? 'Недостаточно звёзд' : 'Принять'}</button><button type="button" class="btn ghost" id="ip-no">Отклонить</button></div>`;
     $('#ip-no').onclick = () => declineInvite(iv);
     $('#ip-yes').onclick = () => acceptInvite(iv);
   }
@@ -10157,7 +10299,24 @@ var WinFx = (function () {
     if (fresh.length && app.freqReady) { toast('👤 ' + fresh[0].name + ' хочет добавить вас в друзья'); ringBell(); }
     app.freqReady = true; // о заявках, которые уже были при входе, не шумим
   }
-  function bellCount() { return freqList.length + visibleInvites().length; }
+  // краткая заметка об обновлении: висит в колокольчике, пока её не закроют
+  const PATCH_ID = '0.30';
+  const patchSeen = () => { try { return localStorage.getItem('egeduel:patch') === PATCH_ID; } catch (e) { return false; } };
+  function patchHTML() {
+    if (patchSeen()) return '';
+    return `<div class="bn-item bn-patch">
+        <div class="bn-what">🆕 Обновление · патч ${PATCH_ID}</div>
+        <div class="bn-ptitle">🛒 Магазин за звёзды</div>
+        <ul class="bn-plist">
+          <li>Кнопка <b>⭐</b> в шапке открывает магазин: мини-профили, карточки, эффекты победы, рамки, слайды и апгрейдер.</li>
+          <li>Звёзды дают за Флеш (+${FLASH_STAR} за верную задачу) и за победы в дуэлях и трио.</li>
+          <li>Дуэль можно кинуть со ставкой или без: без ставки победитель получает +${NOSTAKE_WIN} ⭐, со ставкой — забирает ставку.</li>
+          <li>Купленное лежит в 🎒 Инвентаре в профиле — там же его можно надеть.</li>
+        </ul>
+        <div class="bn-act"><button type="button" class="btn" id="bn-patch-shop">Открыть магазин</button><button type="button" class="btn ghost" id="bn-patch-ok">Понятно</button></div>
+      </div>`;
+  }
+  function bellCount() { return freqList.length + visibleInvites().length + (patchSeen() ? 0 : 1); }
   function ringBell() {
     const b = $('#bell-btn');
     if (!b || matchMedia('(prefers-reduced-motion: reduce)').matches) return;
@@ -10192,18 +10351,19 @@ var WinFx = (function () {
     return `<div class="bn-text"><b>${esc(name)}</b>${tag ? ' <span class="muted">#' + esc(tag) + '</span>' : ''}</div>`;
   }
   function bellHTML() {
-    if (!Cloud.user) return '<div class="bn-head">Уведомления</div><div class="bn-empty">Войдите через Google, чтобы получать заявки в друзья и приглашения в дуэль.</div>';
+    if (!Cloud.user) return `<div class="bn-head">Уведомления</div>${patchHTML()}<div class="bn-empty">Войдите через Google, чтобы получать заявки в друзья и приглашения в дуэль.</div>`;
     const reqs = freqList.map((r) => `<div class="bn-item">
         <div class="bn-what">👤 Хочет добавить вас в друзья</div>
         ${bnCard(r.from, r.name, r.tag)}
         <div class="bn-act"><button type="button" class="btn" data-fr-yes="${esc(r.id)}">Принять</button><button type="button" class="btn ghost" data-fr-no="${esc(r.id)}">Отклонить</button></div>
       </div>`).join('');
     const invs = visibleInvites().map((iv) => `<div class="bn-item">
-        <div class="bn-what">⚔️ Зовёт вас в дуэль · ${SUBJ_ICON[iv.subject]} ${SUBJ_NAME[iv.subject]}</div>
+        <div class="bn-what">⚔️ Зовёт вас в дуэль · ${SUBJ_ICON[iv.subject]} ${SUBJ_NAME[iv.subject]}${ivStake(iv)}</div>
         ${bnCard(iv.from, iv.name, iv.tag)}
-        <div class="bn-act"><button type="button" class="btn" data-iv-yes="${esc(iv.id)}">Принять</button><button type="button" class="btn ghost" data-iv-no="${esc(iv.id)}">Отклонить</button></div>
+        <div class="bn-act"><button type="button" class="btn" data-iv-yes="${esc(iv.id)}"${ivPoor(iv) ? ' disabled title="Недостаточно звёзд"' : ''}>${ivPoor(iv) ? 'Недостаточно звёзд' : 'Принять'}</button><button type="button" class="btn ghost" data-iv-no="${esc(iv.id)}">Отклонить</button></div>
       </div>`).join('');
-    return `<div class="bn-head">Уведомления</div>${reqs || invs ? invs + reqs : '<div class="bn-empty">🔕 Новых уведомлений нет</div>'}`;
+    const pt = patchHTML();
+    return `<div class="bn-head">Уведомления</div>${reqs || invs || pt ? invs + reqs + pt : '<div class="bn-empty">🔕 Новых уведомлений нет</div>'}`;
   }
   async function acceptFreq(r) {
     await Cloud.acceptFriend(r.id, r.from);
@@ -10219,6 +10379,9 @@ var WinFx = (function () {
     const p = $('#bell-pop');
     if (!p) return;
     p.innerHTML = bellHTML();
+    const seePatch = () => { try { localStorage.setItem('egeduel:patch', PATCH_ID); } catch (e) {} updateBell(); };
+    if ($('#bn-patch-ok', p)) $('#bn-patch-ok', p).onclick = () => { seePatch(); renderBell(); };
+    if ($('#bn-patch-shop', p)) $('#bn-patch-shop', p).onclick = () => { seePatch(); closeBell(); app.tab = 'shop'; render(); animatePage(); window.scrollTo(0, 0); };
     $$('[data-fr-yes]', p).forEach((b) => (b.onclick = async () => {
       const r = freqList.find((x) => x.id === b.dataset.frYes);
       if (!r) return;
@@ -10311,11 +10474,23 @@ var WinFx = (function () {
       <div id="friends-list"><div class="waiting"><span class="dot-pulse"></span> Загружаем друзей…</div></div>`;
   }
 
+  // купленные карточки как варианты рядом с цветами
+  function pvPickHTML() {
+    const w = Profile.worn('pv');
+    return Profile.SHOP.filter((it) => it.slot === 'pv' && Profile.ownCount(it.id)).map((it) => `<button type="button" class="cc pvsw${w === it.id ? ' on' : ''}" data-pvsel="${it.id}" title="Карточка «${esc(it.name)}»" aria-label="Карточка ${esc(it.name)}"><span class="pvt ${it.id}"></span></button>`).join('');
+  }
   function tileAttr(p) { const c = p && Profile.CARDS[Math.max(0, Math.min(16, p.tile | 0))]; return c ? ` style="--tc:${c}" data-tc` : ''; }
   function cardColor(fp) { return (fp && Profile.CARDS[Math.max(0, Math.min(16, fp.card | 0))]) || null; }
-  function friendRow(fp) {
+  // оформление строки: купленный «слайд» важнее цвета карточки
+  function rowSkin(fp) {
+    const sl = fp && Profile.SHOP_BY[fp.sl] && Profile.SHOP_BY[fp.sl].slot === 'sl' ? fp.sl : null;
+    if (sl) return { cls: ' sl ' + sl, attr: '' };
     const cc = cardColor(fp);
-    return `<div class="friend-row${cc ? ' tinted' : ''}"${cc ? ` style="--pc:${cc}"` : ''} role="button" tabindex="0" data-friend="${esc(fp.uid)}">${Profile.avatar(fp, 40)}<span class="fr-main"><b>${esc(fp.name)}</b><span class="muted"><span class="fr-st ${fp.online ? 'on' : ''}">${statusHTML(fp)}</span> · #${esc(fp.tag || '')}${fp.stats && fp.stats.streak ? ' · 🔥 ' + fp.stats.streak : ''}</span></span>${fp.online && fp.play ? `<button type="button" class="btn soft fr-inv fr-watch" data-watch="${esc(fp.uid)}" title="Наблюдать за матчем: ${esc(fp.play.vs)}">👁 Смотреть</button>` : fp.online ? `<button type="button" class="btn soft fr-inv" data-invite="${esc(fp.uid)}">⚔️ Позвать</button>` : ''}<span class="fr-go">›</span></div>`;
+    return cc ? { cls: ' tinted', attr: ` style="--pc:${cc}"` } : { cls: '', attr: '' };
+  }
+  function friendRow(fp) {
+    const sk = rowSkin(fp);
+    return `<div class="friend-row${sk.cls}"${sk.attr} role="button" tabindex="0" data-friend="${esc(fp.uid)}">${Profile.avatar(fp, 40)}<span class="fr-main"><b>${esc(fp.name)}</b><span class="muted"><span class="fr-st ${fp.online ? 'on' : ''}">${statusHTML(fp)}</span> · #${esc(fp.tag || '')}${fp.stats && fp.stats.streak ? ' · 🔥 ' + fp.stats.streak : ''}</span></span>${fp.online && fp.play ? `<button type="button" class="btn soft fr-inv fr-watch" data-watch="${esc(fp.uid)}" title="Наблюдать за матчем: ${esc(fp.play.vs)}">👁 Смотреть</button>` : fp.online ? `<button type="button" class="btn soft fr-inv" data-invite="${esc(fp.uid)}">⚔️ Позвать</button>` : ''}<span class="fr-go">›</span></div>`;
   }
 
   async function loadFriends() {
@@ -10366,7 +10541,7 @@ var WinFx = (function () {
     return { el: m, close };
   }
 
-  function profileBlock(fp) {
+  function profileBlock(fp, tail) {
     const st = fp.stats || {};
     return `<div class="pview${fp.pv ? ' pvt ' + fp.pv : ''}">
       ${Profile.avatar(fp, 84)}
@@ -10382,6 +10557,7 @@ var WinFx = (function () {
         ${favTile(fp.fav || null)}
       </div>
       <div class="pview-show"><h3 style="margin:14px 0 6px">🏅 Витрина достижений</h3>${achShowHTML(fp.ach, false, fp.show)}</div>
+      ${tail || ''}
     </div>`;
   }
 
@@ -10393,10 +10569,16 @@ var WinFx = (function () {
       : freq ? '<button type="button" class="btn" id="fr-yes">✓ Принять заявку</button><button type="button" class="btn ghost" id="fr-no">Отклонить</button>'
       : isFriend ? (fp.online && fp.play ? '<button type="button" class="btn" id="fr-watch">👁 Смотреть матч</button>' : fp.online ? '<button type="button" class="btn" id="fr-invite">⚔️ Позвать в дуэль</button>' : '') + '<button type="button" class="btn danger" id="fr-remove">Удалить из друзей</button>'
       : '<button type="button" class="btn" id="fr-add">＋ Добавить в друзья</button>';
-    const m = modal(`<div class="row" style="justify-content:flex-end"><button type="button" class="modal-x" data-close aria-label="Закрыть">×</button></div>${profileBlock(fp)}${btn ? `<div class="actions" style="justify-content:center">${btn}</div>` : ''}`);
+    const acts = btn ? `<div class="actions" style="justify-content:center">${btn}</div>` : '';
+    // карточка из магазина занимает всё окно; иначе — обычное окно с цветом карточки
+    const pvOk = fp.pv && Profile.SHOP_BY[fp.pv] && Profile.SHOP_BY[fp.pv].slot === 'pv';
+    const m = pvOk
+      ? modal(`<button type="button" class="modal-x pv-x" data-close aria-label="Закрыть">×</button>${profileBlock(fp, acts)}`)
+      : modal(`<div class="row" style="justify-content:flex-end"><button type="button" class="modal-x" data-close aria-label="Закрыть">×</button></div>${profileBlock(fp)}${acts}`);
     m.el.classList.add('anim'); // плавное появление профиля
     const cc = cardColor(fp), box = $('.modal-box', m.el);
-    if (cc && box) { box.classList.add('tinted'); box.style.setProperty('--pc', cc); }
+    if (pvOk && box) box.classList.add('pvhost');
+    else if (cc && box) { box.classList.add('tinted'); box.style.setProperty('--pc', cc); }
     const add = $('#fr-add', m.el), rem = $('#fr-remove', m.el), inv = $('#fr-invite', m.el), wt = $('#fr-watch', m.el);
     if (inv) inv.onclick = () => { m.close(); openInviteModal(fp); };
     if (wt) wt.onclick = () => { m.close(); watchMatch(fp); };
@@ -10884,9 +11066,15 @@ var WinFx = (function () {
     { id: 'pv', name: 'Карточки', icon: '🖼️', lead: 'Оформление большого профиля — того, что открывается, когда нажимают на ваш профиль. Нажмите на товар, чтобы увидеть его целиком.' },
     { id: 'fx', name: 'Эффекты победы', icon: '✨', lead: 'Проигрываются на весь экран, когда вы побеждаете в дуэли или трио.' },
     { id: 'frame', name: 'Рамки аватаров', icon: '💫', lead: 'Рамка вокруг аватара — в шапке, в профиле, в дуэлях и в таблице лидеров.' },
+    { id: 'sl', name: 'Слайд', icon: '🎞️', lead: 'Оформление вашей строки в таблице лидеров и в списке друзей у других игроков. Нажмите на товар, чтобы посмотреть его в деле.' },
     { id: 'up', name: 'Апгрейдер', icon: '🎰', lead: 'Поставьте свои предметы и крутите колесо: повезёт — получите предмет дороже, нет — поставленное сгорит. Чем дороже цель, тем меньше шанс.' },
   ];
-  const SLOT_NAME = { frame: 'Рамка аватара', bg: 'Мини-профиль', pv: 'Карточка профиля', fx: 'Эффект победы' };
+  const SLOT_NAME = { frame: 'Рамка аватара', bg: 'Мини-профиль', pv: 'Карточка профиля', fx: 'Эффект победы', sl: 'Слайд' };
+  const UP_TAB = () => SHOP_TABS.find((t) => t.id === 'up');
+  // строка друга/лидера с оформлением «слайд» (для витрины)
+  function slRowHTML(fp, id, top) {
+    return `<div class="friend-row sl ${id}${top ? ' top-row' : ''}">${top ? '<span class="top-place">🥇</span>' : ''}${Profile.avatar(fp, 40)}<span class="fr-main"><b>${esc(fp.name || 'Игрок')}</b><span class="muted"><span class="fr-st on">● Онлайн</span>${fp.tag ? (top ? ' · ID ' : ' · #') + esc(fp.tag) : ''}</span></span>${top ? `<span class="top-score"><b>${(fp.stats && fp.stats.solved) || 0}</b><small>задач</small></span>` : '<span class="fr-go">›</span>'}</div>`;
+  }
   const FX_ICON = { fx_confetti: '🎉', fx_stars: '🌠', fx_fireworks: '🎆', fx_fire: '🔥', fx_storm: '⚡', fx_crown: '👑' };
   const UP_MAX_CHANCE = 0.8, UP_MAX_GIVE = 6;
   const myFp = () => Object.assign({ uid: Cloud.user ? Cloud.user.uid : '', self: true, online: true }, Profile.sanitizePublic(Profile.publicData()));
@@ -10903,20 +11091,26 @@ var WinFx = (function () {
       if (big) return `<div class="si-full">${profileBlock(Object.assign(myFp(), { pv: it.id }))}</div>`;
       return `<div class="si-pv pvt ${it.id}">${Profile.avatar(me, 46)}<i class="l1"></i><i class="l2"></i><span class="si-pv-st"><i></i><i></i><i></i><i></i></span></div>`;
     }
+    if (it.slot === 'sl') {
+      const fp = myFp();
+      if (big) return `<div class="si-slbig"><div class="si-sllbl">👥 В списке друзей</div>${slRowHTML(fp, it.id)}<div class="si-sllbl">🏆 В таблице лидеров</div>${slRowHTML(fp, it.id, true)}</div>`;
+      return `<div class="si-sl"><div class="friend-row sl ${it.id}">${Profile.avatar(me, 30)}<span class="fr-main"><b>${esc(me.name)}</b><i></i></span></div></div>`;
+    }
     return `<div class="si-fx ${it.id}"><span>${FX_ICON[it.id] || '✨'}</span><i></i><i></i><i></i><i></i><i></i></div>`;
   }
   function shopState(it) {
-    const own = (Profile.me.own || []).indexOf(it.id) >= 0;
-    return { own, worn: own && Profile.worn(it.slot) === it.id };
+    const n = Profile.ownCount(it.id), own = n > 0;
+    return { own, n, worn: own && Profile.worn(it.slot) === it.id };
   }
   function shopItemHTML(it, i) {
-    const { own, worn } = shopState(it);
-    const poor = !own && (Profile.me.stars | 0) < it.price;
-    const go = own ? (worn ? 'Снять' : 'Надеть') : Profile.SHOP_OPEN ? 'Купить' : 'Смотреть';
+    const { own, n, worn } = shopState(it);
+    const poor = myStars() < it.price;
+    const go = Profile.SHOP_OPEN ? 'Купить' : 'Смотреть';
+    const cnt = n > 1 ? ' ×' + n : '';
     return `<button type="button" class="shop-item${worn ? ' worn' : ''}${own ? ' own' : ''}" data-item="${it.id}" style="--i:${i}">
-      <div class="si-prev sp-${it.slot}">${shopPreview(it)}${worn ? '<span class="si-badge">✓ Надето</span>' : own ? '<span class="si-badge ghost">В инвентаре</span>' : ''}</div>
+      <div class="si-prev sp-${it.slot}">${shopPreview(it)}${worn ? `<span class="si-badge">✓ Надето${cnt}</span>` : own ? `<span class="si-badge ghost">В инвентаре${cnt}</span>` : ''}</div>
       <div class="si-info"><b>${esc(it.name)}</b><small>${esc(it.desc)}</small>
-        <div class="si-foot">${own ? `<span class="si-own">${worn ? 'Надето' : 'В инвентаре'}</span>` : `<span class="si-price${poor || !Profile.SHOP_OPEN ? ' poor' : ''}">⭐ ${it.price}</span>`}<span class="si-go">${go}</span></div>
+        <div class="si-foot"><span class="si-price${poor || !Profile.SHOP_OPEN ? ' poor' : ''}" title="${it.price} звёзд">⭐ ${fmtStars(it.price)}</span><span class="si-go">${go}</span></div>
       </div></button>`;
   }
   function shopBodyHTML(tab) {
@@ -10934,10 +11128,10 @@ var WinFx = (function () {
           <div class="sh-txt">
             <div class="sh-kick">⭐ Магазин за звёзды</div>
             <h1>Прокачай свой профиль</h1>
-            <p>Звёзды даются за игру: ⚡ Флеш — +${FLASH_STAR} за каждую верную задачу, ⚔️ дуэль и 👥 трио — ставка за победу. За поражение списывается половина ставки.</p>
+            <p>Звёзды даются за игру: ⚡ Флеш — +${FLASH_STAR} за каждую верную задачу, ⚔️ дуэль и 👥 трио — ставка за победу (без ставки — +${NOSTAKE_WIN}). За поражение в игре на ставку она списывается целиком.</p>
             ${Profile.SHOP_OPEN ? '' : '<div class="sh-lock">🔒 Покупки скоро откроются — пока копите звёзды и присматривайтесь к товарам</div>'}
           </div>
-          <div class="sh-bal"><small>Ваш баланс</small><b>⭐ ${stars.toLocaleString('ru-RU')}</b></div>
+          <div class="sh-bal"><small>Ваш баланс</small><b title="${stars.toLocaleString('ru-RU')} звёзд">⭐ ${fmtStars(stars)}</b></div>
           <div class="sh-deco" aria-hidden="true"><span>⭐</span><span>✨</span><span>⭐</span></div>
         </section>
         <nav class="shop-tabs" role="tablist" aria-label="Разделы магазина"><span class="shop-pill" aria-hidden="true"></span>${SHOP_TABS.map((t) => `<button type="button" role="tab" aria-selected="${t.id === tab.id}" class="${t.id === tab.id ? 'on' : ''}" data-stab="${t.id}"><span aria-hidden="true">${t.icon}</span> ${t.name}</button>`).join('')}</nav>
@@ -10983,31 +11177,39 @@ var WinFx = (function () {
   function openShopItem(id) {
     const it = Profile.SHOP_BY[id];
     if (!it) return;
-    const { own, worn } = shopState(it);
-    const stars = Profile.me.stars | 0;
+    const { own, n, worn } = shopState(it);
+    const stars = myStars();
     const need = it.price - stars;
     let act;
-    if (!own && !Profile.SHOP_OPEN) act = `<button class="btn big" disabled>🔒 Скоро в продаже · ⭐ ${it.price}</button>`;
-    else if (!own) act = need > 0 ? `<button class="btn big" disabled>⭐ ${it.price}</button><div class="hint" style="width:100%;text-align:center">Не хватает ${need} ⭐. Побеждайте в дуэлях и решайте Флеш.</div>` : `<button class="btn big" id="si-buy">Купить за ⭐ ${it.price}</button>`;
-    else act = worn ? '<button class="btn ghost big" id="si-off">Снять</button>' : '<button class="btn big" id="si-on">Надеть</button>';
-    const auto = it.slot === 'bg' || it.slot === 'pv';
+    if (!Profile.SHOP_OPEN) act = `<button class="btn big" disabled>🔒 Скоро в продаже · ⭐ ${fmtStars(it.price)}</button>`;
+    else act = need > 0 ? `<button class="btn big" disabled>⭐ ${fmtStars(it.price)}</button>` : `<button class="btn big" id="si-buy">${own ? 'Купить ещё' : 'Купить'} за ⭐ ${fmtStars(it.price)}</button>`;
+    if (own) act += worn ? '<button class="btn ghost big" id="si-off">Снять</button>' : '<button class="btn soft big" id="si-on">Надеть</button>';
+    const note = Profile.SHOP_OPEN && need > 0 ? `<div class="hint" style="width:100%;text-align:center">Не хватает ${fmtStars(need)} ⭐. Побеждайте в дуэлях и решайте Флеш.</div>` : '';
+    const auto = it.slot === 'bg' || it.slot === 'pv' || it.slot === 'sl';
     const m = modal(`<button type="button" class="modal-x" data-close aria-label="Закрыть">×</button>
       <div class="si-modal">
         <div class="si-prev big${auto ? ' auto' : ''} sp-${it.slot}">${shopPreview(it, true)}</div>
         <div class="sh-kick" style="margin-top:14px">${SLOT_NAME[it.slot]}</div>
         <h2 style="margin:4px 0 6px">${esc(it.name)}</h2>
         <p class="muted" style="margin:0 0 14px">${esc(it.desc)}</p>
-        <div class="actions" style="justify-content:center;flex-wrap:wrap">${it.slot === 'fx' ? '<button class="btn soft big" id="si-try">▶ Посмотреть</button>' : ''}${act}</div>
-        ${own || !Profile.SHOP_OPEN ? '' : `<div class="hint" style="text-align:center;margin-top:8px">Баланс: ⭐ ${stars}${need > 0 ? '' : ' → ⭐ ' + (stars - it.price) + ' после покупки'}</div>`}
+        <div class="actions" style="justify-content:center;flex-wrap:wrap">${it.slot === 'fx' ? '<button class="btn soft big" id="si-try">▶ Посмотреть</button>' : ''}${act}${note}</div>
+        ${own ? `<div class="hint" style="text-align:center;margin-top:8px">В инвентаре: ${n} шт.${worn ? ' · надето' : ''}</div>` : ''}
+        ${Profile.SHOP_OPEN ? `<div class="hint" style="text-align:center;margin-top:4px">Баланс: ⭐ ${fmtStars(stars)}${need > 0 ? '' : ' → ⭐ ' + fmtStars(stars - it.price) + ' после покупки'}</div>` : ''}
       </div>`);
     m.el.querySelector('.modal-box').classList.add('si-box');
     const done = () => { m.close(); renderShop(); renderHeaderAvatar(); updateProfilePreview(); };
     if ($('#si-try')) $('#si-try').onclick = () => WinFx.play(it.id);
     if ($('#si-buy')) $('#si-buy').onclick = () => {
       const r = Profile.buy(it.id);
-      if (r === 'ok') { toast('Куплено и надето: ' + it.name); bumpStars(-it.price); done(); WinFx.play(it.slot === 'fx' ? it.id : 'fx_stars', it.slot === 'fx' ? undefined : { dur: 1800 }); }
+      if (r === 'ok') {
+        toast('Куплено: ' + it.name + '. Предмет в 🎒 Инвентаре — надеть можно там или здесь');
+        m.close(); renderShop(); bumpStars(-it.price); updateProfilePreview();
+        WinFx.play('fx_stars', { dur: 1600 });
+        openShopItem(it.id);
+      }
       else if (r === 'poor') toast('Не хватает звёзд');
       else if (r === 'closed') toast('Покупки пока закрыты');
+      else if (r === 'full') toast('Инвентарь полон: не больше ' + Profile.OWN_MAX + ' предметов');
       else done();
     };
     if ($('#si-on')) $('#si-on').onclick = () => { Profile.equip(it.slot, it.id); toast('Надето: ' + it.name); done(); };
@@ -11018,18 +11220,22 @@ var WinFx = (function () {
   function upState() {
     const own = Profile.me.own || [];
     const u = (app.up = app.up || { give: [], target: null, spin: false, angle: 0 });
-    u.give = u.give.filter((id) => own.indexOf(id) >= 0);
-    const value = u.give.reduce((a, id) => a + Profile.SHOP_BY[id].price, 0);
-    if (u.target && (own.indexOf(u.target) >= 0 || Profile.SHOP_BY[u.target].price <= value)) u.target = null;
+    // give — номера предметов в инвентаре (одинаковых копий может быть несколько); инвентарь изменился — выбор сбрасываем
+    const sig = own.join();
+    if (u.sig !== sig && !u.spin) { u.give = []; u.sig = sig; }
+    u.give = u.give.filter((i, k, a) => i < own.length && a.indexOf(i) === k);
+    const value = u.give.reduce((a, i) => a + Profile.SHOP_BY[own[i]].price, 0);
+    if (u.target && Profile.SHOP_BY[u.target].price <= value) u.target = null;
     const chance = u.target && value ? Math.min(UP_MAX_CHANCE, value / Profile.SHOP_BY[u.target].price) : 0;
     return { u, own, value, chance };
   }
   const upPct = (c) => (c * 100).toFixed(c < 0.1 ? 1 : 0) + '%';
-  function upChip(it, on, extra, attr) {
-    return `<button type="button" class="up-chip${on ? ' on' : ''}" ${attr}="${it.id}"><span class="up-ic up-${it.slot}">${upIcon(it)}</span><span class="up-t"><b>${esc(it.name)}</b><small>${SLOT_NAME[it.slot]} · ⭐ ${it.price}${extra || ''}</small></span></button>`;
+  function upChip(it, on, extra, attr, val) {
+    return `<button type="button" class="up-chip${on ? ' on' : ''}" ${attr}="${val === undefined ? it.id : val}"><span class="up-ic up-${it.slot}">${upIcon(it)}</span><span class="up-t"><b>${esc(it.name)}</b><small>${SLOT_NAME[it.slot]} · ⭐ ${fmtStars(it.price)}${extra || ''}</small></span></button>`;
   }
   function upIcon(it) {
     if (it.slot === 'fx') return FX_ICON[it.id] || '✨';
+    if (it.slot === 'sl') return `<span class="up-sw sl ${it.id}"></span>`;
     if (it.slot === 'frame') return `<span class="ava-fr ${it.id}" style="--fs:24px;width:24px;height:24px"><span class="ava" style="width:24px;height:24px;background:var(--bg2)"></span></span>`;
     return `<span class="up-sw cbg ${it.slot === 'pv' ? 'pvt ' : ''}${it.id}"></span>`;
   }
@@ -11043,19 +11249,20 @@ var WinFx = (function () {
   }
   function upgraderHTML() {
     const { u, own, value, chance } = upState();
-    const mine = own.map((id) => Profile.SHOP_BY[id]).filter(Boolean).sort((a, b) => b.price - a.price);
-    const targets = Profile.SHOP.filter((it) => own.indexOf(it.id) < 0 && (!value || it.price > value)).sort((a, b) => a.price - b.price);
+    const mine = own.map((id, i) => ({ it: Profile.SHOP_BY[id], i })).filter((x) => x.it).sort((a, b) => b.it.price - a.it.price || a.i - b.i);
+    const targets = Profile.SHOP.filter((it) => !value || it.price > value).sort((a, b) => a.price - b.price);
+    const wornIds = ['frame', 'bg', 'pv', 'fx', 'sl'].map((k) => Profile.worn(k)).filter(Boolean);
     const left = mine.length
-      ? `<div class="up-list">${mine.map((it) => upChip(it, u.give.indexOf(it.id) >= 0, '', 'data-give')).join('')}</div>`
+      ? `<div class="up-list">${mine.map((x) => upChip(x.it, u.give.indexOf(x.i) >= 0, wornIds.indexOf(x.it.id) >= 0 && Profile.ownCount(x.it.id) === 1 ? ' · надето' : '', 'data-give', x.i)).join('')}</div>`
       : `<div class="up-empty">🎒<b>Пока нечего ставить</b><span>${Profile.SHOP_OPEN ? 'Купите что-нибудь в магазине — и предмет появится здесь.' : 'Предметы появятся в инвентаре, когда откроется магазин.'}</span></div>`;
     const right = `<div class="up-list">${targets.map((it) => upChip(it, u.target === it.id, value ? ' · шанс ' + upPct(Math.min(UP_MAX_CHANCE, value / it.price)) : '', 'data-target')).join('')}</div>`;
     const tgt = u.target && Profile.SHOP_BY[u.target];
     return `<div class="up">
-      <section class="up-col card"><h3>Ваши предметы</h3><div class="hint" style="margin:0 0 8px">Выберите до ${UP_MAX_GIVE} — они сгорят, если не повезёт.</div>${left}<div class="up-sum">Ставка: <b>⭐ ${value}</b></div></section>
+      <section class="up-col card"><h3>Ваши предметы</h3><div class="hint" style="margin:0 0 8px">Выберите до ${UP_MAX_GIVE} — они сгорят, если не повезёт.</div>${left}<div class="up-sum">Ставка: <b>⭐ ${fmtStars(value)}</b></div></section>
       <section class="up-mid card">
         <div class="up-wheel">${wheelSVG(chance)}<div class="up-needle" id="up-needle" style="transform:rotate(${u.angle}deg)"><i></i></div>
           <div class="up-center"><b id="up-pct">${chance ? upPct(chance) : '—'}</b><small>шанс</small></div></div>
-        <div class="up-pair">${value ? '⭐ ' + value : '⭐ 0'} <span>→</span> ${tgt ? esc(tgt.name) + ' · ⭐ ' + tgt.price : 'выберите цель'}</div>
+        <div class="up-pair">⭐ ${fmtStars(value)} <span>→</span> ${tgt ? esc(tgt.name) + ' · ⭐ ' + fmtStars(tgt.price) : 'выберите цель'}</div>
         <button type="button" class="btn big up-go" id="up-go"${chance && !u.spin ? '' : ' disabled'}>🎰 Апгрейд</button>
         <div class="hint" style="text-align:center;margin:8px 0 0">Шанс = ставка ÷ цена цели, но не больше ${UP_MAX_CHANCE * 100}%. Зелёный сектор — выигрыш.</div>
         <div id="up-res" class="up-res"></div>
@@ -11067,7 +11274,7 @@ var WinFx = (function () {
     const body = $('#shop-body');
     if (!body || app.shopTab !== 'up') return;
     const res = keepRes && $('#up-res') ? $('#up-res').outerHTML : '';
-    body.innerHTML = `<p class="shop-lead">${esc(SHOP_TABS[4].lead)}</p>${upgraderHTML()}`;
+    body.innerHTML = `<p class="shop-lead">${esc(UP_TAB().lead)}</p>${upgraderHTML()}`;
     if (res) $('#up-res').outerHTML = res;
     bindUpgrader();
   }
@@ -11075,7 +11282,7 @@ var WinFx = (function () {
     const u = upState().u;
     $$('[data-give]').forEach((x) => (x.onclick = () => {
       if (u.spin) return;
-      const id = x.dataset.give, i = u.give.indexOf(id);
+      const id = +x.dataset.give, i = u.give.indexOf(id);
       if (i >= 0) u.give.splice(i, 1);
       else if (u.give.length >= UP_MAX_GIVE) { toast('Можно поставить не больше ' + UP_MAX_GIVE + ' предметов'); return; }
       else u.give.push(id);
@@ -11085,9 +11292,9 @@ var WinFx = (function () {
     if ($('#up-go')) $('#up-go').onclick = spinUpgrade;
   }
   function spinUpgrade() {
-    const { u, chance } = upState();
+    const { u, own, chance } = upState();
     if (!chance || u.spin) return;
-    const give = u.give.slice(), target = u.target, tgt = Profile.SHOP_BY[target];
+    const give = u.give.map((i) => own[i]), target = u.target, tgt = Profile.SHOP_BY[target];
     const names = give.map((id) => Profile.SHOP_BY[id].name).join(', ');
     if (!confirm(`Поставить: ${names}?\nШанс получить «${tgt.name}» — ${upPct(chance)}. Если не повезёт, предметы сгорят.`)) return;
     const rnd = crypto.getRandomValues(new Uint32Array(1))[0] / 4294967296;
@@ -11113,14 +11320,16 @@ var WinFx = (function () {
 
   /* ---------- инвентарь (кнопка в профиле) ---------- */
   function inventoryHTML() {
-    const own = (Profile.me.own || []).map((id) => Profile.SHOP_BY[id]).filter(Boolean);
+    const ids = Profile.me.own || [];
+    const own = Profile.SHOP.filter((it) => ids.indexOf(it.id) >= 0);
     if (!own.length) return `<div class="up-empty" style="margin:10px 0">🎒<b>Пока пусто</b><span>Здесь будут рамки, фоны, карточки и эффекты — после покупки в магазине или удачного апгрейда.</span></div>`;
     return SHOP_TABS.filter((t) => t.id !== 'up').map((t) => {
       const list = own.filter((it) => it.slot === t.id);
       if (!list.length) return '';
       return `<div class="inv-group">${t.icon} ${t.name}</div><div class="inv-grid">${list.map((it) => {
         const w = Profile.worn(it.slot) === it.id;
-        return `<div class="inv-item${w ? ' worn' : ''}"><span class="up-ic up-${it.slot}">${upIcon(it)}</span><span class="up-t"><b>${esc(it.name)}</b><small>${w ? '✓ надето' : '⭐ ' + it.price}</small></span><button type="button" class="btn ${w ? 'ghost' : 'soft'} sm" data-inv="${it.id}">${w ? 'Снять' : 'Надеть'}</button></div>`;
+        const c = Profile.ownCount(it.id);
+        return `<div class="inv-item${w ? ' worn' : ''}"><span class="up-ic up-${it.slot}">${upIcon(it)}</span><span class="up-t"><b>${esc(it.name)}${c > 1 ? ` <span class="inv-n">×${c}</span>` : ''}</b><small>${w ? '✓ надето' : '⭐ ' + fmtStars(it.price)}</small></span><button type="button" class="btn ${w ? 'ghost' : 'soft'} sm" data-inv="${it.id}">${w ? 'Снять' : 'Надеть'}</button></div>`;
       }).join('')}</div>`;
     }).join('');
   }
@@ -11142,10 +11351,10 @@ var WinFx = (function () {
 
   /* ---------- таблица лидеров ---------- */
   function topRow(fp, i) {
-    const cc = cardColor(fp);
+    const sk = rowSkin(fp);
     const isMe = Cloud.user && fp.uid === Cloud.user.uid;
     const place = i < 3 ? ['🥇', '🥈', '🥉'][i] : String(i + 1);
-    return `<div class="friend-row top-row${cc ? ' tinted' : ''}${isMe ? ' me' : ''}${i < 3 ? ' podium' : ''}"${cc ? ` style="--pc:${cc}"` : ''} role="button" tabindex="0" data-top="${i}">
+    return `<div class="friend-row top-row${sk.cls}${isMe ? ' me' : ''}${i < 3 ? ' podium' : ''}"${sk.attr} role="button" tabindex="0" data-top="${i}">
       <span class="top-place">${place}</span>${Profile.avatar(fp, 40)}
       <span class="fr-main"><b>${esc(fp.name || 'Игрок')}${isMe ? ' <span class="top-you">вы</span>' : ''}</b><span class="muted"><span class="fr-st ${fp.online ? 'on' : ''}">${statusHTML(fp)}</span>${fp.tag ? ' · ID ' + esc(fp.tag) : ''}</span></span>
       <span class="top-score"><b>${(fp.stats && fp.stats.solved) || 0}</b><small>задач</small></span></div>`;
@@ -11270,7 +11479,7 @@ var WinFx = (function () {
         const key = card.dataset.skey || (card.querySelector('#create') ? 'duel' : 'solo');
         const sn = e.target.closest('[data-set="stake-num"]');
         if (sn) {
-          draft(key).stake = Math.max(STAKE_MIN, Math.min(STAKE_MAX, Math.round(+sn.value || STAKE_MIN)));
+          draft(key).stake = Math.max(STAKE_MIN, Math.min(STAKE_MAX, myStars(), Math.round(+sn.value || STAKE_MIN)));
           saveDraft(key);
           render();
           return;
