@@ -1474,6 +1474,12 @@ nav.tabs.nav-lite button:not([data-tab="top"]) { display: none; }
 .apk-steps { margin: 12px 0 0; padding-left: 20px; font-size: 14px; line-height: 1.45; display: grid; gap: 4px; }
 .apk-meta { font-size: 12px; }
 a.btn#apk-dl { text-decoration: none; display: inline-flex; align-items: center; }
+/* без синей подсветки при нажатии (везде) */
+* { -webkit-tap-highlight-color: transparent; }
+/* внутри Android-приложения: текст не выделяется, долгое нажатие не открывает меню; поля ввода работают как обычно */
+html.in-app, html.in-app body { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+html.in-app img { -webkit-user-drag: none; }
+html.in-app input, html.in-app textarea, html.in-app [contenteditable="true"] { -webkit-user-select: text; user-select: text; -webkit-touch-callout: default; }
 
 </style>
 </head>
@@ -9623,6 +9629,8 @@ var WinFx = (function () {
     let inApp = /^android-app:\/\/io\.github\.egeduel\.app/.test(document.referrer || '');
     try { if (inApp) sessionStorage.setItem('egeduel:inapp', '1'); else inApp = sessionStorage.getItem('egeduel:inapp') === '1'; } catch (e) {}
     const ios = /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    // в приложении ведём себя как приложение: без выделения текста и меню по долгому нажатию
+    document.documentElement.classList.toggle('in-app', inApp);
     return (apkOffer.v = !inApp && !ios);
   }
   function render() {
