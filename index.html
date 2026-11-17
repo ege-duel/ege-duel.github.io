@@ -1441,6 +1441,22 @@ nav.tabs.nav-lite button:not([data-tab="top"]) { display: none; }
 .modal { overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; place-items: normal; justify-items: center; }
 .modal > .modal-box { margin: auto 0; }
 
+/* магазин: вкладки разделов в верхней шапке (только ПК) */
+@media (min-width: 761px) {
+  header.top nav.shop-tabs.in-head { margin: 0 0 0 auto; padding: 4px; gap: 2px; border-radius: 12px; flex: 0 1 auto; min-width: 0; max-width: none; width: auto; overflow-x: auto; scrollbar-width: none; animation: si-in .35s cubic-bezier(.2, .9, .3, 1.1) both; }
+  header.top nav.shop-tabs.in-head::-webkit-scrollbar { display: none; }
+  header.top nav.shop-tabs.in-head button { font-size: 14px; font-weight: 600; padding: 7px 12px; border-radius: 9px; }
+  header.top nav.shop-tabs.in-head .shop-pill { border-radius: 9px; }
+}
+@media (min-width: 761px) and (max-width: 1180px) {
+  header.top nav.shop-tabs.in-head button { padding: 7px 9px; font-size: 13px; }
+}
+@media (prefers-reduced-motion: reduce) { header.top nav.shop-tabs.in-head { animation: none; } }
+@media (min-width: 761px) {
+  header.top nav.shop-tabs.in-head.compact .st-n { display: none; }
+  header.top nav.shop-tabs.in-head.compact button { padding: 7px 11px; font-size: 16px; }
+}
+
 </style>
 </head>
 <body>
@@ -9592,6 +9608,7 @@ var WinFx = (function () {
     const navEl = $('nav.tabs');
     const sectionNav = !(app.tab === 'home' || app.tab === 'soon' || app.tab === 'shop' || app.tab === 'watch');
     if (navEl) navEl.classList.toggle('nav-hidden', !sectionNav);
+    if (app.tab !== 'shop') $$('header.top nav.shop-tabs').forEach((x) => x.remove());
     // из профиля (и перейдя оттуда в таблицу лидеров) разделы предмета не показываем — только 🏆
     app.navLite = app.tab === 'profile' || (app.tab === 'top' && !!app.navLite);
     if (navEl) navEl.classList.toggle('nav-lite', app.navLite);
@@ -11251,6 +11268,7 @@ var WinFx = (function () {
     return `<p class="shop-lead">${esc(tab.lead)}</p><div class="shop-grid">${items.map(shopItemHTML).join('')}</div>`;
   }
   function renderShop() {
+    $$('header.top nav.shop-tabs').forEach((x) => x.remove());
     const tab = SHOP_TABS.find((t) => t.id === app.shopTab) || SHOP_TABS[0];
     app.shopTab = tab.id;
     const stars = Profile.me.stars | 0;
@@ -11266,13 +11284,32 @@ var WinFx = (function () {
           <div class="sh-bal"><small>Ваш баланс</small><b title="${stars.toLocaleString('ru-RU')} звёзд">⭐ ${fmtStars(stars)}</b></div>
           <div class="sh-deco" aria-hidden="true"><span>⭐</span><span>✨</span><span>⭐</span></div>
         </section>
-        <nav class="shop-tabs" role="tablist" aria-label="Разделы магазина"><span class="shop-pill" aria-hidden="true"></span>${SHOP_TABS.map((t) => `<button type="button" role="tab" aria-selected="${t.id === tab.id}" class="${t.id === tab.id ? 'on' : ''}" data-stab="${t.id}"><span aria-hidden="true">${t.icon}</span> ${t.name}</button>`).join('')}</nav>
+        <nav class="shop-tabs" role="tablist" aria-label="Разделы магазина"><span class="shop-pill" aria-hidden="true"></span>${SHOP_TABS.map((t) => `<button type="button" role="tab" aria-selected="${t.id === tab.id}" class="${t.id === tab.id ? 'on' : ''}" data-stab="${t.id}" title="${t.name}"><span aria-hidden="true">${t.icon}</span><span class="st-n"> ${t.name}</span></button>`).join('')}</nav>
         <div id="shop-body" class="sw-in">${shopBodyHTML(tab)}</div>
       </div>`;
     $$('[data-stab]').forEach((x) => (x.onclick = () => setShopTab(x.dataset.stab)));
-    moveShopPill(false);
+    placeShopTabs();
     bindShopBody();
   }
+  // на ПК (шире 760px) вкладки магазина живут в шапке рядом с логотипом; на телефоне — под баннером, как раньше
+  const SHOP_HEAD_MQ = matchMedia('(min-width: 761px)');
+  function placeShopTabs() {
+    const nav = $('nav.shop-tabs'), page = $('#shop-page'), head = $('header.top .wrap');
+    if (!nav || !page || !head) return;
+    if (SHOP_HEAD_MQ.matches) {
+      if (nav.parentNode !== head) head.insertBefore(nav, head.querySelector('nav.tabs') || head.children[1]);
+      nav.classList.add('in-head');
+      // не влезает в шапку — оставляем только значки (название — во всплывающей подсказке)
+      nav.classList.remove('compact');
+      if (nav.scrollWidth > nav.clientWidth + 1) nav.classList.add('compact');
+    } else {
+      if (nav.parentNode !== page) page.insertBefore(nav, $('#shop-body'));
+      nav.classList.remove('in-head', 'compact');
+    }
+    moveShopPill(false);
+  }
+  SHOP_HEAD_MQ.addEventListener('change', () => { if (app.tab === 'shop') placeShopTabs(); });
+  window.addEventListener('resize', () => { if (app.tab === 'shop') placeShopTabs(); });
   // переключение раздела: подложка переезжает под кнопку, содержимое въезжает с той стороны, куда идём
   function setShopTab(id) {
     if (app.shopTab === id || !$('#shop-body')) return;
