@@ -1465,6 +1465,8 @@ nav.tabs.nav-lite button:not([data-tab="top"]) { display: none; }
 .apk-tip { position: absolute; right: calc(100% + 10px); top: 50%; transform: translate(6px, -50%); white-space: nowrap; background: var(--card); color: var(--ink); border: 1px solid var(--line); font-size: 13px; font-weight: 700; padding: 6px 10px; border-radius: 10px; box-shadow: 0 6px 18px rgba(0,0,0,.18); opacity: 0; pointer-events: none; transition: opacity .15s, transform .15s; }
 .apk-fab:hover .apk-tip, .apk-fab:focus-visible .apk-tip { opacity: 1; transform: translate(0, -50%); }
 @media (max-width: 600px) { .apk-fab { right: 12px; bottom: 68px; width: 46px; height: 46px; } .apk-fab svg { width: 23px; height: 23px; } .apk-tip { display: none; } }
+/* на ПК (широкий экран и мышь) кнопку APK не показываем — только на телефоне */
+@media (min-width: 761px) and (hover: hover) and (pointer: fine) { .apk-fab { display: none !important; } }
 
 </style>
 </head>
