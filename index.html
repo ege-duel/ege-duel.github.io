@@ -1311,6 +1311,124 @@ nav.tabs.nav-lite button:not([data-tab="top"]) { display: none; }
 .si-sllbl:first-child { margin-top: 0; }
 .up-sw.sl { border: 2px solid transparent; }
 
+
+/* ===== апгрейдер: раскладка «ставка — колесо — цель», внизу инвентарь и цели ===== */
+.upg { --gold: #fcc419; --gold2: #ffe45c; display: flex; flex-direction: column; gap: 14px; }
+.upg-top { display: grid; grid-template-columns: 1fr minmax(280px, 340px) 1fr; gap: 14px; align-items: stretch; }
+.upg-bot { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; align-items: start; }
+.upg-slot, .upg-panel { background: var(--card); border: 1px solid var(--line); border-radius: 20px; padding: 18px; position: relative; overflow: hidden; }
+.upg-slot { min-height: 300px; display: flex; flex-direction: column; align-items: center; text-align: center; }
+.upg-slot::before { content: ''; position: absolute; inset: 0; background: radial-gradient(55% 45% at 50% 58%, color-mix(in srgb, var(--gold) 16%, transparent), transparent 70%); pointer-events: none; }
+.upg-slot.has::before { background: radial-gradient(60% 50% at 50% 55%, color-mix(in srgb, var(--gold) 24%, transparent), transparent 72%); }
+.upg-slot h3 { margin: 0; font-size: 16px; position: relative; }
+.upg-slot > p { margin: 4px 0 0; font-size: 12px; color: var(--ink3); position: relative; }
+.upg-ph { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; color: var(--ink3); font-size: 13px; position: relative; }
+.upg-ph .upg-chev { width: 84px; height: 84px; opacity: .9; animation: upg-bob 1.8s ease-in-out infinite; }
+@keyframes upg-bob { 50% { transform: translateY(-6px); } }
+.upg-ph .upg-chev.down { animation-name: upg-bob-d; }
+@keyframes upg-bob-d { 50% { transform: translateY(6px); } }
+.upg-chev { width: 1em; height: 1em; fill: none; stroke: var(--gold); stroke-width: 6; stroke-linecap: round; stroke-linejoin: round; flex: none; }
+.upg-chev path:last-child { opacity: .5; }
+.upg-picked { flex: 1; width: 100%; display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; align-content: center; margin-top: 12px; position: relative; }
+.upg-picked.n1 { grid-template-columns: minmax(0, 170px); justify-content: center; }
+.upg-picked.n2 { grid-template-columns: repeat(2, minmax(0, 150px)); justify-content: center; }
+.upg-pk { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 12px 6px 8px; border-radius: 14px; background: var(--bg); border: 1.5px solid var(--slc, var(--line)); animation: si-in .35s cubic-bezier(.2, .9, .3, 1.1) both; }
+.upg-picked.n1 .upg-pk { padding: 22px 10px 12px; transform-origin: center; }
+.upg-picked.n1 .upg-pk > :first-child { transform: scale(1.5); margin: 14px 0; }
+.upg-pk small { font-size: 12px; font-weight: 700; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.upg-sum { margin-top: 12px; font-size: 14px; color: var(--ink2); position: relative; }
+.upg-sum b { color: var(--gold); }
+.upg-big { flex: 1; display: grid; place-items: center; position: relative; }
+.upg-big > * { transform: scale(2); }
+.upg-tname { display: flex; flex-direction: column; gap: 2px; position: relative; }
+.upg-tname small { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: .06em; color: var(--slc, var(--ink3)); }
+.upg-tname b { font-family: "Unbounded", sans-serif; font-size: 18px; }
+.upg-tname span { font-weight: 800; color: var(--gold); }
+
+/* колесо */
+.upg-mid { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; }
+.upg .up-wheel { width: 260px; height: 260px; margin: 0; }
+.upg .up-track { stroke: var(--bg2); stroke-width: 16; }
+.upg .up-win { stroke: url(#upg-grad); stroke-width: 16; filter: drop-shadow(0 0 8px #fcc41966); }
+.upg .up-ring { fill: none; stroke: var(--line); stroke-width: 1.5; }
+.upg .up-center { inset: 50px; background: radial-gradient(circle at 50% 35%, color-mix(in srgb, var(--gold) 14%, var(--card)), var(--card)); box-shadow: inset 0 0 0 1px var(--line), 0 10px 30px -12px #000; gap: 0; }
+.upg .up-center .upg-chev { width: 46px; height: 46px; margin-bottom: 2px; }
+.upg .up-center b { font-size: 28px; line-height: 1.1; }
+.upg .up-needle i { border-top-color: var(--gold2); filter: drop-shadow(0 0 6px #fcc419aa) drop-shadow(0 2px 3px #000a); }
+.upg-go { width: 100%; max-width: 300px; display: inline-flex; align-items: center; justify-content: center; gap: 10px; background: linear-gradient(180deg, var(--gold2), var(--gold)); color: #1d1b19; border: 0; font-weight: 800; box-shadow: 0 10px 26px -10px #fcc419aa; }
+.upg-go .upg-chev { stroke: #1d1b19; width: 20px; height: 20px; }
+.upg-go:not(:disabled):hover { filter: brightness(1.06); transform: translateY(-1px); }
+.upg-go:disabled { background: var(--bg2); color: var(--ink3); box-shadow: none; }
+.upg-go:disabled .upg-chev { stroke: var(--ink3); }
+.upg .up-res { margin-top: 0; }
+.upg .up-res:not(.show) { display: none; }
+
+/* нижние панели */
+.upg-panel { padding: 0; }
+.upg-head { display: flex; align-items: center; gap: 10px; padding: 14px 16px; border-bottom: 1px solid var(--line); background: color-mix(in srgb, var(--bg2) 50%, var(--card)); }
+.upg-head h3 { margin: 0; font-size: 16px; display: flex; align-items: center; gap: 8px; }
+.upg-head h3 .upg-chev { width: 20px; height: 20px; }
+.upg-cnt { margin-left: auto; min-width: 26px; padding: 2px 9px; border-radius: 999px; background: var(--bg2); font-weight: 800; font-size: 13px; text-align: center; }
+.upg-sort { margin-left: auto; border: 1px solid var(--line); background: var(--bg); color: var(--ink2); border-radius: 10px; padding: 6px 10px; font: inherit; font-size: 13px; font-weight: 700; cursor: pointer; }
+.upg-sort:hover { color: var(--ink); border-color: var(--gold); }
+.upg-filter { display: grid; grid-template-columns: 1fr 92px 92px; gap: 8px; padding: 12px 16px 0; }
+.upg-filter .input { padding: 8px 10px; font-size: 14px; min-width: 0; }
+.upg-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)); gap: 8px; padding: 12px 16px 16px; max-height: 470px; overflow-y: auto; }
+.upg-panel .up-empty { margin: 16px; }
+.upg-pager { display: flex; align-items: center; justify-content: center; gap: 12px; padding: 0 16px 16px; font-weight: 700; color: var(--ink3); font-size: 14px; }
+.upg-pager[hidden] { display: none; }
+.upg-pg { width: 36px; height: 36px; border-radius: 10px; border: 1px solid var(--line); background: var(--bg); color: var(--ink); font-size: 20px; cursor: pointer; }
+.upg-pg:disabled { opacity: .35; cursor: default; }
+.upg-pg:not(:disabled):hover { border-color: var(--gold); }
+
+/* плитка предмета; цвет рамки — по разделу, как «редкость» */
+.upt-frame { --slc: #fcc419; } .upt-bg { --slc: #4dabf7; } .upt-pv { --slc: #9b6bff; } .upt-fx { --slc: #ff6b9d; } .upt-sl { --slc: #51cf66; }
+.upt { all: unset; box-sizing: border-box; position: relative; display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 8px 8px 10px; border-radius: 14px; cursor: pointer; text-align: center; overflow: hidden;
+  background: radial-gradient(70% 55% at 50% 52%, color-mix(in srgb, var(--slc) 22%, transparent), transparent 75%), var(--bg);
+  border: 1.5px solid color-mix(in srgb, var(--slc) 45%, var(--line)); transition: transform .15s, border-color .2s, box-shadow .2s; }
+.upt::after { content: ''; position: absolute; left: 18%; right: 18%; bottom: 0; height: 3px; border-radius: 3px 3px 0 0; background: var(--slc); opacity: .8; }
+.upt:hover { transform: translateY(-2px); border-color: var(--slc); }
+.upt:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+.upt.on { border-color: var(--gold); box-shadow: 0 0 0 2px var(--gold), 0 8px 22px -10px #fcc419aa; }
+.upt:disabled { opacity: .6; cursor: default; transform: none; }
+.upt-top { width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 4px; }
+.upt-price { font-size: 12px; font-weight: 800; color: var(--gold); white-space: nowrap; }
+.upt-badge { font-size: 10px; font-weight: 800; padding: 1px 6px; border-radius: 6px; background: var(--bg2); color: var(--ink2); white-space: nowrap; }
+.upt-art { height: 62px; display: grid; place-items: center; }
+.upt-cat { font-size: 10px; color: var(--ink3); line-height: 1.1; }
+.upt-name { font-size: 13px; line-height: 1.15; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.upt-check { position: absolute; top: 28px; right: 6px; width: 20px; height: 20px; border-radius: 50%; background: var(--gold); color: #1d1b19; font-size: 12px; font-weight: 900; display: grid; place-items: center; }
+
+/* картинки предметов */
+.upa-fx { font-size: 38px; line-height: 1; filter: drop-shadow(0 4px 10px #0008); }
+.upa-bg, .upa-pv, .upa-sl { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; border-radius: 10px; box-shadow: 0 6px 16px -8px #000; overflow: hidden; position: relative; }
+.upa-bg { width: 64px; height: 44px; padding: 0 !important; }
+.upa-bg i { width: 18px; height: 18px; border-radius: 50%; background: #ffffffcc; }
+.upa-pv { width: 46px; height: 58px; padding: 0 !important; border-radius: 9px; }
+.upa-pv i { display: block; height: 4px; width: 60%; border-radius: 2px; background: #ffffffcc; }
+.upa-pv i + i { width: 40%; opacity: .6; }
+.upa-sl { width: 76px; height: 26px; flex-direction: row; justify-content: flex-start; padding: 0 8px; border: 2px solid transparent; border-radius: 8px; }
+.upa-sl i:first-child { width: 12px; height: 12px; border-radius: 50%; background: #ffffffcc; }
+.upa-sl i + i { width: 34px; height: 4px; border-radius: 2px; background: #ffffffaa; }
+
+@media (max-width: 980px) {
+  .upg-top { grid-template-columns: 1fr 1fr; }
+  .upg-mid { grid-column: 1 / -1; order: -1; }
+  .upg-bot { grid-template-columns: 1fr; }
+  .upg-slot { min-height: 220px; }
+}
+@media (max-width: 560px) {
+  .upg .up-wheel { width: 220px; height: 220px; }
+  .upg .up-center { inset: 42px; }
+  .upg-slot { min-height: 190px; padding: 14px 10px; }
+  .upg-big > * { transform: scale(1.5); }
+  .upg-picked { grid-template-columns: repeat(2, 1fr); }
+  .upg-filter { grid-template-columns: 1fr 1fr; }
+  .upg-filter #upg-q { grid-column: 1 / -1; }
+  .upg-grid { grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); padding: 10px; }
+}
+@media (prefers-reduced-motion: reduce) { .upg-ph .upg-chev, .upg-pk { animation: none; } .upt { transition: none; } }
+
 </style>
 </head>
 <body>
@@ -11242,32 +11360,90 @@ var WinFx = (function () {
   function wheelSVG(chance) {
     const C = 2 * Math.PI * 90;
     return `<svg viewBox="0 0 220 220" class="up-svg" aria-hidden="true">
+      <defs><linearGradient id="upg-grad" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffe45c"/><stop offset=".55" stop-color="#fcc419"/><stop offset="1" stop-color="#ff8a3d"/></linearGradient></defs>
+      <circle cx="110" cy="110" r="106" class="up-ring"/>
       <circle cx="110" cy="110" r="90" class="up-track"/>
       <circle cx="110" cy="110" r="90" class="up-win" stroke-dasharray="${(chance * C).toFixed(1)} ${C.toFixed(1)}" transform="rotate(-90 110 110)"/>
       ${Array.from({ length: 40 }, (_, i) => `<line x1="110" y1="12" x2="110" y2="${i % 5 ? 18 : 22}" transform="rotate(${i * 9} 110 110)" class="up-tick"/>`).join('')}
     </svg>`;
   }
+  // крупная картинка предмета для плиток апгрейдера
+  function upArt(it) {
+    if (it.slot === 'fx') return `<span class="upa-fx">${FX_ICON[it.id] || '✨'}</span>`;
+    if (it.slot === 'frame') return `<span class="ava-fr ${it.id}" style="--fs:46px;width:46px;height:46px"><span class="ava" style="width:46px;height:46px;background:var(--bg2)"></span></span>`;
+    if (it.slot === 'sl') return `<span class="upa-sl sl ${it.id}"><i></i><i></i></span>`;
+    if (it.slot === 'pv') return `<span class="upa-pv pvt ${it.id}"><i></i><i></i></span>`;
+    return `<span class="upa-bg cbg ${it.id}"><i></i></span>`;
+  }
+  // плитка предмета: цена сверху, картинка, раздел и название
+  function upTile(it, o) {
+    o = o || {};
+    return `<button type="button" class="upt upt-${it.slot}${o.on ? ' on' : ''}" ${o.attr}="${o.val === undefined ? it.id : o.val}" title="${esc(it.name)} · ${it.price} ⭐">
+      <span class="upt-top"><span class="upt-price">⭐ ${fmtStars(it.price)}</span>${o.badge ? `<span class="upt-badge">${o.badge}</span>` : ''}</span>
+      <span class="upt-art">${upArt(it)}</span>
+      <span class="upt-cat">${SLOT_NAME[it.slot]}</span><b class="upt-name">${esc(it.name)}</b>
+      ${o.on ? '<span class="upt-check" aria-hidden="true">✓</span>' : ''}</button>`;
+  }
+  const UP_PAGE = 10;
+  const chev = (down) => `<svg viewBox="0 0 48 48" class="upg-chev${down ? ' down' : ''}" aria-hidden="true"><g${down ? ' transform="rotate(180 24 25)"' : ''}><path d="M8 26 24 12l16 14" /><path d="M8 38 24 24l16 14" /></g></svg>`;
+  // список целей с учётом поиска, цены «от/до» и сортировки
+  function upTargets(value) {
+    const u = app.up;
+    const q = (u.q || '').trim().toLowerCase(), from = +u.from || 0, to = +u.to || 0;
+    return Profile.SHOP.filter((it) => (!value || it.price > value)
+      && (!q || it.name.toLowerCase().indexOf(q) >= 0 || SLOT_NAME[it.slot].toLowerCase().indexOf(q) >= 0)
+      && (!from || it.price >= from) && (!to || it.price <= to))
+      .sort((a, b) => (u.sort === 'asc' ? a.price - b.price : b.price - a.price));
+  }
+  function upTargetsHTML(value) {
+    const u = app.up, list = upTargets(value);
+    const pages = Math.max(1, Math.ceil(list.length / UP_PAGE));
+    u.page = Math.max(0, Math.min(pages - 1, u.page | 0));
+    const part = list.slice(u.page * UP_PAGE, u.page * UP_PAGE + UP_PAGE);
+    const grid = part.length
+      ? `<div class="upg-grid">${part.map((it) => upTile(it, { on: u.target === it.id, attr: 'data-target', badge: value ? upPct(Math.min(UP_MAX_CHANCE, value / it.price)) : '' })).join('')}</div>`
+      : `<div class="up-empty">🔍<b>Ничего не нашлось</b><span>${value ? 'Нет предметов дороже ставки с такими условиями.' : 'Измените поиск или цену.'}</span></div>`;
+    return `${grid}<div class="upg-pager"${pages > 1 ? '' : ' hidden'}><button type="button" class="upg-pg" data-pg="-1"${u.page ? '' : ' disabled'} aria-label="Назад">‹</button><span>${u.page + 1} / ${pages}</span><button type="button" class="upg-pg" data-pg="1"${u.page < pages - 1 ? '' : ' disabled'} aria-label="Дальше">›</button></div>`;
+  }
   function upgraderHTML() {
     const { u, own, value, chance } = upState();
-    const mine = own.map((id, i) => ({ it: Profile.SHOP_BY[id], i })).filter((x) => x.it).sort((a, b) => b.it.price - a.it.price || a.i - b.i);
-    const targets = Profile.SHOP.filter((it) => !value || it.price > value).sort((a, b) => a.price - b.price);
+    if (!u.sort) u.sort = 'asc';
     const wornIds = ['frame', 'bg', 'pv', 'fx', 'sl'].map((k) => Profile.worn(k)).filter(Boolean);
-    const left = mine.length
-      ? `<div class="up-list">${mine.map((x) => upChip(x.it, u.give.indexOf(x.i) >= 0, wornIds.indexOf(x.it.id) >= 0 && Profile.ownCount(x.it.id) === 1 ? ' · надето' : '', 'data-give', x.i)).join('')}</div>`
-      : `<div class="up-empty">🎒<b>Пока нечего ставить</b><span>${Profile.SHOP_OPEN ? 'Купите что-нибудь в магазине — и предмет появится здесь.' : 'Предметы появятся в инвентаре, когда откроется магазин.'}</span></div>`;
-    const right = `<div class="up-list">${targets.map((it) => upChip(it, u.target === it.id, value ? ' · шанс ' + upPct(Math.min(UP_MAX_CHANCE, value / it.price)) : '', 'data-target')).join('')}</div>`;
+    const mine = own.map((id, i) => ({ it: Profile.SHOP_BY[id], i })).filter((x) => x.it).sort((a, b) => b.it.price - a.it.price || a.i - b.i);
     const tgt = u.target && Profile.SHOP_BY[u.target];
-    return `<div class="up">
-      <section class="up-col card"><h3>Ваши предметы</h3><div class="hint" style="margin:0 0 8px">Выберите до ${UP_MAX_GIVE} — они сгорят, если не повезёт.</div>${left}<div class="up-sum">Ставка: <b>⭐ ${fmtStars(value)}</b></div></section>
-      <section class="up-mid card">
-        <div class="up-wheel">${wheelSVG(chance)}<div class="up-needle" id="up-needle" style="transform:rotate(${u.angle}deg)"><i></i></div>
-          <div class="up-center"><b id="up-pct">${chance ? upPct(chance) : '—'}</b><small>шанс</small></div></div>
-        <div class="up-pair">⭐ ${fmtStars(value)} <span>→</span> ${tgt ? esc(tgt.name) + ' · ⭐ ' + fmtStars(tgt.price) : 'выберите цель'}</div>
-        <button type="button" class="btn big up-go" id="up-go"${chance && !u.spin ? '' : ' disabled'}>🎰 Апгрейд</button>
-        <div class="hint" style="text-align:center;margin:8px 0 0">Шанс = ставка ÷ цена цели, но не больше ${UP_MAX_CHANCE * 100}%. Зелёный сектор — выигрыш.</div>
-        <div id="up-res" class="up-res"></div>
-      </section>
-      <section class="up-col card"><h3>Цель</h3><div class="hint" style="margin:0 0 8px">${value ? 'Предметы дороже вашей ставки.' : 'Сначала выберите, что поставить.'}</div>${right}</section>
+    const picked = u.give.map((i) => Profile.SHOP_BY[own[i]]).filter(Boolean);
+    const left = picked.length
+      ? `<div class="upg-picked n${Math.min(picked.length, 6)}">${picked.map((it) => `<span class="upg-pk upt-${it.slot}">${upArt(it)}<small>${esc(it.name)}</small></span>`).join('')}</div>
+         <div class="upg-sum">Ставка <b>⭐ ${fmtStars(value)}</b> · ${picked.length} из ${UP_MAX_GIVE}</div>`
+      : `<div class="upg-ph">${chev(true)}<span>Выберите предметы из инвентаря ниже</span></div>`;
+    const right = tgt
+      ? `<div class="upg-big upt-${tgt.slot}">${upArt(tgt)}</div><div class="upg-tname"><small>${SLOT_NAME[tgt.slot]}</small><b>${esc(tgt.name)}</b><span>⭐ ${fmtStars(tgt.price)}${value ? ' · ×' + (tgt.price / value).toFixed(2).replace('.', ',') : ''}</span></div>`
+      : `<div class="upg-ph">${chev(false)}<span>Выберите цель справа внизу</span></div>`;
+    const inv = mine.length
+      ? `<div class="upg-grid">${mine.map((x) => upTile(x.it, { on: u.give.indexOf(x.i) >= 0, attr: 'data-give', val: x.i, badge: wornIds.indexOf(x.it.id) >= 0 && Profile.ownCount(x.it.id) === 1 ? 'надето' : '' })).join('')}</div>`
+      : `<div class="up-empty">🎒<b>Пока нечего ставить</b><span>${Profile.SHOP_OPEN ? 'Купите что-нибудь в магазине — и предмет появится здесь.' : 'Предметы появятся в инвентаре, когда откроется магазин.'}</span></div>`;
+    return `<div class="upg">
+      <div class="upg-top">
+        <section class="upg-slot${picked.length ? ' has' : ''}"><h3>Ваша ставка</h3><p>Можно выбрать несколько предметов — до ${UP_MAX_GIVE}</p>${left}</section>
+        <section class="upg-mid">
+          <div class="up-wheel">${wheelSVG(chance)}<div class="up-needle" id="up-needle" style="transform:rotate(${u.angle}deg)"><i></i></div>
+            <div class="up-center">${chev(false)}<b id="up-pct">${chance ? upPct(chance) : '—'}</b><small>шанс</small></div></div>
+          <button type="button" class="btn big upg-go" id="up-go"${chance && !u.spin ? '' : ' disabled'}>${chev(false)} Улучшить</button>
+          <div id="up-res" class="up-res"></div>
+        </section>
+        <section class="upg-slot tgt${tgt ? ' has' : ''}"><h3>Цель апгрейда</h3><p>Шанс = ставка ÷ цена, не больше ${UP_MAX_CHANCE * 100}%</p>${right}</section>
+      </div>
+      <div class="upg-bot">
+        <section class="upg-panel"><div class="upg-head"><h3>🎒 Мой инвентарь</h3><span class="upg-cnt">${own.length}</span></div>${inv}</section>
+        <section class="upg-panel"><div class="upg-head"><h3>${chev(false)} Прокачать до</h3>
+            <button type="button" class="upg-sort" id="upg-sort" title="Сортировка по цене" aria-label="Сортировка по цене: ${u.sort === 'asc' ? 'сначала дешёвые' : 'сначала дорогие'}">${u.sort === 'asc' ? '↑' : '↓'} цена</button></div>
+          <div class="upg-filter">
+            <input class="input" id="upg-q" type="search" placeholder="Название" value="${esc(u.q || '')}" aria-label="Поиск по названию">
+            <input class="input" id="upg-from" type="number" min="0" placeholder="⭐ от" value="${u.from || ''}" aria-label="Цена от">
+            <input class="input" id="upg-to" type="number" min="0" placeholder="⭐ до" value="${u.to || ''}" aria-label="Цена до">
+          </div>
+          <div id="upg-targets">${upTargetsHTML(value)}</div></section>
+      </div>
     </div>`;
   }
   function refreshUpgrader(keepRes) {
@@ -11277,6 +11453,18 @@ var WinFx = (function () {
     body.innerHTML = `<p class="shop-lead">${esc(UP_TAB().lead)}</p>${upgraderHTML()}`;
     if (res) $('#up-res').outerHTML = res;
     bindUpgrader();
+  }
+  function bindTargets() {
+    const u = app.up;
+    $$('[data-target]').forEach((x) => (x.onclick = () => { if (u.spin) return; u.target = u.target === x.dataset.target ? null : x.dataset.target; refreshUpgrader(); }));
+    $$('[data-pg]').forEach((x) => (x.onclick = () => { u.page = (u.page | 0) + +x.dataset.pg; redrawTargets(); }));
+  }
+  // при вводе в фильтры перерисовываем только сетку целей, чтобы не терять фокус
+  function redrawTargets() {
+    const box = $('#upg-targets');
+    if (!box) return;
+    box.innerHTML = upTargetsHTML(upState().value);
+    bindTargets();
   }
   function bindUpgrader() {
     const u = upState().u;
@@ -11288,7 +11476,10 @@ var WinFx = (function () {
       else u.give.push(id);
       refreshUpgrader();
     }));
-    $$('[data-target]').forEach((x) => (x.onclick = () => { if (u.spin) return; u.target = u.target === x.dataset.target ? null : x.dataset.target; refreshUpgrader(); }));
+    bindTargets();
+    const inp = (id, k) => { const el = $(id); if (el) el.oninput = () => { u[k] = el.value; u.page = 0; redrawTargets(); }; };
+    inp('#upg-q', 'q'); inp('#upg-from', 'from'); inp('#upg-to', 'to');
+    if ($('#upg-sort')) $('#upg-sort').onclick = () => { u.sort = u.sort === 'asc' ? 'desc' : 'asc'; u.page = 0; refreshUpgrader(); };
     if ($('#up-go')) $('#up-go').onclick = spinUpgrade;
   }
   function spinUpgrade() {
